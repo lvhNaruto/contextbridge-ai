@@ -1,4 +1,4 @@
-"""ContextBridge API — Phase 1 (P0-2a/b/c, P0-4a, P0-6).
+"""ContextBridge API — Phase 1 pipeline + Phase 2 agent (P0-1a/b).
 
 Contract: context/API.md — the API adapts to the locked frontend, never the
 reverse. Implemented here:
@@ -6,10 +6,11 @@ reverse. Implemented here:
   GET  /analyses/{id}           full Lesson (✳ contradictions, ✳ confidence)
   GET  /analyses/{id}/video     Range-supporting playback (local / GCS / 302)
   GET  /analyses/{id}/chapters  reserved projection (locked api.ts names it)
+  POST /analyses/{id}/questions grounded Q&A — the agent (api/agent.py)
   GET  /healthz                 ops probe (demoSeeded + store reachability)
   GET  /health                  Phase 0 smoke alias
-Phase 2 adds POST /analyses/{id}/questions (agent) and the reserved
-voice-question alias; Phase 5 adds the internal eval harness.
+Still reserved (unwired): the voice-question alias (API.md §4.1) and
+Phase 5's internal eval harness.
 """
 
 from __future__ import annotations
@@ -18,16 +19,17 @@ import json
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from api import pipeline, seed
+from api import agent, pipeline, seed
 from api.config import get_settings
 from contextbridge_schema import MediaAnalysis
 from contextbridge_store import create_analysis, get_analysis
@@ -199,8 +201,8 @@ def _lesson_from_row(row: dict[str, Any], base_url: str) -> dict[str, Any]:
     return lesson
 
 
-def _completed_lesson(analysis_id: str, base_url: str) -> dict[str, Any]:
-    """Shared guard for the lesson-shaped routes (404 / 409 per API §3.2)."""
+def _completed_row(analysis_id: str) -> dict[str, Any]:
+    """Row guard shared by the lesson and question routes (404 / 409, API §3.2)."""
     row = _load_row(analysis_id)
     if row["status"] == "failed":
         raise ApiError(
@@ -208,10 +210,28 @@ def _completed_lesson(analysis_id: str, base_url: str) -> dict[str, Any]:
         )
     if row["status"] != "completed" or not row.get("result_json"):
         raise ApiError(409, "analysis_incomplete", "Analysis has not completed.")
+    return row
+
+
+def _completed_lesson(analysis_id: str, base_url: str) -> dict[str, Any]:
+    """The lesson-shaped routes' body (404 / 409 per API §3.2)."""
+    row = _completed_row(analysis_id)
     try:
         return _lesson_from_row(row, base_url)
     except (ValueError, json.JSONDecodeError) as exc:
         raise ApiError(409, "analysis_failed", f"Stored analysis is invalid: {exc}")
+
+
+def _completed_envelope(analysis_id: str) -> dict[str, Any]:
+    """Stored MediaAnalysis envelope for the agent (404 / 409 per API §3.4)."""
+    row = _completed_row(analysis_id)
+    try:
+        envelope = json.loads(row["result_json"])
+    except json.JSONDecodeError as exc:
+        raise ApiError(409, "analysis_failed", f"Stored analysis is invalid: {exc}")
+    if not isinstance(envelope, dict):
+        raise ApiError(409, "analysis_failed", "Stored analysis is invalid.")
+    return envelope
 
 
 # ---------------------------------------------------------------------------
@@ -304,6 +324,54 @@ def get_chapters(analysis_id: str, request: Request) -> list[dict[str, Any]]:
     """Reserved projection (API.md §4.2) — named by locked api.ts, uncalled today."""
     _check_id(analysis_id)
     return _completed_lesson(analysis_id, str(request.base_url).rstrip("/"))["chapters"]
+
+
+# ---------------------------------------------------------------------------
+# P0-1b — POST /analyses/{id}/questions: the agent (API.md §3.4, ARCH. §6.3)
+# ---------------------------------------------------------------------------
+
+
+class LessonSettingsIn(BaseModel):
+    """LessonSettings exactly as the locked client sends them (API §2 inv. 4)."""
+
+    answerLanguage: Literal["auto", "en", "hi"] = "auto"
+    explanationLevel: Literal["beginner", "intermediate", "expert"] = "beginner"
+    researchMissingContext: bool = True
+
+
+class QuestionRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    settings: LessonSettingsIn = Field(default_factory=LessonSettingsIn)
+    isVoice: bool = False
+
+
+@app.post("/analyses/{analysis_id}/questions")
+def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
+    """Grounded Q&A (API.md §3.4) via the agent loop (ARCHITECTURE §6.3).
+
+    Stateless per question (§5.2): the stored envelope is the only server-side
+    input besides the request; nothing about the conversation is kept. The
+    sync route runs in FastAPI's threadpool, so the provider ladder's waits
+    never block the event loop (25 s budget: API.md §1 timeouts).
+    """
+    _check_id(analysis_id)
+    question = payload.question.strip()
+    if not question:
+        raise ApiError(422, "invalid_question", "The question is empty.")
+    envelope = _completed_envelope(analysis_id)
+    try:
+        return agent.answer_question(
+            question,
+            envelope,
+            payload.settings.model_dump(),
+            settings,
+            is_voice=payload.isVoice,
+        )
+    except pipeline.PipelineError:
+        # §6.5 last resort — total LLM failure, honestly reported (API.md §3.4).
+        raise ApiError(
+            502, "answer_failed", "The model could not answer right now. Please retry."
+        )
 
 
 # ---------------------------------------------------------------------------

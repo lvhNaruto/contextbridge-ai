@@ -125,3 +125,14 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Status:** done — Phase 1 complete; Phase 2 (agent loop, P0-1/P0-7/P0-5) unblocked.
 
 
+## D-14 · 2026-09-23 · P0-1b — agent loop lands; `_mock_answer` deleted from the product path
+
+- **`_mock_answer` deletion (binding interpretation):** the mocked `_ask_gemini → _mock_answer` path is deleted *from the product* — `POST /analyses/{id}/questions` runs only `api/agent.py`, and no file under `api/` contains a mock answer path (locked in by a regression test). `app.py` itself stays byte-untouched per CONSTRAINTS §3.1 ("file untouched, no longer the product"); editing it would break the binding reconciliation decision, and it is superseded code kept for provenance, not served by the API (ARCHITECTURE §4.1 reads "the path is deleted" together with "the file is untouched" — the deletion therefore applies to the serving path).
+- **Exception taxonomy (agent reliability):** `tools.AnswerValidationExhausted(pipeline.PipelineError)` distinguishes a *judgement* failure — the model never produced evidence passing the draft gate even with the one §6.3 retry → agent answers with `declare_not_found` — from an *infra* failure (credentials/quota/SDK) → plain `PipelineError` → the endpoint's honest 502 (§6.5 last resort). Detection: the gate records whether validation ever fired; only then is ladder exhaustion reclassified. Existing `pytest.raises(PipelineError)` tests stay green (subclass).
+- **Stored contradiction pass injected into the answer prompt** (`envelope["contradictions"]`, verified earlier against the same transcript) so API.md §3.4's contradiction-question behaviour has real timestamps/quotes to cite — no second video call, no new tool, no new endpoint.
+- **Web `confidence` fixed at 0.72** mirrors the locked mock (`web/lib/demo-answers.ts`); `AssistantAnswer.confidence` is required in the locked TS types.
+- **Deferred (next items):** the `history` request field stays out of the endpoint model (P0-7; pydantic ignores unknown keys, so early senders are safe) and the reserved `voice-question` alias remains unwired (API.md §4.1). Rate limiting (429) is likewise a later security item.
+- **Validation:** `python -m compileall api tests` clean; full suite green (54 passed — 36 pre-existing + 18 new).
+- **Status:** done.
+
+

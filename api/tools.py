@@ -58,6 +58,10 @@ Explanation level: {level}
 Answer language: {language}
 Video durationSeconds: {duration}
 Video summary: {summary}
+Stored contradiction pass (verified earlier against this same transcript —
+both statements carry real timestamps and verbatim quotes; usable as video
+evidence for contradiction questions):
+{contradictions}
 Recent conversation (for resolving follow-ups only):
 {history}
 
@@ -254,6 +258,40 @@ def validate_answer_draft(
 # ---------------------------------------------------------------------------
 
 
+class AnswerValidationExhausted(pipeline.PipelineError):
+    """Every ladder attempt failed the draft gate — the model could not produce
+    a *verified* video answer, even with the one §6.3 retry.
+
+    The agent treats this as a judgement failure and answers honestly with
+    declare_not_found (§6.3 Fallback); a plain PipelineError (credentials,
+    quota, SDK) is an infrastructure failure and maps to §6.5's honest 502.
+    """
+
+
+def _contradiction_lines(envelope: dict[str, Any]) -> str:
+    """The stored contradiction pass as prompt context (API.md §3.4: contradiction
+    questions are answered from this pass with real video evidence — no second
+    video call, no new tool)."""
+    pairs = envelope.get("contradictions") or []
+    if not pairs:
+        return "(none)"
+    lines = []
+    for pair in pairs:
+        a = pair.get("statementA") or {}
+        b = pair.get("statementB") or {}
+        line = (
+            f"- claim: {pair.get('claim', '')} | "
+            f"A [{a.get('startSeconds')}s–{a.get('endSeconds')}s] "
+            f"\"{a.get('quote', '')}\" | "
+            f"B [{b.get('startSeconds')}s–{b.get('endSeconds')}s] "
+            f"\"{b.get('quote', '')}\""
+        )
+        if pair.get("note"):
+            line += f" | note: {pair['note']}"
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def _language_directive(code: str) -> str:
     return {
         "auto": "the same language as the question",
@@ -273,7 +311,9 @@ def gemini_answer(
     """Draft an answer constrained to retrieved slices; validate + retry once.
 
     Returns a validated draft: {text, found, confidence, evidence?}.
-    Raises PipelineError only on total LLM failure (→ agent's honest 502).
+    Raises AnswerValidationExhausted when every attempt failed the draft gate
+    (the agent's honest declare_not_found fallback) and plain PipelineError on
+    total LLM failure (→ the endpoint's honest 502, §6.5).
     """
     history_text = "(none)"
     if history:
@@ -287,17 +327,32 @@ def gemini_answer(
         language=_language_directive(qa_settings.get("answerLanguage", "auto")),
         duration=pipeline.envelope_duration(envelope),
         summary=str(envelope.get("summary") or "")[:500],
+        contradictions=_contradiction_lines(envelope),
         history=history_text,
         slices=json.dumps(slices, ensure_ascii=False)[:8000],
     )
     from google.genai import types
 
     base_parts = [types.Part.from_text(text=prompt)]
-    return pipeline._call_with_ladder(
-        settings,
-        base_parts,
-        lambda parsed: validate_answer_draft(parsed, envelope),
-    )
+    validation_failed: list[ValueError] = []
+
+    def _gate(parsed: dict[str, Any]) -> dict[str, Any]:
+        # Raises ValueError (not PipelineError) so the ladder still retries
+        # once with the error fed back (§6.3 Retry).
+        try:
+            return validate_answer_draft(parsed, envelope)
+        except ValueError as exc:
+            validation_failed.append(exc)
+            raise
+
+    try:
+        return pipeline._call_with_ladder(settings, base_parts, _gate)
+    except pipeline.PipelineError as exc:
+        if validation_failed:
+            # Judgement failure: the model answered but never with evidence
+            # passing the gate → agent falls back to declare_not_found.
+            raise AnswerValidationExhausted(str(exc)) from exc
+        raise  # infra failure (credentials/quota/SDK) → honest 502 (§6.5)
 
 
 # ---------------------------------------------------------------------------

@@ -241,3 +241,54 @@ def test_declare_not_found_shape_and_language():
     hi = tools.declare_not_found({"answerLanguage": "hi"})
     assert "वीडियो" in hi["text"]
 
+
+
+# --- exception taxonomy (P0-1b: judgement failure vs infra failure) ----------
+
+
+def test_validation_exhaustion_raises_distinct_error(monkeypatch, envelope: dict):
+    _stub_ladder(monkeypatch, [{"garbage": True}])
+    with pytest.raises(tools.AnswerValidationExhausted):
+        tools.gemini_answer(
+            "q", {"events": [], "transcript": []}, envelope, {}, _settings()
+        )
+
+
+def test_provider_failure_stays_plain_pipeline_error(monkeypatch, envelope: dict):
+    def explode(client, model_id, parts):
+        raise RuntimeError("quota exceeded")
+
+    monkeypatch.setattr(pipeline, "_clients", lambda settings: [object()])
+    monkeypatch.setattr(pipeline, "_generate_json", explode)
+    monkeypatch.setattr(pipeline.time, "sleep", lambda _: None)
+    with pytest.raises(pipeline.PipelineError) as excinfo:
+        tools.gemini_answer(
+            "q", {"events": [], "transcript": []}, envelope, {}, _settings()
+        )
+    assert not isinstance(excinfo.value, tools.AnswerValidationExhausted)
+
+
+def test_answer_prompt_carries_stored_contradiction_pass(
+    monkeypatch, envelope: dict
+):
+    assert envelope.get("contradictions"), "fixture must ship the D-02 pair"
+    seen: dict = {}
+
+    def fake_generate(client, model_id, parts):
+        seen["prompt"] = parts[0].text
+        return {"text": "ok", "found": False, "confidence": 0}
+
+    monkeypatch.setattr(pipeline, "_clients", lambda settings: [object()])
+    monkeypatch.setattr(pipeline, "_generate_json", fake_generate)
+    tools.gemini_answer(
+        "did the teacher contradict themselves?",
+        {"events": [], "transcript": []},
+        envelope,
+        {},
+        _settings(),
+    )
+    pair = envelope["contradictions"][0]
+    assert pair["claim"] in seen["prompt"]
+    assert pair["statementA"]["quote"] in seen["prompt"]
+    assert pair["statementB"]["quote"] in seen["prompt"]
+
