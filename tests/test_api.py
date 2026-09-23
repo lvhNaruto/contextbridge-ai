@@ -236,3 +236,12 @@ def test_rescale_noop_when_model_is_accurate():
     out = _rescale_timestamps(envelope, 57.0)
     assert out["durationSeconds"] == 57.0  # container truth always wins
     assert out["transcript"][0]["endSeconds"] == 12.0  # timestamps untouched
+
+
+# --- config ----------------------------------------------------------------
+
+
+def test_get_settings_is_cached():
+    from api.config import get_settings
+
+    assert get_settings() is get_settings()  # single instance, env parsed once

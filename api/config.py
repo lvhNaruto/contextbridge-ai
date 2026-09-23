@@ -6,6 +6,7 @@ runtimes share one .env.local. Never commit real values — see .env.example.
 
 from __future__ import annotations
 
+import functools
 import os
 from dataclasses import dataclass
 
@@ -31,6 +32,7 @@ class Settings:
         return bool(self.google_project_id)
 
 
+@functools.lru_cache(maxsize=1)  # parse env once; tests set env before first call
 def get_settings() -> Settings:
     return Settings(
         google_project_id=os.getenv("GOOGLE_PROJECT_ID") or None,
