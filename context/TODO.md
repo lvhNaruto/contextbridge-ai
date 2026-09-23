@@ -30,7 +30,7 @@
 - [x] **P0-6** Fixture set seeded at startup incl. `demo-binary` with genuine contradiction pair (zero LLM calls)
 
 ### Phase 2 · Agent workflow
-- [ ] **P0-1a** Tools: `retrieve_video_context`, `gemini_answer`, `gemini_web_research` (gated on `researchMissingContext`)
+- [x] **P0-1a** Tools: `retrieve_video_context`, `gemini_answer`, `gemini_web_research` (gated on `researchMissingContext`)
 - [ ] **P0-1b** Agent loop observe→reason→select→verify→reply → `ChatMessage`; **`_mock_answer` deleted**
 - [ ] **P0-1c** Honest "not found in this video" path (`answerFound=false`), verified never invented
 - [ ] **P0-7** Accept ✳ `history` (≤ 6 msgs) in `POST /questions`; per-request only, nothing stored
