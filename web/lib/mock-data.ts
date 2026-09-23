@@ -12,7 +12,8 @@ export const DEMO_LESSON: Lesson = {
   id: DEMO_LESSON_ID,
   title: "Understanding binary & computer language",
   videoUrl:
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    // gtv-videos-bucket went private (403) — same public fallback as api/seed.py (D-13)
+    "https://storage.googleapis.com/cloud-samples-data/generative-ai/video/pixel8.mp4",
   durationSeconds: 888,
   createdAt: "2026-09-20T10:00:00.000Z",
   language: "English",
