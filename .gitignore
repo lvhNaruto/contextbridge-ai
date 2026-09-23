@@ -20,6 +20,7 @@ dist/
 .DS_Store
 # ContextBridge local state
 contextbridge.db
+uploaded_videos/
 # Logs
 *.log
 logs/

@@ -23,11 +23,11 @@
 - [x] **P0-10d** CI lint/test stub; `.gitignore` covers db/env/log/`__pycache__`
 
 ### Phase 1 · Core feature — analysis pipeline
-- [ ] **P0-2a** FastAPI skeleton: `POST /analyses` (multipart), `GET /analyses/:id`, `GET /analyses/:id/video` (Range), error envelope, CORS
-- [ ] **P0-2b** Real Gemini analysis call (reuse `app.py` prompt) → schema validation → `contextbridge_store.py` → GCS video
-- [ ] **P0-2c** `MediaAnalysis` → `Lesson` serialisation (events→chapters, ✳ `confidence` passthrough)
-- [ ] **P0-4a** Contradiction pass over stored analysis (no 2nd video call) → served as ✳ `Lesson.contradictions`
-- [ ] **P0-6** Fixture set seeded at startup incl. `demo-binary` with genuine contradiction pair (zero LLM calls)
+- [x] **P0-2a** FastAPI skeleton: `POST /analyses` (multipart), `GET /analyses/:id`, `GET /analyses/:id/video` (Range), error envelope, CORS
+- [x] **P0-2b** Real Gemini analysis call (reuse `app.py` prompt) → schema validation → `contextbridge_store.py` → GCS video
+- [x] **P0-2c** `MediaAnalysis` → `Lesson` serialisation (events→chapters, ✳ `confidence` passthrough)
+- [x] **P0-4a** Contradiction pass over stored analysis (no 2nd video call) → served as ✳ `Lesson.contradictions`
+- [x] **P0-6** Fixture set seeded at startup incl. `demo-binary` with genuine contradiction pair (zero LLM calls)
 
 ### Phase 2 · Agent workflow
 - [ ] **P0-1a** Tools: `retrieve_video_context`, `gemini_answer`, `gemini_web_research` (gated on `researchMissingContext`)

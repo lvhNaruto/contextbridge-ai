@@ -1,0 +1,93 @@
+{
+  "title": "Understanding binary & computer language",
+  "createdAt": "2026-09-20T10:00:00.000Z",
+  "durationSeconds": 888,
+  "summary": "An introduction to binary language: how computers represent every kind of information using only 0 and 1, with practical examples.",
+  "language": "English",
+  "topics": ["Binary", "Data representation", "Computers"],
+  "events": [
+    {
+      "id": "ch-intro",
+      "startSeconds": 0,
+      "endSeconds": 173,
+      "title": "Introduction",
+      "description": "What this lesson covers and why binary matters.",
+      "confidence": 0.95,
+      "evidence": [
+        {"startSeconds": 4, "endSeconds": 16, "quote": "Today we're going to learn how computers speak."}
+      ]
+    },
+    {
+      "id": "ch-binary",
+      "startSeconds": 173,
+      "endSeconds": 376,
+      "title": "What is binary language?",
+      "description": "How computers represent information using only 0 and 1.",
+      "confidence": 0.97,
+      "evidence": [
+        {"startSeconds": 173, "endSeconds": 210, "quote": "Binary language uses only two digits: zero and one."}
+      ]
+    },
+    {
+      "id": "ch-represent",
+      "startSeconds": 376,
+      "endSeconds": 642,
+      "title": "How computers represent information",
+      "description": "Numbers, text, images, and sound as patterns of bits.",
+      "confidence": 0.94,
+      "evidence": [
+        {"startSeconds": 376, "endSeconds": 430, "quote": "Every letter, pixel, and sound becomes a pattern of bits."}
+      ]
+    },
+    {
+      "id": "ch-example",
+      "startSeconds": 642,
+      "endSeconds": 860,
+      "title": "Practical example",
+      "description": "Converting a number to binary, step by step.",
+      "confidence": 0.92,
+      "evidence": [
+        {"startSeconds": 642, "endSeconds": 680, "quote": "To write five in binary, we use one-zero-one."}
+      ]
+    },
+    {
+      "id": "ch-summary",
+      "startSeconds": 860,
+      "endSeconds": 888,
+      "title": "Summary",
+      "description": "Binary is the foundation of all digital information.",
+      "confidence": 0.9,
+      "evidence": [
+        {"startSeconds": 860, "endSeconds": 888, "quote": "Binary turns the physical world into digital information."}
+      ]
+    }
+  ],
+  "transcript": [
+    {"startSeconds": 4, "endSeconds": 16, "text": "Today we're going to learn how computers speak."},
+    {"startSeconds": 173, "endSeconds": 210, "text": "Binary language uses only two digits: zero and one."},
+    {"startSeconds": 210, "endSeconds": 224, "text": "Remember: everything a computer stores is always pure binary, no exceptions."},
+    {"startSeconds": 376, "endSeconds": 430, "text": "Every letter, pixel, and sound becomes a pattern of bits."},
+    {"startSeconds": 615, "endSeconds": 630, "text": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata."},
+    {"startSeconds": 642, "endSeconds": 680, "text": "To write five in binary, we use one-zero-one."},
+    {"startSeconds": 860, "endSeconds": 888, "text": "Binary turns the physical world into digital information."}
+  ],
+  "contradictions": [
+    {
+      "id": "cx-1",
+      "claim": "Whether everything a computer stores is pure binary",
+      "statementA": {
+        "text": "Remember: everything a computer stores is always pure binary, no exceptions.",
+        "startSeconds": 210,
+        "endSeconds": 224,
+        "quote": "Remember: everything a computer stores is always pure binary, no exceptions."
+      },
+      "statementB": {
+        "text": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata.",
+        "startSeconds": 615,
+        "endSeconds": 630,
+        "quote": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata."
+      },
+      "note": "The second statement qualifies the first; both sides are shown without picking a winner."
+    }
+  ]
+}

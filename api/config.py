@@ -23,6 +23,7 @@ class Settings:
     db_path: str
     bucket: str | None
     web_origin: str
+    google_api_key: str | None  # AI-Studio fallback path only (ARCHITECTURE §10)
 
     @property
     def analysis_enabled(self) -> bool:
@@ -38,4 +39,5 @@ def get_settings() -> Settings:
         db_path=os.getenv("CONTEXTBRIDGE_DB_PATH", "contextbridge.db"),
         bucket=os.getenv("CONTEXTBRIDGE_BUCKET") or None,
         web_origin=os.getenv("WEB_ORIGIN", "http://localhost:3000"),
+        google_api_key=os.getenv("GOOGLE_API_KEY") or None,
     )

@@ -116,4 +116,12 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Risk:** none. No file in `api/` or `web/` imports either package. CI `python -m compileall api` still passes.
 - **Status:** done.
 
+## D-13 · 2026-09-24 · Phase 1 outcomes — demo-video fallback, timestamp unit repair, live validation
+
+- **Demo-video fallback URL changed (binding):** the frontend mock's `gtv-videos-bucket` sample bucket went private (anonymous `storage.objects.get` now denied). `api/seed.py` falls back to the still-public `https://storage.googleapis.com/cloud-samples-data/generative-ai/video/pixel8.mp4` for `demo-binary`; dropping a real clip at `api/fixtures/demo-binary.mp4` still overrides it. The lesson payload keeps the canonical 888 s fixture data; the locked frontend mock is untouched (its mock-mode URL is frontend-owned).
+- **Timestamp unit repair (binding):** live P0-2b validation caught `gemini-2.5-flash` emitting timestamps in the wrong unit (0.563 for a 57 s clip — percent/100). Two-layer fix in `api/pipeline.py`: (1) prompt hardened ("plain seconds, never minutes, never fractions"); (2) safety net — stdlib `mvhd` parse gives container ground truth (no ffprobe, per ARCHITECTURE §4.1), `durationSeconds` is always replaced with container truth, and when the model's duration is off by a known factor (×60 minutes / ×100 percent, ±15%) all event/evidence/transcript timestamps are rescaled. Serializer additionally clamps `durationSeconds` from below by observed content so the API.md §2 invariant (timestamps ≤ durationSeconds) can never be violated.
+- **Sync upload latency:** real upload of a 5 MB / 57 s clip completes in ~30 s end-to-end (analysis + contradiction pass) — acceptable for the synchronous `POST /analyses` contract (API.md §3.1).
+- **Validation:** 16/16 contract tests green (zero LLM calls); live smoke verified fixture journey (lesson + contradiction pair + 302 video redirect) and full upload journey (real chapters with second-based timestamps, 200/206 Range serving, contradiction field correctly omitted for a video without genuine conflicts).
+- **Status:** done — Phase 1 complete; Phase 2 (agent loop, P0-1/P0-7/P0-5) unblocked.
+
 
