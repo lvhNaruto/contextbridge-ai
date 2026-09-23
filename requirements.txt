@@ -1,7 +1,5 @@
-streamlit>=1.57,<2
 google-cloud-aiplatform>=1.71.0
 google-cloud-storage>=2.18.0
-google-cloud-texttospeech>=2.16.0
 google-genai>=1.30.0
 python-dotenv>=1.0.1
 # FastAPI backend (api/) — P0-2a / P0-9a

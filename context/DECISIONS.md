@@ -108,4 +108,12 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Phase 0 exit gate:** repo initialised with provenance note ✓ · `api/` skeleton runs (`/health` live, config shared with prototype) ✓ · credentials/quota verified ✓ · CI stub + `.gitignore` cover db/env/log/`__pycache__` ✓.
 - **Status:** done — Phase 1 unblocked.
 
+## D-12 · 2026-09-24 · Removed `streamlit` and `google-cloud-texttospeech` from `requirements.txt`
+
+- **What:** deleted `streamlit>=1.57,<2` and `google-cloud-texttospeech>=2.16.0` from `requirements.txt`. `app.py` stays in the repo untouched as a reference file.
+- **Why:** both packages are used exclusively by the superseded Streamlit prototype (`app.py`). The production stack is FastAPI (`api/`) + Next.js (`web/`) — neither imports Streamlit or TTS. Browser-side `speechSynthesis` handles read-aloud (`CONSTRAINTS.md` §5). Removing them saves ~200 MB on every `pip install`, Docker build, and CI run.
+- **What stays:** `app.py` remains at root for provenance and as a reference for the Gemini analysis prompt (copied into `api/pipeline.py` in Phase 1, P0-2b). It will not run standalone — expected and intentional.
+- **Risk:** none. No file in `api/` or `web/` imports either package. CI `python -m compileall api` still passes.
+- **Status:** done.
+
 
