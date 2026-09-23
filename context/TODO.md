@@ -17,10 +17,10 @@
 ## P0 — Must ship (in build order)
 
 ### Phase 0 · Foundation
-- [ ] **P0-10a** `git init`, first in-window commit; provenance note for `app.py` / `contextbridge_schema.py` / `contextbridge_store.py`
-- [ ] **P0-10b** `api/` FastAPI structure beside preserved `web/`; `requirements.txt`, `.env.example`, `Dockerfile` stub
-- [ ] **P0-10c** Gemini-on-Vertex quota/credentials smoke test (≤ 30 s clip); record outcome in DECISIONS
-- [ ] **P0-10d** CI lint/test stub; `.gitignore` covers db/env/log/`__pycache__`
+- [x] **P0-10a** `git init`, first in-window commit; provenance note for `app.py` / `contextbridge_schema.py` / `contextbridge_store.py`
+- [x] **P0-10b** `api/` FastAPI structure beside preserved `web/`; `requirements.txt`, `.env.example`, `Dockerfile` stub
+- [x] **P0-10c** Gemini-on-Vertex quota/credentials smoke test (≤ 30 s clip); record outcome in DECISIONS
+- [x] **P0-10d** CI lint/test stub; `.gitignore` covers db/env/log/`__pycache__`
 
 ### Phase 1 · Core feature — analysis pipeline
 - [ ] **P0-2a** FastAPI skeleton: `POST /analyses` (multipart), `GET /analyses/:id`, `GET /analyses/:id/video` (Range), error envelope, CORS

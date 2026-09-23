@@ -99,4 +99,13 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Recovery:** OneDrive version history/recycle bin; deletion happened before `git init` (P0-10a), so no in-repo history exists.
 - **Status:** done.
 
+## D-11 · 2026-09-23 · Phase 0 outcomes — provenance fix, Vertex smoke PASS, SDK choice
+
+- **Stale worktree pointer (P0-10a):** repo root held a `.git` pointer into `SchemaSentinel-Strands - Copy` worktrees — the exact provenance red flag predicted in `IDEA_REVIEW.md` §6. Deleted; fresh `git init -b main`; baseline commit `452d4dd`. Full inventory + creation-date evidence in `context/PROVENANCE.md` — all inherited files created 22–23 Sep 2026, inside the window.
+- **Vertex smoke test (P0-10c): PASS.** `scripts/smoke_vertex.py` — text call 3.5 s; video understanding on a public ≤ 30 s-class sample (`gs://cloud-samples-data/generative-ai/video/pixel8.mp4`) 8.6 s with a correct grounded description. ADC credentials and quota confirmed working; the #1 architecture risk (Gemini-on-Vertex video quota) is de-risked.
+- **SDK choice for `api/` (binding):** the smoke run surfaced that `vertexai.generative_models` (used by `app.py`) is a deprecated path. **New backend code uses the `google-genai` SDK instead** (already in `requirements.txt`, v2.24.0 installed). P0-2b reuses app.py's *prompt and parsing logic*, not its client. The preserved prototype stays untouched.
+- **Repo identity:** local git author set from the authenticated GCP account (`mohitsinghgeek@gmail.com`); amend with `git config user.name/email` if a different display name should appear in the public history.
+- **Phase 0 exit gate:** repo initialised with provenance note ✓ · `api/` skeleton runs (`/health` live, config shared with prototype) ✓ · credentials/quota verified ✓ · CI stub + `.gitignore` cover db/env/log/`__pycache__` ✓.
+- **Status:** done — Phase 1 unblocked.
+
 
