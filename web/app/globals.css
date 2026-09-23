@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --background: #070b14;
+  --surface: #0d1322;
+  --card: #111a2e;
+  --foreground: #f1f5f9;
+  --muted: #8a94a6;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --border: rgba(148, 163, 184, 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.35);
+}
+
+/* Subtle custom scrollbar that fits the dark surface */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+
+/* Accessibility: high-contrast mode bumps borders and text contrast */
+[data-contrast="high"] {
+  --border: rgba(226, 232, 240, 0.4);
+  --muted: #cbd5e1;
+}
+[data-contrast="high"] body {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Accessibility: reduced motion kills animations globally */
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
