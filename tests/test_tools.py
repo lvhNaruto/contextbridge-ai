@@ -292,3 +292,65 @@ def test_answer_prompt_carries_stored_contradiction_pass(
     assert pair["statementA"]["quote"] in seen["prompt"]
     assert pair["statementB"]["quote"] in seen["prompt"]
 
+
+# --- P0-5: accessible artifacts (plain-language & Hindi) ---------------------
+
+
+def test_answer_prompt_carries_accessible_settings(monkeypatch, envelope: dict):
+    seen: dict = {}
+
+    def fake_generate(client, model_id, parts):
+        seen["prompt"] = parts[0].text
+        return {"text": "ok", "found": False, "confidence": 0}
+
+    monkeypatch.setattr(pipeline, "_clients", lambda settings: [object()])
+    monkeypatch.setattr(pipeline, "_generate_json", fake_generate)
+    tools.gemini_answer(
+        "What is binary?",
+        {"events": [], "transcript": []},
+        envelope,
+        {"explanationLevel": "beginner", "answerLanguage": "hi"},
+        _settings(),
+    )
+    assert "Explanation level: beginner" in seen["prompt"]
+    assert "Answer language: Hindi (Devanagari)" in seen["prompt"]
+
+
+def test_answer_prompt_carries_expert_and_en_settings(monkeypatch, envelope: dict):
+    seen: dict = {}
+
+    def fake_generate(client, model_id, parts):
+        seen["prompt"] = parts[0].text
+        return {"text": "ok", "found": False, "confidence": 0}
+
+    monkeypatch.setattr(pipeline, "_clients", lambda settings: [object()])
+    monkeypatch.setattr(pipeline, "_generate_json", fake_generate)
+    tools.gemini_answer(
+        "What is binary?",
+        {"events": [], "transcript": []},
+        envelope,
+        {"explanationLevel": "expert", "answerLanguage": "en"},
+        _settings(),
+    )
+    assert "Explanation level: expert" in seen["prompt"]
+    assert "Answer language: English" in seen["prompt"]
+
+
+def test_accessible_answer_preserves_source_timestamps(envelope: dict):
+    # P0-5 acceptance: accessible answer preserves source timestamps and quotes
+    hindi_draft = {
+        "text": "बाइनरी भाषा केवल दो अंकों का उपयोग करती है: शून्य और एक।",
+        "found": True,
+        "confidence": 0.95,
+        "evidence": {
+            "startSeconds": 173,
+            "endSeconds": 210,
+            "quote": "Binary language uses only two digits: zero and one.",
+        },
+    }
+    validated = tools.validate_answer_draft(hindi_draft, envelope)
+    assert validated["found"] is True
+    assert validated["evidence"]["startSeconds"] == 173.0
+    assert validated["evidence"]["endSeconds"] == 210.0
+    assert "two digits" in validated["evidence"]["quote"]
+

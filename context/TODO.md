@@ -32,9 +32,9 @@
 ### Phase 2 · Agent workflow
 - [x] **P0-1a** Tools: `retrieve_video_context`, `gemini_answer`, `gemini_web_research` (gated on `researchMissingContext`)
 - [x] **P0-1b** Agent loop observe→reason→select→verify→reply → `ChatMessage`; **`_mock_answer` deleted**
-- [ ] **P0-1c** Honest "not found in this video" path (`answerFound=false`), verified never invented
-- [ ] **P0-7** Accept ✳ `history` (≤ 6 msgs) in `POST /questions`; per-request only, nothing stored
-- [ ] **P0-5** Accessible artifact from stored index (plain-language / translation / TTS-ready) with source timestamps
+- [x] **P0-1c** Honest "not found in this video" path (`answerFound=false`), verified never invented
+- [x] **P0-7** Accept ✳ `history` (≤ 6 msgs) in `POST /questions`; per-request only, nothing stored
+- [x] **P0-5** Accessible artifact from stored index (plain-language / translation / TTS-ready) with source timestamps
 
 ### Phase 3 · Frontend additions (additive only, preserved design)
 - [ ] **A1** `components/contradictions/contradiction-card.tsx` — both timestamps seek (P0-4 UI)

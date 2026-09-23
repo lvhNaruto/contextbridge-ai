@@ -136,3 +136,12 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Status:** done.
 
 
+## D-15 · 2026-09-24 · Phase 2 complete — P0-7 history passthrough, P0-5 accessible outputs, voice alias
+
+- **P0-7 history passthrough (binding):** `QuestionRequest` in `api/main.py` gains optional `history: list[HistoryTurn] | None = None` (`role` in `{"user", "assistant"}`, `text` non-empty string). The endpoint slices the last ≤ 6 messages (`payload.history[-6:]`) and passes them to `agent.answer_question`, which injects them into `_ANSWER_PROMPT`. The server stores nothing in SQLite/db — statelessness per `CONSTRAINTS.md` §3.4 and `API.md` §3.4 is strictly preserved.
+- **P0-5 accessible outputs (binding):** Verified that `explanationLevel` (`beginner`, `intermediate`, `expert`) and `answerLanguage` (`hi`, `en`, `auto`) condition the answer engine to output plain-language explanations or Hindi (Devanagari) translations while strictly enforcing `validate_answer_draft` invariants — exact start/end seconds within duration and verbatim quotes matched against the stored transcript. Audio narration is handled client-side via Web Speech API (`CONSTRAINTS.md` §3.3).
+- **Reserved alias wired (`POST /analyses/{id}/voice-question`):** Implemented the multipart endpoint per `API.md` §4.1 (`transcript` string form field + optional `audio` blob upload). Answers through `agent.answer_question` with `isVoice: true`, ensuring the locked `web/lib/api.ts:askVoiceQuestion` function succeeds cleanly.
+- **Validation:** `python -m compileall api tests` clean; full test suite green (64 passed — 54 pre-existing + 10 new).
+- **Status:** done — Phase 2 complete; Phase 3 (Frontend additions: A1–A7) unblocked.
+
+

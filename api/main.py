@@ -7,10 +7,10 @@ reverse. Implemented here:
   GET  /analyses/{id}/video     Range-supporting playback (local / GCS / 302)
   GET  /analyses/{id}/chapters  reserved projection (locked api.ts names it)
   POST /analyses/{id}/questions grounded Q&A — the agent (api/agent.py)
+  POST /analyses/{id}/voice-question reserved alias (locked api.ts names it)
   GET  /healthz                 ops probe (demoSeeded + store reachability)
   GET  /health                  Phase 0 smoke alias
-Still reserved (unwired): the voice-question alias (API.md §4.1) and
-Phase 5's internal eval harness.
+Still reserved (unwired): Phase 5's internal eval harness.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, File, Request, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
@@ -339,10 +339,18 @@ class LessonSettingsIn(BaseModel):
     researchMissingContext: bool = True
 
 
+class HistoryTurn(BaseModel):
+    """One conversation turn in client-owned history (API.md §3.4, P0-7)."""
+
+    role: Literal["user", "assistant"]
+    text: str = Field(min_length=1, max_length=2000)
+
+
 class QuestionRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
     settings: LessonSettingsIn = Field(default_factory=LessonSettingsIn)
     isVoice: bool = False
+    history: list[HistoryTurn] | None = None
 
 
 @app.post("/analyses/{analysis_id}/questions")
@@ -359,6 +367,11 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
     if not question:
         raise ApiError(422, "invalid_question", "The question is empty.")
     envelope = _completed_envelope(analysis_id)
+    history_dicts = (
+        [turn.model_dump() for turn in payload.history[-6:]]
+        if payload.history
+        else None
+    )
     try:
         return agent.answer_question(
             question,
@@ -366,9 +379,36 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
             payload.settings.model_dump(),
             settings,
             is_voice=payload.isVoice,
+            history=history_dicts,
         )
     except pipeline.PipelineError:
         # §6.5 last resort — total LLM failure, honestly reported (API.md §3.4).
+        raise ApiError(
+            502, "answer_failed", "The model could not answer right now. Please retry."
+        )
+
+
+@app.post("/analyses/{analysis_id}/voice-question")
+def ask_voice_question(
+    analysis_id: str,
+    transcript: str = Form(...),
+    audio: UploadFile | None = File(default=None),
+) -> dict[str, Any]:
+    """Reserved alias (API.md §4.1) — answers voice transcript per §3.4."""
+    _check_id(analysis_id)
+    text = transcript.strip()
+    if not text:
+        raise ApiError(422, "invalid_question", "The transcript is empty.")
+    envelope = _completed_envelope(analysis_id)
+    try:
+        return agent.answer_question(
+            text,
+            envelope,
+            LessonSettingsIn().model_dump(),
+            settings,
+            is_voice=True,
+        )
+    except pipeline.PipelineError:
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
         )

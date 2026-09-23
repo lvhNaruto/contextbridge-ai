@@ -67,10 +67,14 @@ def envelope() -> dict:
 
 def _stub(monkeypatch, *, answer=None, answer_error=None, web=None, web_error=None):
     """Replace the two LLM tools; return a call counter."""
-    calls = {"answer": 0, "web": 0}
+    calls = {"answer": 0, "web": 0, "last_history": None}
 
     def fake_answer(*args, **kwargs):
         calls["answer"] += 1
+        if "history" in kwargs:
+            calls["last_history"] = kwargs["history"]
+        elif len(args) >= 6:
+            calls["last_history"] = args[5]
         if answer_error is not None:
             raise answer_error
         return dict(answer)
@@ -247,6 +251,106 @@ def test_post_question_502_on_total_llm_failure(client, monkeypatch):
     )
     assert resp.status_code == 502
     assert resp.json()["error"]["code"] == "answer_failed"
+
+
+# --- P0-7: history & follow-up context ----------------------------------------
+
+
+def test_agent_passes_history_to_gemini_answer(monkeypatch, envelope):
+    calls = _stub(monkeypatch, answer=VIDEO_DRAFT)
+    history = [
+        {"role": "user", "text": "What is binary?"},
+        {"role": "assistant", "text": "Binary uses only two digits."},
+    ]
+    msg = agent.answer_question(
+        "Tell me more about that", envelope, QA_ON, None, history=history
+    )
+    assert calls["answer"] == 1
+    assert calls["last_history"] == history
+    assert msg["answer"]["evidenceType"] == "video"
+
+
+def test_post_question_with_valid_history(client, monkeypatch):
+    calls = _stub(monkeypatch, answer=VIDEO_DRAFT)
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={
+            "question": "Tell me more about that",
+            "settings": QA_ON,
+            "history": [
+                {"role": "user", "text": "What is binary?"},
+                {"role": "assistant", "text": "Binary uses two digits."},
+            ],
+        },
+    )
+    assert resp.status_code == 200
+    assert calls["answer"] == 1
+    assert len(calls["last_history"]) == 2
+    assert calls["last_history"][0]["text"] == "What is binary?"
+
+
+def test_post_question_history_clamped_to_last_six(client, monkeypatch):
+    calls = _stub(monkeypatch, answer=VIDEO_DRAFT)
+    long_history = [{"role": "user", "text": f"turn {i}"} for i in range(10)]
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={
+            "question": "Follow-up",
+            "settings": QA_ON,
+            "history": long_history,
+        },
+    )
+    assert resp.status_code == 200
+    assert len(calls["last_history"]) == 6
+    assert calls["last_history"][-1]["text"] == "turn 9"
+
+
+def test_post_question_invalid_history_role_is_422(client):
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={
+            "question": "hi",
+            "settings": QA_ON,
+            "history": [{"role": "system", "text": "invalid role"}],
+        },
+    )
+    assert resp.status_code == 422
+
+
+def test_post_question_empty_history_text_is_422(client):
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={
+            "question": "hi",
+            "settings": QA_ON,
+            "history": [{"role": "user", "text": ""}],
+        },
+    )
+    assert resp.status_code == 422
+
+
+# --- reserved alias: POST /analyses/{id}/voice-question ----------------------
+
+
+def test_post_voice_question_happy_path(client, monkeypatch):
+    _stub(monkeypatch, answer=VIDEO_DRAFT)
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/voice-question",
+        data={"transcript": "What is binary?"},
+    )
+    assert resp.status_code == 200
+    msg = resp.json()
+    assert msg["isVoice"] is True
+    assert msg["answer"]["evidenceType"] == "video"
+
+
+def test_post_voice_question_empty_transcript_is_422(client):
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/voice-question",
+        data={"transcript": "   "},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "invalid_question"
 
 
 # --- REG: _mock_answer absent from the product (REQUIREMENTS risk table) -----
