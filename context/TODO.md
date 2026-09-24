@@ -91,7 +91,7 @@
 - [ ] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
 - [ ] **4.3** **Recorded backup demo:** Clean 90-second screen recording of live deployed app following demo script (<3 min public MP4).
 - [ ] **4.4** **Demo script rehearsal:** Rehearse the 90-second live presentation 5× until seamless.
-- [ ] **4.5** **README + Pitch Deck:** Finalize README with architecture diagram and live links; produce 8-10 slide PDF deck citing metrics.
+- [x] **4.5** **README + Pitch Deck:** Finalize README with architecture diagram and live links; produce 8-10 slide PDF deck citing metrics.
 - [ ] **4.6** **Final deploy freeze:** Deploy final frozen revision $\ge 48$h before deadline. Run full test suite, sweep, and lock revision.
 
 ---

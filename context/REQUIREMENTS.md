@@ -90,8 +90,8 @@ Surface per-answer confidence and an uncertainty note in the answer card (data a
 ### P1-5 Auth + per-user video scoping
 Firebase Auth so each user sees only their own videos/analyses. Optional for a single-judge demo; strengthens the "real product" read.
 
-### P1-6 Second frontend polish pass
-Only if a dedicated frontend owner exists: bring the Next.js surface to feature parity. Otherwise keep Streamlit as the single surface and spend the time on P0/P1 above.
+### P1-6 Production frontend polish pass
+Next.js 16 (App Router) is the single committed surface per D-01/D-12; maintain full feature parity, accessibility, and clean lint gates.
 
 ### P1-7 Demo rehearsal + fallback recording
 Record a clean backup demo video early; rehearse the live path against the deployed URL on a stable network.
@@ -112,7 +112,7 @@ Record a clean backup demo video early; rehearse the live path against the deplo
 
 ## Out-of-scope guardrails (applies to every tier)
 
-- **One frontend.** Streamlit is the committed surface unless P1-6 is triggered; never maintain two half-finished frontends.
+- **One frontend.** Next.js 16 (`web/`) is the single committed surface per D-01/D-12; never maintain two half-finished frontends.
 - **One video at a time.** No playlists, no cross-video index, no platform language in the UI.
 - **No invented answers.** The "not found in this video" path is a feature; it is never patched with a hallucination. Optional external context (if built at all) must be visibly separated and labelled.
 - **No service sprinkling.** Every Google Cloud service in the stack must have a named responsibility in `PRODUCT.md` §7 or a P0/P1 item here.

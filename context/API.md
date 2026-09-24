@@ -199,9 +199,11 @@ These functions exist in the locked `web/lib/api.ts`, so their routes are docume
 
 ## 5. Operations endpoint (not frontend-consumed)
 
-### `GET /healthz`
+### `GET /health` & `GET /healthz`
 
-Cloud Run health/liveness check. `200 {"status":"ok","demoSeeded":true,"model":"gemini-2.5-flash"}` · `503` when the demo fixture failed to seed or the store is unreachable.
+Operational health & metrics probe.
+- `GET /health`: The canonical operational, monitoring, and smoke test probe returning `200 {"status":"ok","demoSeeded":true,"model":"gemini-2.5-flash","metrics":...}` with live `questions_by_branch` counters.
+- `GET /healthz`: Internal container liveness check (`200` healthy, `503` if store failed to seed). Note: On public Google Cloud Run ingress, Google Front End (GFE) may intercept `/healthz` with a 404; all operational probes and test scripts target `/health`.
 
 ---
 
@@ -217,8 +219,8 @@ Cloud Run health/liveness check. `200 {"status":"ok","demoSeeded":true,"model":"
 | `POST /analyses/{id}/voice-question` | none today | reserved alias |
 | `GET /analyses/{id}/conversation` | never fetched | **not built** |
 | `POST /transcribe` | `WorkspaceClient` voice flow → `transcribeAudio` | live helper added in D-21 (§7.1) |
-| `GET /health` | deployed smoke/sweep scripts | ops alias, P0-9c (§7.2) |
-| `GET /healthz` | Cloud Run | ops only |
+| `GET /health` | deployed smoke/sweep scripts & monitoring | canonical ops probe, P0-9c (§7.2) |
+| `GET /healthz` | Cloud Run container liveness | internal ops only (§5) |
 
 Four frontend-facing endpoints, two reserved, one ops — plus the two additive helpers in §7 (`POST /transcribe`, `GET /health`), both created by documented decisions. Anything beyond this list is invention.
 
@@ -228,11 +230,11 @@ Four frontend-facing endpoints, two reserved, one ops — plus the two additive 
 
 ### 7.1 `POST /transcribe` — voice transcription helper (D-21)
 
-Live and frontend-consumed: `transcribeAudio(audio, language)` in `web/lib/api.ts` sends `multipart/form-data` (`audio` Blob as `voice.webm`, `language` string) and returns `{"text": "…"}`. The backend (`api/main.py`) transcribes with Gemini multimodal audio, so the voice loop no longer depends on the browser Web Speech API. Added 2026-09-24 under D-21, before the Compass-era endpoint freeze; covered by `tests/test_api.py::test_post_transcribe_endpoint`.
+Live and frontend-consumed: `transcribeAudio(audio, language)` in `web/lib/api.ts` sends `multipart/form-data` (`audio` Blob as `voice.webm`, `language` string) and returns `{"text": "…"}`. The backend (`api/main.py`) transcribes with Gemini multimodal audio, so the voice loop no longer depends solely on browser Web Speech API recognition (uses native speech recognition with real-time backend `/transcribe` fallback). Added 2026-09-24 under D-21, before the Compass-era endpoint freeze; covered by `tests/test_api.py::test_post_transcribe_endpoint`.
 
-### 7.2 `GET /health` — smoke alias (P0-9c)
+### 7.2 `GET /health` — operational health & metrics probe (P0-9c)
 
-Returns `{"status","service","phase","analysis_enabled","model","metrics"}`, where `metrics.questions_by_branch` carries the Week 1 structured agent-run counters (task 1.4). Used by the deployed smoke scripts; `GET /healthz` (§5) remains the Cloud Run liveness probe with the same metrics block.
+Returns `{"status","service","phase","analysis_enabled","model","metrics"}`, where `metrics.questions_by_branch` carries structured agent-run counters (video, web, not_found, clarify). Used by deployed smoke, sweep, and monitoring scripts. Note that on public Cloud Run ingress, `/healthz` can be intercepted by GFE, making `/health` the canonical public operational probe.
 
 **Additive fields (2026-09-23 amendment, `FRONTEND_GAP_ANALYSIS.md` A1–A7):** `Lesson.contradictions?`, `Chapter.confidence?`, and the `POST …/questions` body's `history?` are **fields, not endpoints** — all optional, all ignored by untouched components. A2 (transcript panel), A5 (captions), A6 (evidence-card copy), and A7 (progress honesty) are purely client-side and consume data already in this contract.
 
