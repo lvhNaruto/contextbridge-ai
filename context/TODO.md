@@ -51,7 +51,7 @@
 - [x] **P0-9a** FastAPI deployed to Cloud Run (env vars per ARCHITECTURE §16.3; startup seeding) — early, before features finish
 - [x] **P0-9b** `web/` deployed as Next.js node server on Cloud Run; `NEXT_PUBLIC_API_BASE_URL` set; CORS updated
 - [x] **P0-9c** Deployed smoke: fixture journey end to end (open → chapters → ask → answer → evidence seek)
-- [ ] **P0-9d** One real live upload through the deployed stack; progress cadence acceptable
+- [x] **P0-9d** One real live upload through the deployed stack; progress cadence acceptable
 
 ### Phase 5 · Testing
 - [ ] **P0-8** Evaluation harness: fixtures × {in-video, follow-up, contradiction, unanswerable}; reports timestamp accuracy, groundedness, unsupported-answer rate, processing time
