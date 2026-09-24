@@ -33,6 +33,7 @@ export function Conversation({
   onJump,
   answerLanguage,
   emptyHint,
+  lessonTitle,
 }: {
   messages: ChatMessage[];
   /** The message whose moment is currently highlighted on the timeline. */
@@ -40,6 +41,7 @@ export function Conversation({
   onJump: (seconds: number) => void;
   answerLanguage: string;
   emptyHint?: string;
+  lessonTitle?: string;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +85,7 @@ export function Conversation({
                 isHighlighted={highlightMessageId === message.id}
                 onJump={onJump}
                 answerLanguage={answerLanguage}
+                lessonTitle={lessonTitle}
               />
             </div>
           ),

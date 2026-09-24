@@ -10,6 +10,7 @@ import {
   VolumeX,
   Quote,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   ConfidenceBadge,
@@ -18,7 +19,7 @@ import {
 import { TimestampButton } from "@/components/evidence/timestamp-button";
 import { WebSourceCard } from "@/components/evidence/web-source-card";
 import type { ChatMessage } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 
 const STAGE_COPY: Record<string, string> = {
   "checking-video": "Checking whether the video answers your question…",
@@ -27,6 +28,31 @@ const STAGE_COPY: Record<string, string> = {
   "preparing-answer": "Preparing your teacher's answer…",
   speaking: "Preparing your teacher's voice answer…",
 };
+
+function formatEvidenceCard(
+  text: string,
+  answer?: ChatMessage["answer"],
+  lessonTitle?: string,
+): string {
+  const parts: string[] = [text];
+
+  if (answer?.evidence?.quote) {
+    parts.push(`Evidence: "${answer.evidence.quote}"`);
+  }
+
+  if (
+    answer?.evidence?.startSeconds !== undefined &&
+    answer.evidence.startSeconds !== null
+  ) {
+    parts.push(`Timestamp: ${formatTime(answer.evidence.startSeconds)}`);
+  }
+
+  if (lessonTitle) {
+    parts.push(`Source: ${lessonTitle}`);
+  }
+
+  return parts.join("\n\n");
+}
 
 function useSpeak() {
   const [speaking, setSpeaking] = useState(false);
@@ -51,20 +77,24 @@ export function AssistantMessage({
   isHighlighted,
   onJump,
   answerLanguage,
+  lessonTitle,
 }: {
   message: ChatMessage;
   /** True when this answer's moment is the current timeline highlight. */
   isHighlighted?: boolean;
   onJump: (seconds: number) => void;
   answerLanguage: string;
+  lessonTitle?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const { speaking, speak } = useSpeak();
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(message.text);
+      const payload = formatEvidenceCard(message.text, message.answer, lessonTitle);
+      await navigator.clipboard.writeText(payload);
       setCopied(true);
+      toast.success("Evidence card copied");
       setTimeout(() => setCopied(false), 1600);
     } catch {
       /* clipboard unavailable */
@@ -186,7 +216,7 @@ export function AssistantMessage({
             variant="ghost"
             size="icon-sm"
             onClick={copy}
-            aria-label={copied ? "Answer copied" : "Copy answer"}
+            aria-label={copied ? "Evidence card copied" : "Copy evidence card"}
           >
             {copied ? (
               <Check className="size-3.5 text-emerald-400" aria-hidden="true" />

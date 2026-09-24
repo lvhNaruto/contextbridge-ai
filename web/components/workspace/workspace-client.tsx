@@ -337,6 +337,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                 highlightMessageId={highlightedMessageId}
                 onJump={handleJump}
                 answerLanguage={settings.answerLanguage}
+                lessonTitle={lesson.title}
               />
             </div>
 

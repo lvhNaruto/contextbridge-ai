@@ -42,7 +42,7 @@
 - [x] **A4** ✳ `Chapter.confidence` badge via existing `ConfidenceBadge` (P0-3)
 - [x] **A3** `lib/api.ts` sends last ≤ 6 messages as `history` (P0-7, no visual change)
 - [x] **A5** Client-side WebVTT captions from `lesson.transcript`; toggle + `captionsPreferred` honoured
-- [ ] **A6** Copyable evidence card: answer + quote + mm:ss + title (P1-2, pulled forward)
+- [x] **A6** Copyable evidence card: answer + quote + mm:ss + title (P1-2, pulled forward)
 - [ ] **A7** Elapsed-time line in `AnalysisProgress`
 - [x] **TYPES** ✳ optional fields in `web/types/index.ts` (`Lesson.contradictions?`, `Chapter.confidence?`, `ContradictionPair`)
 - [ ] **MOCK** Seed contradictions + confidence in `lib/mock-data.ts` / `demo-answers.ts`; `npm run build` clean
