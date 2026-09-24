@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Languages, SignalHigh } from "lucide-react";
+import { Globe, Languages, SignalHigh, Volume2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +124,32 @@ export function LessonSettingsBar({
             }`}
           />
         </span>
+      </button>
+      {/* Auto-speak toggle (Task 3.1) */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={Boolean(settings.autoSpeak)}
+        title="Automatically read answers aloud in matched language"
+        onClick={() =>
+          onChange({
+            ...settings,
+            autoSpeak: !settings.autoSpeak,
+          })
+        }
+        className={`flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-full border px-3 text-xs font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-violet-400/70 ${
+          settings.autoSpeak
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
+            : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:bg-white/[0.07]"
+        }`}
+      >
+        <Volume2
+          className={`size-3.5 transition-colors ${
+            settings.autoSpeak ? "text-emerald-300" : "text-slate-500"
+          }`}
+          aria-hidden="true"
+        />
+        <span>Auto-speak</span>
       </button>
     </div>
   );

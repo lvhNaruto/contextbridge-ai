@@ -401,11 +401,12 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
         if should_find:
             if evidence_type == "video" and quote and start_sec is not None and end_sec is not None:
                 exp_sub = case.get("expected_quote_sub", "").lower()
-                if exp_sub in quote.lower():
+                if exp_sub and exp_sub in quote.lower():
+                    grounded = True
+                elif not exp_sub and len(quote.strip()) > 0:
                     grounded = True
                 else:
-                    # Non-empty quote from transcript
-                    grounded = True
+                    grounded = False
         else:
             # For unanswerable, clarify, or web-grounded questions:
             # - web answers with sources are grounded

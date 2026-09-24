@@ -30,7 +30,7 @@ def run_smoke():
     assert len(lesson.get("contradictions", [])) >= 1
 
     print("4. Testing backend Q&A agent on deployed Cloud Run...")
-    data = json.dumps({"question": "What is binary language?"}).encode()
+    data = json.dumps({"question": "What feature is introduced on the new Pixel?"}).encode()
     req = urllib.request.Request(
         API + "/analyses/demo-binary/questions",
         data=data,
@@ -40,6 +40,8 @@ def run_smoke():
     assert resp.status == 200
     ans = json.loads(resp.read().decode())
     print(f"   -> Answer text: {ans['text']}")
+    assert ans["answer"]["evidenceType"] == "video", f"Expected video, got {ans['answer']['evidenceType']}"
+    assert ans["answer"]["evidence"] is not None
     print(f"   -> Evidence: {ans['answer']['evidence']}")
     print(f"   -> Confidence: {ans['answer']['confidence']}")
 

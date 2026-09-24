@@ -47,6 +47,7 @@ METRICS: dict[str, Any] = {
         "video": 0,
         "web": 0,
         "not_found": 0,
+        "clarify": 0,
     },
 }
 
@@ -54,10 +55,13 @@ METRICS: dict[str, Any] = {
 def _record_question_metric(answer: dict[str, Any] | None) -> None:
     METRICS["questions_total"] += 1
     evidence_type = (answer or {}).get("evidenceType", "unknown")
+    text = str((answer or {}).get("text", "")).lower()
     if evidence_type == "video":
         METRICS["questions_by_branch"]["video"] += 1
     elif evidence_type == "web":
         METRICS["questions_by_branch"]["web"] += 1
+    elif "specify what you would like to explore" in text:
+        METRICS["questions_by_branch"]["clarify"] += 1
     else:
         METRICS["questions_by_branch"]["not_found"] += 1
 

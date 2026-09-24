@@ -415,3 +415,21 @@ def test_ambiguous_question_triggers_clarification(client):
     assert "specify" in msg["text"].lower()
     assert len(msg.get("suggestions", [])) > 0
 
+
+def test_hindi_ambiguous_question_triggers_clarification(client):
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={"question": "kya"},
+    )
+    assert resp.status_code == 200
+    msg = resp.json()
+    assert msg["answer"]["evidenceType"] == "unknown"
+    assert "specify" in msg["text"].lower()
+    assert len(msg.get("suggestions", [])) > 0
+
+
+def test_wants_simplification_detection():
+    assert agent._wants_simplification("samajh nahi aaya, please explain simply")
+    assert agent._wants_simplification("I don't understand how Video Boost works")
+    assert not agent._wants_simplification("What is the duration of this video?")
+

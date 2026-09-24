@@ -48,6 +48,16 @@ def test_retrieve_no_overlap_returns_fewer_slices(envelope: dict):
     assert slices["transcript"] == []
 
 
+def test_retrieve_devanagari_query_returns_bounded_fallback(envelope: dict):
+    # Pure Devanagari Hindi question against English video
+    slices = tools.retrieve_video_context(envelope, "सायका शिमाडा टोक्यो में क्या काम करती हैं?")
+    assert len(slices["transcript"]) > 0
+    assert len(slices["events"]) > 0
+    # Chronological ordering preserved
+    starts = [s["startSeconds"] for s in slices["transcript"]]
+    assert starts == sorted(starts)
+
+
 # --- quote verification (the anti-fabrication net) -------------------------
 
 

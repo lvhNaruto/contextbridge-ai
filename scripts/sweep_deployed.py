@@ -114,15 +114,17 @@ def run_sweep():
     print("\nChecking P0-5: Accessible explanation & Hindi translation...")
     ans_beginner = post_json(
         "/analyses/demo-binary/questions",
-        {"question": "What is binary language?", "explanationLevel": "beginner"},
+        {"question": "How does the photographer describe Tokyo at night?", "explanationLevel": "beginner"},
     )
+    assert ans_beginner["answer"]["evidenceType"] == "video", f"Expected video, got {ans_beginner['answer']['evidenceType']}"
     assert len(ans_beginner["text"]) > 0
     print(f"  [PASS] P0-5 Beginner explanation: \"{ans_beginner['text'][:60]}...\"")
 
     ans_hindi = post_json(
         "/analyses/demo-binary/questions",
-        {"question": "What is binary language?", "answerLanguage": "hi"},
+        {"question": "How does the photographer describe Tokyo at night?", "answerLanguage": "hi"},
     )
+    assert ans_hindi["answer"]["evidenceType"] == "video", f"Expected video, got {ans_hindi['answer']['evidenceType']}"
     assert len(ans_hindi["text"]) > 0
     print(f"  [PASS] P0-5 Hindi translation: \"{ans_hindi['text'][:60]}...\"")
 

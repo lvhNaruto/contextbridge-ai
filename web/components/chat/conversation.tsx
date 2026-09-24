@@ -35,6 +35,7 @@ export function Conversation({
   emptyHint,
   lessonTitle,
   onSelectSuggestion,
+  autoSpeak,
 }: {
   messages: ChatMessage[];
   /** The message whose moment is currently highlighted on the timeline. */
@@ -44,6 +45,7 @@ export function Conversation({
   emptyHint?: string;
   lessonTitle?: string;
   onSelectSuggestion?: (question: string) => void;
+  autoSpeak?: boolean;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +79,7 @@ export function Conversation({
       aria-live="polite"
     >
       <AnimatePresence initial={false}>
-        {messages.map((message) =>
+        {messages.map((message, idx) =>
           message.role === "user" ? (
             <UserMessage key={message.id} message={message} />
           ) : (
@@ -89,6 +91,8 @@ export function Conversation({
                 answerLanguage={answerLanguage}
                 lessonTitle={lessonTitle}
                 onSelectSuggestion={onSelectSuggestion}
+                autoSpeak={autoSpeak}
+                isLatest={idx === messages.length - 1}
               />
             </div>
           ),

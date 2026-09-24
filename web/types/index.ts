@@ -117,6 +117,7 @@ export interface LessonSettings {
   answerLanguage: AnswerLanguage;
   explanationLevel: ExplanationLevel;
   researchMissingContext: boolean;
+  autoSpeak?: boolean;
 }
 
 export interface AccessibilitySettings {

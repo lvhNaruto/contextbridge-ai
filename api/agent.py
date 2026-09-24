@@ -60,11 +60,15 @@ def _chat_message(
     return msg
 
 
-_AMBIGUOUS_KEYWORDS = frozenset({"what", "why", "how", "explain", "tell me", "help", "hello", "hi", "hey", "video"})
+_AMBIGUOUS_KEYWORDS = frozenset({
+    "what", "why", "how", "explain", "tell me", "help", "hello", "hi", "hey", "video",
+    "kya", "kaise", "kyun", "batao", "samjhao", "kya hai", "madad",
+    "क्या", "कैसे", "क्यों", "बताओ", "समझाइए", "नमस्ते", "मदद"
+})
 
 
 def _is_ambiguous_query(text: str) -> bool:
-    cleaned = text.strip().lower().strip("?!.,")
+    cleaned = text.strip().lower().strip("?!.,।")
     if not cleaned or (len(cleaned.split()) <= 1 and cleaned in _AMBIGUOUS_KEYWORDS):
         return True
     return False
@@ -166,7 +170,7 @@ def answer_question(
         topics = envelope.get("topics") or []
         first_topic = str(topics[0]) if topics else "this video"
         clarify_text = f"Could you please specify what you would like to explore about {first_topic}? You can tap one of the suggested questions below."
-        _log_run(question, "not_found", False, 0, t0, 0.0, is_voice)
+        _log_run(question, "clarify", False, 0, t0, 0.0, is_voice)
         return _chat_message(
             {"text": clarify_text, "evidenceType": "unknown", "confidence": 0.0},
             is_voice=is_voice,

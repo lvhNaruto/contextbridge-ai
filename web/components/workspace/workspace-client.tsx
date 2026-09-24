@@ -394,6 +394,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                 answerLanguage={settings.answerLanguage}
                 lessonTitle={lesson.title}
                 onSelectSuggestion={(q) => ask(q, false)}
+                autoSpeak={settings.autoSpeak}
               />
             </div>
 

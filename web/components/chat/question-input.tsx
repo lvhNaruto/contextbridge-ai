@@ -72,6 +72,10 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
   );
 
   const startListening = useCallback(async () => {
+    // Barge-in: immediately cancel any active answer speech when the learner speaks
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     setVoiceState("listening");
     transcriptRef.current = "";
     setLiveTranscript("");

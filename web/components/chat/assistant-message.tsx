@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import {
   GraduationCap,
@@ -58,19 +58,45 @@ function formatEvidenceCard(
 
 function useSpeak() {
   const [speaking, setSpeaking] = useState(false);
+
   const speak = (text: string, lang: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
     if (speaking) {
       window.speechSynthesis.cancel();
       setSpeaking(false);
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.onend = () => setSpeaking(false);
+
     window.speechSynthesis.cancel();
+
+    // Clean symbols for speech clarity
+    const cleanText = text
+      .replace(/\[\d{2}:\d{2}\]/g, "")
+      .replace(/[*_#`~]/g, "")
+      .replace(/https?:\/\/\S+/g, "")
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = lang;
+
+    // Language-matched voice selection (Task 3.1)
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      const prefix = lang.toLowerCase().split("-")[0];
+      const match = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+      if (match) {
+        utterance.voice = match;
+      }
+    }
+
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+
     window.speechSynthesis.speak(utterance);
     setSpeaking(true);
   };
+
   return { speaking, speak };
 }
 
@@ -81,6 +107,8 @@ export function AssistantMessage({
   answerLanguage,
   lessonTitle,
   onSelectSuggestion,
+  autoSpeak,
+  isLatest,
 }: {
   message: ChatMessage;
   /** True when this answer's moment is the current timeline highlight. */
@@ -89,9 +117,19 @@ export function AssistantMessage({
   answerLanguage: string;
   lessonTitle?: string;
   onSelectSuggestion?: (question: string) => void;
+  autoSpeak?: boolean;
+  isLatest?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const { speaking, speak } = useSpeak();
+  const spokenRef = useRef(false);
+
+  useEffect(() => {
+    if (autoSpeak && isLatest && !message.processing && message.text && !spokenRef.current) {
+      spokenRef.current = true;
+      speak(message.text, answerLanguage === "hi" ? "hi-IN" : "en-US");
+    }
+  }, [autoSpeak, isLatest, message.processing, message.text, answerLanguage]);
 
   const copy = async () => {
     try {
@@ -157,9 +195,27 @@ export function AssistantMessage({
     >
       <span
         aria-hidden="true"
-        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-violet-400/25 bg-violet-500/15"
+        className={cn(
+          "relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+          speaking
+            ? "border-emerald-400/60 bg-emerald-500/20 shadow-[0_0_16px_rgba(16,185,129,0.4)]"
+            : "border-violet-400/25 bg-violet-500/15",
+        )}
       >
-        <GraduationCap className="size-4 text-violet-300" />
+        <GraduationCap
+          className={cn(
+            "size-4 transition-colors",
+            speaking ? "text-emerald-300" : "text-violet-300",
+          )}
+        />
+        {speaking && (
+          <motion.span
+            animate={{ scale: [1, 1.25, 1], opacity: [0.7, 0.1, 0.7] }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+            className="absolute inset-0 rounded-full border-2 border-emerald-400/60"
+            aria-hidden="true"
+          />
+        )}
       </span>
 
       <div
@@ -247,14 +303,30 @@ export function AssistantMessage({
             aria-label={
               speaking ? "Stop reading answer aloud" : "Read answer aloud"
             }
+            className={cn(speaking && "text-emerald-400 hover:text-emerald-300")}
           >
             {speaking ? (
-              <VolumeX className="size-3.5 text-violet-300" aria-hidden="true" />
+              <VolumeX className="size-3.5 text-emerald-400" aria-hidden="true" />
             ) : (
               <Volume2 className="size-3.5" aria-hidden="true" />
             )}
           </Button>
-          {message.isVoice && (
+          {speaking && (
+            <span className="ml-1 flex items-center gap-1.5 text-[11px] font-medium text-emerald-400">
+              <span className="flex h-3 items-end gap-0.5" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    animate={{ height: ["4px", "12px", "4px"] }}
+                    transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.18 }}
+                    className="w-0.5 rounded-full bg-emerald-400"
+                  />
+                ))}
+              </span>
+              Speaking aloud…
+            </span>
+          )}
+          {message.isVoice && !speaking && (
             <span className="ml-1 text-[11px] text-slate-500">
               Voice answer
             </span>

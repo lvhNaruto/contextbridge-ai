@@ -25,11 +25,11 @@ export function TranscriptPanel({
   const segmentRefs = useRef(new Map<number, HTMLButtonElement>());
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim().toLowerCase().normalize("NFC");
     if (!q) return transcript;
     return transcript.filter(
       (seg) =>
-        seg.text.toLowerCase().includes(q) ||
+        seg.text.toLowerCase().normalize("NFC").includes(q) ||
         formatTime(seg.startSeconds).includes(q),
     );
   }, [transcript, query]);

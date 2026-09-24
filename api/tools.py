@@ -51,6 +51,9 @@ Rules:
 - confidence is between 0 and 1.
 - Write "text" at the requested explanation level and in the requested
   language. Mention the moment (mm:ss) when helpful.
+- Multilingual & Hinglish consistency:
+  * If the question or requested language is Hindi, explain in fluent Hindi while quoting the transcript verbatim in English.
+  * If the user asks in Hinglish (code-mixed Hindi and English, e.g. "Pixel phone mein night videography ke liye kaunsa feature use hota hai?"), reply in natural, fluent Hinglish using the same conversational code-mix, keeping technical terms in English.
 - Never invent speech, facts, sources, or timestamps.
 
 Question: {question}
@@ -76,6 +79,7 @@ Search Google and provide an accurate, helpful, and concise answer to the user's
 question in the requested language and explanation level.
 State clearly at the beginning of your response:
 "This information comes from external web research since it was not explained in the video lesson."
+Be direct, clear, and concise. Do not repeat sentences or duplicate paragraphs.
 
 Question: {question}
 Answer language: {language}
@@ -103,7 +107,7 @@ _NOT_FOUND_TEXT = {
 def _tokens(text: str) -> set[str]:
     return {
         token
-        for token in re.findall(r"[a-z0-9']+", text.lower())
+        for token in re.findall(r"[\w']+", text.lower())
         if token not in STOPWORDS and len(token) > 1
     }
 
@@ -152,6 +156,22 @@ def retrieve_video_context(
 
     events = [event for _, _, event in sorted(scored_events)[: max(1, top_k // 2)]]
     segments = [segment for _, _, segment in sorted(scored_segments)[:top_k]]
+
+    # Devanagari fallback: when the question is in Hindi/Devanagari but the video transcript
+    # is in English (or vice versa), lexical token overlap yields 0 matches. Provide a bounded
+    # representative window of transcript segments across the timeline so the multilingual
+    # Gemini model can inspect video facts and quote verbatim without hallucinating.
+    has_devanagari = bool(re.search(r"[\u0900-\u097F]", question))
+    if not segments and has_devanagari:
+        all_segments = envelope.get("transcript", [])
+        if len(all_segments) <= top_k:
+            segments = list(all_segments)
+        elif all_segments:
+            step = len(all_segments) / float(top_k)
+            segments = [all_segments[int(i * step)] for i in range(top_k)]
+        if not events:
+            events = list(envelope.get("events", [])[: max(1, top_k // 2)])
+
     # Chronological order beats rank order for prompt coherence.
     events.sort(key=lambda e: float(e.get("startSeconds") or 0))
     segments.sort(key=lambda s: float(s.get("startSeconds") or 0))
