@@ -198,7 +198,27 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Validation:** All 76 Python tests pass (`python -m pytest`); Next.js production build clean with 0 errors/warnings (`npm run build`).
 - **Status:** done — Phase 5 complete; Phase 7 (Submission & Dry Run) unblocked.
 
+## D-19 · 2026-09-24 · User Feedback & UX Polish — Chapter Truncation, Playback Dropdown, Web Research Switch, Dynamic Questions
 
-
-
+- **A4 / Chapter Layout & Truncation Fix (`web/components/chapters/chapter-list.tsx`):**
+  - *Root Cause:* The chapter item row used a single horizontal flex line (`flex items-center gap-2`) containing timestamp (~45px), chapter title (`truncate`), and `ConfidenceBadge` (`ml-auto shrink-0`, ~120px) inside a ~190px sidebar. With 165px occupied, the title was squashed into a 15px box, truncating titles down to single letters: `00:00 H` (*"Humans and communication"*), `00:02 C` (*"Computers and machine language"*), `00:06 T.` (*"The question of how to represent words"*), `00:09 I..` (*"Intermediate representation: decimal digits"*), and `00:18 E` (*"Evolution to binary: 0 and 1"*).
+  - *User Impact:* Seeing `00:02 C` led the user to reasonably conclude the application was hardcoded and restricted solely to the C programming language.
+  - *Fix:* Restructured each chapter item into a 3-row vertical layout:
+    - *Row 1:* Timestamp + `ConfidenceBadge` side-by-side (`justify-between`).
+    - *Row 2:* Full chapter title across 100% width with wrapping (`break-words`, `text-sm font-medium text-slate-200`), completely eliminating character clipping.
+    - *Row 3:* Chapter description (`text-xs text-slate-400 line-clamp-2`).
+- **Playback Speed Dropdown Selector (`web/components/video/video-player.tsx`):**
+  - *Root Cause:* The playback rate button operated as a cyclic single-direction toggle (`1x -> 1.25x -> 1.5x -> 1.75x -> 2x -> 0.5x -> 0.75x`), requiring up to 5 repetitive clicks to switch from 1x to 0.5x.
+  - *Fix:* Replaced the cycle button with a Radix UI `DropdownMenu` offering direct single-click selection across 7 granular speed presets: `0.5x`, `0.75x`, `1x (Normal)`, `1.25x`, `1.5x`, `1.75x`, and `2x`. Added a checkmark indicator (`Check` icon) beside the active rate and updated the trigger label dynamically.
+- **Web Research Toggle & Tooltip Event Fix (`web/components/settings/lesson-settings.tsx`):**
+  - *Root Cause:* The "Research missing context" toggle was wrapped in an outer HTML `<label>` element around the Radix UI `<Switch>` (which renders a `<button role="switch">`). In HTML, clicking an interactive button nested inside a `<label>` causes the label to fire a synthetic click event on the control, resulting in an immediate double-toggle (ON then immediately OFF), freezing the switch. Redundant `<Tooltip>` wrappers on `DropdownMenuTrigger` elements also swallowed pointer events.
+  - *Fix:* Removed the outer `<label>`, replaced with a dedicated accessible button switch (`role="switch"`, `aria-checked`), and eliminated tooltip wrappers around dropdown triggers to restore smooth, unhindered click interactions.
+- **Dynamic Video-Specific Question Suggestions (`web/components/workspace/workspace-client.tsx`):**
+  - *Root Cause:* Suggested question starter chips below the input box were hardcoded to `DEMO_SUGGESTED_QUESTIONS.slice(0, 3)` (*"What does binary language mean?"*, *"Why do computers use 0 and 1?"*), regardless of what video was being analyzed. Clicking them triggered binary questions even when analyzing unrelated custom videos.
+  - *Fix:* Replaced the static array with dynamic question generation derived from the loaded lesson's actual `lesson.topics` and `lesson.chapters` (e.g. *"What does the video explain about [Topic]?"*, *"What is covered in [Chapter Title]?"*). Custom typed queries continue to route to the deployed Gemini 2.5 Flash agent (`POST /analyses/:id/questions`) returning timestamp-grounded answers.
+- **Local Dev vs Live Cloud Run Synchronization:**
+  - Configured `web/.env.local` with `NEXT_PUBLIC_API_BASE_URL=https://contextbridge-api-c5ltxo3mkq-uc.a.run.app` so local dev targets the live Cloud Run backend instead of fallback mock mode.
+  - Built updated container `gcr.io/quantum-device-401006/contextbridge-web:latest` via Cloud Build and deployed revision `contextbridge-web-00003-xbl` to Cloud Run at `https://contextbridge-web-263542412452.us-central1.run.app`.
+- **Validation:** Next.js production build clean with 0 errors/warnings (`npm run build` completed in 1110ms); all 76 Python test cases passing (`python -m pytest`).
+- **Status:** done — fixes deployed live to Cloud Run and verified.
 
