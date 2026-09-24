@@ -254,6 +254,6 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - All 12 regression tests pass (`python -m pytest tests/test_regression.py`).
   - All 9 failure-path drills pass (`python scripts/test_failure_paths.py`).
   - Next.js production build clean with 0 errors/warnings (`npm run build`).
-- **Status:** in-flight — deploying updated backend and frontend images to Cloud Run.
+- **Status:** done — backend revision `contextbridge-api-00003-z97` and frontend revision `contextbridge-web-00004-x5s` deployed to Cloud Run; all P0 criteria verified via `scripts/sweep_deployed.py`.
 
 
