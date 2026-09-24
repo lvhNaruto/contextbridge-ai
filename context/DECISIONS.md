@@ -290,6 +290,6 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - Automated tests covering `transcribe_audio`, `POST /transcribe`, and `POST /analyses/{id}/voice-question` with audio.
   - Regression and failure-path drills verified.
   - End-to-end multi-turn conversation and voice input verified.
-- **Status:** in_progress
+- **Status:** done — backend revision `contextbridge-api-00004-ccj` and frontend revision `contextbridge-web-00005-s4p` deployed to Cloud Run; verified via `scripts/sweep_deployed.py`.
 
 
