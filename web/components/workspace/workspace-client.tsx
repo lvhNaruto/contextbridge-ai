@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ListVideo, ChevronDown } from "lucide-react";
+import { ListVideo, ChevronDown, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/video-player";
 import { ChapterList } from "@/components/chapters/chapter-list";
 import { ContradictionCard } from "@/components/contradictions/contradiction-card";
+import { TranscriptPanel } from "@/components/transcript/transcript-panel";
 import { Conversation } from "@/components/chat/conversation";
 import { QuestionInput } from "@/components/chat/question-input";
 import { LessonSettingsBar } from "@/components/settings/lesson-settings";
@@ -49,6 +50,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   const [highlightSeconds, setHighlightSeconds] = useState<number | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [chaptersOpen, setChaptersOpen] = useState(false);
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [asking, setAsking] = useState(false);
 
   const playerRef = useRef<VideoPlayerHandle>(null);
@@ -256,6 +258,45 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             </AnimatePresence>
           </div>
 
+          {/* Mobile transcript drawer (A2, P0-3) */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setTranscriptOpen((o) => !o)}
+              aria-expanded={transcriptOpen}
+              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
+            >
+              <span className="flex items-center gap-2">
+                <FileText className="size-4 text-violet-300" aria-hidden="true" />
+                Transcript ({lesson.transcript.length})
+              </span>
+              <motion.span animate={{ rotate: transcriptOpen ? 180 : 0 }}>
+                <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
+              </motion.span>
+            </button>
+            <AnimatePresence initial={false}>
+              {transcriptOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-3">
+                    <TranscriptPanel
+                      transcript={lesson.transcript}
+                      onJump={(sec) => {
+                        handleJump(sec);
+                        setTranscriptOpen(false);
+                      }}
+                      activeSeconds={highlightSeconds}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Contradiction findings card (A1, P0-4 UI) */}
           {lesson.contradictions && lesson.contradictions.length > 0 && (
             <ContradictionCard
@@ -326,6 +367,18 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
               activeChapterId={activeChapterId}
               onSelect={handleChapterSelect}
             />
+
+            {/* Searchable transcript panel (A2, P0-3) */}
+            <div className="mt-6 border-t border-white/[0.08] pt-5">
+              <h2 className="mb-3 px-1 text-sm font-semibold text-slate-100">
+                Transcript
+              </h2>
+              <TranscriptPanel
+                transcript={lesson.transcript}
+                onJump={handleJump}
+                activeSeconds={highlightSeconds}
+              />
+            </div>
           </div>
         </motion.aside>
       </div>
