@@ -170,21 +170,54 @@ export async function askQuestion(
   };
 }
 
+/** POST /transcribe — transcribe audio bytes via backend Gemini multimodal */
+export async function transcribeAudio(
+  audio: Blob,
+  language = "auto",
+): Promise<string> {
+  if (!USE_MOCK) {
+    try {
+      const form = new FormData();
+      form.append("audio", audio, "voice.webm");
+      form.append("language", language);
+      const res = await request<{ text: string }>("/transcribe", {
+        method: "POST",
+        body: form,
+      });
+      return res.text?.trim() || "";
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
 /** POST /analyses/:id/voice-question */
 export async function askVoiceQuestion(
   lessonId: string,
-  audio: Blob,
+  audio: Blob | null,
   transcript: string,
   settings: LessonSettings,
-): Promise<ChatMessage> {
+  history?: HistoryTurn[],
+): Promise<ChatMessage & { transcribedQuestion?: string }> {
   if (!USE_MOCK) {
     const form = new FormData();
-    form.append("audio", audio);
+    if (audio) {
+      form.append("audio", audio, "question.webm");
+    }
     form.append("transcript", transcript);
-    return request<ChatMessage>(`/analyses/${lessonId}/voice-question`, {
-      method: "POST",
-      body: form,
-    });
+    form.append("settings", JSON.stringify(settings));
+    if (history && history.length > 0) {
+      form.append("history", JSON.stringify(history.slice(-6)));
+    }
+    return request<ChatMessage & { transcribedQuestion?: string }>(
+      `/analyses/${lessonId}/voice-question`,
+      {
+        method: "POST",
+        body: form,
+      },
+    );
   }
-  return askQuestion(lessonId, transcript, settings, true);
+  return askQuestion(lessonId, transcript, settings, true, history);
 }
+

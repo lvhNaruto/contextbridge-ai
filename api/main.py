@@ -396,26 +396,79 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
         )
 
 
+@app.post("/transcribe")
+def transcribe_audio_endpoint(
+    audio: UploadFile = File(...),
+    language: str = Form(default="auto"),
+) -> dict[str, Any]:
+    """Transcribe speech audio using Gemini multimodal understanding."""
+    try:
+        audio_bytes = audio.file.read()
+    except Exception as exc:
+        raise ApiError(400, "invalid_audio", f"Could not read audio file: {exc}")
+    if not audio_bytes:
+        raise ApiError(422, "empty_audio", "The uploaded audio file is empty.")
+    mime_type = audio.content_type or "audio/webm"
+    text = pipeline.transcribe_audio(
+        audio_bytes, mime_type, settings, language_hint=language
+    )
+    return {"text": text}
+
+
 @app.post("/analyses/{analysis_id}/voice-question")
 def ask_voice_question(
     analysis_id: str,
-    transcript: str = Form(...),
+    transcript: str = Form(default=""),
     audio: UploadFile | None = File(default=None),
+    settings_json: str = Form(default="{}", alias="settings"),
+    history_json: str = Form(default="[]", alias="history"),
 ) -> dict[str, Any]:
-    """Reserved alias (API.md §4.1) — answers voice transcript per §3.4."""
+    """Answers voice question (API.md §4.1) — transcribes audio if transcript is omitted."""
     _check_id(analysis_id)
     text = transcript.strip()
+    if not text and audio is not None:
+        try:
+            audio_bytes = audio.file.read()
+            mime_type = audio.content_type or "audio/webm"
+            text = pipeline.transcribe_audio(audio_bytes, mime_type, settings)
+        except Exception as exc:
+            logger.warning("Voice transcription failed: %s", exc)
     if not text:
-        raise ApiError(422, "invalid_question", "The transcript is empty.")
+        raise ApiError(422, "invalid_question", "No question text or speech was recognized.")
+
+    # Parse optional settings & history
+    qa_settings = LessonSettingsIn().model_dump()
+    if settings_json and settings_json.strip() not in ("{}", ""):
+        try:
+            parsed_settings = json.loads(settings_json)
+            qa_settings = LessonSettingsIn(**parsed_settings).model_dump()
+        except Exception:
+            pass
+
+    history_dicts: list[dict[str, str]] | None = None
+    if history_json and history_json.strip() not in ("[]", ""):
+        try:
+            parsed_history = json.loads(history_json)
+            if isinstance(parsed_history, list):
+                history_dicts = [
+                    HistoryTurn(**turn).model_dump()
+                    for turn in parsed_history[-6:]
+                ]
+        except Exception:
+            pass
+
     envelope = _completed_envelope(analysis_id)
     try:
-        return agent.answer_question(
+        msg = agent.answer_question(
             text,
             envelope,
-            LessonSettingsIn().model_dump(),
+            qa_settings,
             settings,
             is_voice=True,
+            history=history_dicts,
         )
+        msg["transcribedQuestion"] = text
+        return msg
     except pipeline.PipelineError:
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
@@ -425,6 +478,7 @@ def ask_voice_question(
         raise ApiError(
             502, "answer_failed", f"Agent error: {exc}"
         )
+
 
 
 # ---------------------------------------------------------------------------

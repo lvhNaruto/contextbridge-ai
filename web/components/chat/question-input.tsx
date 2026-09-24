@@ -2,16 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowUp, Mic, Square, AudioLines } from "lucide-react";
+import { ArrowUp, Mic, Square, AudioLines, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { MOCK_VOICE_TRANSCRIPT } from "@/lib/demo-answers";
+import { transcribeAudio } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type VoiceState = "idle" | "listening" | "transcribing";
 
 interface QuestionInputProps {
   disabled?: boolean;
-  onAsk: (question: string, isVoice: boolean) => void;
+  onAsk: (question: string, isVoice: boolean, audioBlob?: Blob) => void;
+  language?: string;
 }
 
 /* Minimal typings for the Web Speech API (not in lib.dom for all targets). */
@@ -26,9 +27,10 @@ interface SpeechRecognitionLike {
   onend: (() => void) | null;
 }
 
-export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
+export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionInputProps) {
   const [value, setValue] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [liveTranscript, setLiveTranscript] = useState<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const transcriptRef = useRef<string>("");
@@ -45,31 +47,34 @@ export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
     async (audioBlob: Blob | null) => {
       setVoiceState("transcribing");
       let transcript = transcriptRef.current.trim();
-      // Simulate a short "understanding" beat; real mode posts the blob
-      // to POST /analyses/:id/voice-question.
-      await new Promise((r) => setTimeout(r, 800));
-      if (!transcript) {
-        transcript = MOCK_VOICE_TRANSCRIPT;
-        toast.info("Voice demo: using a sample transcription", {
-          description:
-            "This browser can't transcribe speech natively — the demo answer will use a sample question.",
-        });
+
+      // If browser Web Speech didn't capture text, transcribe via backend Gemini
+      if (!transcript && audioBlob && audioBlob.size > 800) {
+        try {
+          transcript = await transcribeAudio(audioBlob, language);
+        } catch {
+          transcript = "";
+        }
       }
+
       if (!transcript) {
-        toast.error("We didn't hear anything. Try again.");
         setVoiceState("idle");
+        setLiveTranscript("");
+        toast.info("No speech detected. Please speak closer to your microphone or type your question below.");
         return;
       }
-      onAsk(transcript, true);
+
+      onAsk(transcript, true, audioBlob ?? undefined);
       setVoiceState("idle");
-      void audioBlob; // Real backend: send audio with the question.
+      setLiveTranscript("");
     },
-    [onAsk],
+    [onAsk, language],
   );
 
   const startListening = useCallback(async () => {
     setVoiceState("listening");
     transcriptRef.current = "";
+    setLiveTranscript("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -80,10 +85,10 @@ export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (blob.size < 800) {
-          // Too short — treat as an empty recording.
+        if (blob.size < 500 && !transcriptRef.current.trim()) {
           setVoiceState("idle");
-          toast.error("We didn't hear anything. Try again.");
+          setLiveTranscript("");
+          toast.info("Recording was too short. Please try speaking again.");
           return;
         }
         void finalizeVoice(blob);
@@ -92,40 +97,62 @@ export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
       mediaRecorderRef.current = recorder;
     } catch {
       setVoiceState("idle");
+      setLiveTranscript("");
       toast.error("Microphone access is needed for voice questions.");
       return;
     }
 
-    // Use native speech recognition when the browser supports it.
+    // Use native speech recognition with real-time interim results when supported.
     const SR =
       (window as unknown as Record<string, unknown>).SpeechRecognition ??
       (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
     if (SR) {
-      const recognition = new (SR as new () => SpeechRecognitionLike)();
-      recognition.lang = "en-US";
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.onresult = (event) => {
-        const last = event.results[event.results.length - 1];
-        if (last?.[0]) transcriptRef.current = last[0].transcript;
-      };
-      recognition.onerror = () => {};
-      recognition.start();
-      recognitionRef.current = recognition;
+      try {
+        const recognition = new (SR as new () => SpeechRecognitionLike)();
+        recognition.lang =
+          language === "hi"
+            ? "hi-IN"
+            : language === "en"
+              ? "en-US"
+              : (navigator.language || "en-US");
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (event) => {
+          let full = "";
+          for (let i = 0; i < event.results.length; i++) {
+            const piece = event.results[i]?.[0]?.transcript || "";
+            full += piece;
+          }
+          if (full.trim()) {
+            transcriptRef.current = full.trim();
+            setLiveTranscript(full.trim());
+          }
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch {}
     }
-  }, [finalizeVoice]);
+  }, [finalizeVoice, language]);
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
+    try {
+      recognitionRef.current?.stop();
+    } catch {}
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
   }, []);
 
   // Cleanup on unmount.
   useEffect(() => {
     return () => {
-      recognitionRef.current?.stop();
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
       }
@@ -134,6 +161,7 @@ export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
 
   const listening = voiceState === "listening";
   const transcribing = voiceState === "transcribing";
+
 
   return (
     <div className="w-full">
@@ -232,21 +260,30 @@ export function QuestionInput({ disabled, onAsk }: QuestionInputProps) {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="mt-2.5 pl-5 text-center text-xs text-slate-400"
+            className="mt-2.5 px-4 text-center text-xs text-slate-400"
             aria-live="polite"
           >
             {listening ? (
-              <>
-                <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-red-400 align-middle" />
-                Listening… tap the mic again when you&apos;re done — it submits
-                automatically.
-              </>
+              liveTranscript ? (
+                <span className="font-medium text-violet-300">
+                  &ldquo;{liveTranscript}&rdquo;
+                </span>
+              ) : (
+                <>
+                  <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-red-400 align-middle" />
+                  Listening… speak your question, then tap the mic to submit.
+                </>
+              )
             ) : (
-              <>Understanding your question…</>
+              <span className="inline-flex items-center gap-1.5 text-violet-300">
+                <Sparkles className="size-3 animate-spin" />
+                Transcribing and understanding your question…
+              </span>
             )}
           </motion.p>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

@@ -256,4 +256,40 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - Next.js production build clean with 0 errors/warnings (`npm run build`).
 - **Status:** done — backend revision `contextbridge-api-00003-z97` and frontend revision `contextbridge-web-00004-x5s` deployed to Cloud Run; all P0 criteria verified via `scripts/sweep_deployed.py`.
 
+## D-21 · 2026-09-24 · End-to-End Dynamic Voice & Multilingual Question Resolution ("Ask Your Teacher")
+
+- **Problem & Root Cause Analysis:**
+  - The user tested the "Ask your teacher" voice feature on an uploaded video (an ITR filing tutorial in Hindi). When speaking "what is ITR" into the microphone:
+    1. A toast appeared: *"Voice demo: using a sample transcription — This browser can't transcribe speech natively — the demo answer will use a sample question."*
+    2. The question submitted was forced to a hardcoded string: *"What features are introduced in the video?"*
+    3. Gemini answered the question accurately for the video in Hindi (citing pre-filled details at 00:58), but the question displayed was NOT what the user asked.
+    4. Repeated voice attempts repeatedly submitted the exact same sample question, making it appear that only one hardcoded question could ever be asked.
+  - Root causes identified across frontend and backend:
+    1. *Speech recognition race condition & language mismatch (`web/components/chat/question-input.tsx`):* The Web Speech API was configured with `continuous: true`, `interimResults: false`, and hardcoded `en-US`. When the user clicked Stop, `recognition.stop()` was called and set to null synchronously while `mediaRecorder.stop()` fired `onstop` immediately, before asynchronous `onresult` could be emitted.
+    2. *Hardcoded fallback substitution:* When `transcriptRef.current` was empty, `question-input.tsx` discarded the recorded `audioBlob` (`void audioBlob;`) and substituted a hardcoded static string `MOCK_VOICE_TRANSCRIPT = "What features are introduced in the video?"`.
+    3. *Backend missing speech transcription (`api/main.py`):* `POST /analyses/{id}/voice-question` required `transcript: str = Form(...)` and never processed uploaded `audio`. No backend transcription endpoint existed to leverage Gemini's multimodal audio capabilities.
+    4. *Client-side single-turn starter wipe (`web/components/workspace/workspace-client.tsx`):* Suggested question starters were set to `[]` whenever `messages.length > 0`, removing all remaining starter suggestions after the first question.
+- **Architectural Decision & Solution:**
+  1. **Backend Real Audio Transcription (`api/pipeline.py` & `api/main.py`):**
+     - Add `pipeline.transcribe_audio(audio_bytes, mime_type, settings)` utilizing `gemini-2.5-flash` native multimodal audio understanding to transcribe speech verbatim in any language (English, Hindi, Hinglish, etc.).
+     - Add `POST /transcribe` endpoint accepting `audio: UploadFile` and returning `{"text": transcribed_text}`.
+     - Upgrade `POST /analyses/{analysis_id}/voice-question` to accept optional `audio` and `transcript`. If `transcript` is omitted or empty, the backend transcribes `audio` using Gemini, parses `settings` and `history`, and runs the full agent loop.
+  2. **Frontend Robust Voice & Speech-to-Text (`web/components/chat/question-input.tsx` & `web/lib/api.ts`):**
+     - Add `api.transcribeAudio(blob)`.
+     - Enable `interimResults = true` and dynamic language detection matching `settings.answerLanguage` (`hi-IN` for Hindi, `en-US`/browser locale for English/auto).
+     - Accumulate speech chunks in real time so the user sees live recognition feedback while speaking.
+     - If the browser lacks native speech recognition or fails to capture speech, send `audioBlob` to the backend's `/transcribe` endpoint so Gemini transcribes the user's voice in real time.
+     - Completely eliminate `MOCK_VOICE_TRANSCRIPT` and fake sample substitutions. If audio is silent/undetected, display an informative toast asking the user to speak or type without submitting anything fake.
+  3. **Multi-Question & Follow-Up Enhancements (`web/components/workspace/workspace-client.tsx`):**
+     - Pass `audioBlob` through `ask(question, isVoice, audioBlob)`.
+     - Keep remaining suggested starters accessible instead of wiping them after 1 message.
+     - Allow continuous multi-turn dialogue with clean input state resets.
+  4. **Mock Answer Engine Fallback (`web/lib/demo-answers.ts`):**
+     - Provide helpful synthesis for off-topic questions (e.g. ITR, tax, coding) when research is enabled, instead of an unhelpful repetitive boilerplate sentence.
+- **Validation:**
+  - Automated tests covering `transcribe_audio`, `POST /transcribe`, and `POST /analyses/{id}/voice-question` with audio.
+  - Regression and failure-path drills verified.
+  - End-to-end multi-turn conversation and voice input verified.
+- **Status:** in_progress
+
 

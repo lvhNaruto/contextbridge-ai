@@ -175,13 +175,59 @@ export function resolveDemoAnswer(
     };
   }
 
+  if (/(itr|income tax|tax return)/.test(q)) {
+    return {
+      text: localized(
+        {
+          en: "An Income Tax Return (ITR) is a formal declaration filed with the tax authorities detailing annual earnings, deductions, and tax obligations. While this video covers Tokyo night videography rather than taxation, research confirms ITR filing allows individuals to report income, verify taxes paid, and claim eligible refunds.",
+          hi: "आयकर रिटर्न (ITR) कर अधिकारियों के पास दाखिल किया जाने वाला एक घोषणापत्र है जिसमें वार्षिक आय, छूट और कर देनदारियों का विवरण होता है। यह वीडियो टोक्यो वीडियोग्राफी पर केंद्रित है, लेकिन शोध से पुष्टि होती है कि ITR आय की रिपोर्ट करने और रिफंड प्राप्त करने के लिए दाखिल किया जाता है।",
+        },
+        lang,
+      ),
+      evidenceType: "web",
+      notInVideo: true,
+      confidence: 0.88,
+      sources: [
+        {
+          title: "Income Tax Department — e-Filing Portal",
+          domain: "incometax.gov.in",
+          url: "https://www.incometax.gov.in",
+          description: "Official guidelines and procedures for filing annual income tax returns.",
+        },
+      ],
+    };
+  }
+
+  if (/(binary|bit|byte|computer)/.test(q)) {
+    return {
+      text: localized(
+        {
+          en: "Binary is a base-2 numeral system using only 0 and 1. While this lesson focuses on Tokyo night videography, digital camera sensors and processors convert analog light photons into binary data for processing.",
+          hi: "बाइनरी केवल दो अंकों (0 और 1) का उपयोग करने वाली संख्या प्रणाली है। हालांकि यह पाठ टोक्यो वीडियोग्राफी पर है, डिजिटल कैमरा सेंसर प्रकाश को बाइनरी डेटा में परिवर्तित करते हैं।",
+        },
+        lang,
+      ),
+      evidenceType: "web",
+      notInVideo: true,
+      confidence: 0.85,
+      sources: [
+        {
+          title: "Binary Code & Digital Imaging — Britannica",
+          domain: "britannica.com",
+          url: "https://www.britannica.com/technology/binary-code",
+          description: "Foundational overview of binary encoding in digital electronics.",
+        },
+      ],
+    };
+  }
+
   // Not covered in the video → web research fallback (when enabled).
   if (settings.researchMissingContext) {
     return {
       text: localized(
         {
-          en: "This was not explained in the video, so I researched it separately. Here is additional context from the web — kept clearly separate from the lesson's content.",
-          hi: "यह वीडियो में नहीं बताया गया, इसलिए मैंने अलग से शोध किया। नीचे वेब से अतिरिक्त संदर्भ दिए गए हैं।",
+          en: `"${question}" was not directly explained in this video clip. Based on web research: this topic represents external context beyond the current lesson.`,
+          hi: `"${question}" इस वीडियो क्लिप में सीधे तौर पर नहीं बताया गया है। वेब खोज के अनुसार यह पाठ से बाहर का अतिरिक्त संदर्भ है।`,
         },
         lang,
       ),
@@ -195,8 +241,8 @@ export function resolveDemoAnswer(
   return {
     text: localized(
       {
-        en: "This was not explained in the video, and web research is turned off — so I'd rather say so than guess. You can enable “Research missing context” in the controls above to let me search the web.",
-        hi: "यह वीडियो में नहीं बताया गया और वेब शोध बंद है। आप ऊपर “Research missing context” चालू कर सकते हैं।",
+        en: `"${question}" was not explained in this video, and web research is turned off. You can toggle “Web research” in the controls above to allow searching external sources.`,
+        hi: `"${question}" इस वीडियो में नहीं बताया गया है और वेब खोज बंद है। आप बाहरी स्रोतों से जानकारी प्राप्त करने के लिए ऊपर “Web research” चालू कर सकते हैं।`,
       },
       lang,
     ),
@@ -205,7 +251,4 @@ export function resolveDemoAnswer(
     confidence: 0.0,
   };
 }
-
-/** Mock transcription for voice questions when the browser lacks SpeechRecognition. */
-export const MOCK_VOICE_TRANSCRIPT = "What features are introduced in the video?";
 

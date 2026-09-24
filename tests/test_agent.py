@@ -353,6 +353,38 @@ def test_post_voice_question_empty_transcript_is_422(client):
     assert resp.json()["error"]["code"] == "invalid_question"
 
 
+def test_post_voice_question_with_audio_transcription(client, monkeypatch):
+    _stub(monkeypatch, answer=VIDEO_DRAFT)
+    monkeypatch.setattr(
+        "api.pipeline.transcribe_audio",
+        lambda audio_bytes, mime, settings, language_hint=None: "What is binary?",
+    )
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/voice-question",
+        data={"transcript": ""},
+        files={"audio": ("question.webm", b"FAKEAUDIOBYTES" * 10, "audio/webm")},
+    )
+    assert resp.status_code == 200
+    msg = resp.json()
+    assert msg["isVoice"] is True
+    assert msg["transcribedQuestion"] == "What is binary?"
+    assert msg["answer"]["evidenceType"] == "video"
+
+
+def test_post_transcribe_endpoint(client, monkeypatch):
+    monkeypatch.setattr(
+        "api.pipeline.transcribe_audio",
+        lambda audio_bytes, mime, settings, language_hint=None: "Transcribed speech text",
+    )
+    resp = client.post(
+        "/transcribe",
+        data={"language": "en"},
+        files={"audio": ("speech.webm", b"AUDIOBYTES12345" * 10, "audio/webm")},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["text"] == "Transcribed speech text"
+
+
 # --- REG: _mock_answer absent from the product (REQUIREMENTS risk table) -----
 
 

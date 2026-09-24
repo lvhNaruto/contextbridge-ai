@@ -13,7 +13,7 @@ import { Conversation } from "@/components/chat/conversation";
 import { QuestionInput } from "@/components/chat/question-input";
 import { LessonSettingsBar } from "@/components/settings/lesson-settings";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAnalysis, askQuestion } from "@/lib/api";
+import { getAnalysis, askQuestion, askVoiceQuestion } from "@/lib/api";
 import {
   loadConversation,
   saveConversation,
@@ -98,7 +98,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   );
 
   const ask = useCallback(
-    async (question: string, isVoice: boolean) => {
+    async (question: string, isVoice: boolean, audioBlob?: Blob) => {
       if (!lesson || asking) return;
       setAsking(true);
 
@@ -137,13 +137,36 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
         .slice(-6);
 
       try {
-        const resolved = await askQuestion(
-          lessonId,
-          question,
-          settings,
-          isVoice,
-          historyTurns,
-        );
+        let resolved: ChatMessage & { transcribedQuestion?: string };
+        if (isVoice && audioBlob) {
+          resolved = await askVoiceQuestion(
+            lessonId,
+            audioBlob,
+            question,
+            settings,
+            historyTurns,
+          );
+        } else {
+          resolved = await askQuestion(
+            lessonId,
+            question,
+            settings,
+            isVoice,
+            historyTurns,
+          );
+        }
+
+        // If backend transcribed a refined question, ensure user message reflects it
+        if (resolved.transcribedQuestion && resolved.transcribedQuestion !== question) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === userMessage.id
+                ? { ...m, text: resolved.transcribedQuestion! }
+                : m,
+            ),
+          );
+        }
+
         setMessages((prev) =>
           prev.map((m) => (m.id === pendingId ? resolved : m)),
         );
@@ -171,39 +194,46 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
         setAsking(false);
       }
     },
-    [lesson, lessonId, settings, asking],
+    [lesson, lessonId, settings, asking, messages],
   );
 
   const chapters = lesson?.chapters ?? [];
   const suggested = useMemo(() => {
-    if (messages.length > 0 || !lesson) return [];
-    // If it's the demo binary lesson, return the curated binary questions
+    if (!lesson) return [];
+    let pool: string[] = [];
     if (lesson.id === "demo-binary") {
-      return DEMO_SUGGESTED_QUESTIONS.slice(0, 3);
+      pool = [...DEMO_SUGGESTED_QUESTIONS];
+    } else {
+      if (lesson.topics && lesson.topics.length > 0) {
+        pool.push(`What does the video explain about ${lesson.topics[0]}?`);
+      }
+      if (lesson.chapters && lesson.chapters.length > 1) {
+        const chTitle = lesson.chapters[1].title;
+        pool.push(
+          chTitle.length > 35
+            ? `What is covered in "${chTitle.slice(0, 32)}..."?`
+            : `What is covered in "${chTitle}"?`,
+        );
+      } else if (lesson.chapters && lesson.chapters.length > 0) {
+        const chTitle = lesson.chapters[0].title;
+        pool.push(
+          chTitle.length > 35
+            ? `What is covered in "${chTitle.slice(0, 32)}..."?`
+            : `What is covered in "${chTitle}"?`,
+        );
+      }
+      pool.push("Can you summarize the main takeaways of this video?");
+      if (lesson.topics && lesson.topics.length > 1) {
+        pool.push(`How does ${lesson.topics[1]} work in this video?`);
+      }
     }
-    // Dynamic questions tailored to the uploaded lesson:
-    const questions: string[] = [];
-    if (lesson.topics && lesson.topics.length > 0) {
-      questions.push(`What does the video explain about ${lesson.topics[0]}?`);
-    }
-    if (lesson.chapters && lesson.chapters.length > 1) {
-      const chTitle = lesson.chapters[1].title;
-      questions.push(
-        chTitle.length > 35
-          ? `What is covered in "${chTitle.slice(0, 32)}..."?`
-          : `What is covered in "${chTitle}"?`,
-      );
-    } else if (lesson.chapters && lesson.chapters.length > 0) {
-      const chTitle = lesson.chapters[0].title;
-      questions.push(
-        chTitle.length > 35
-          ? `What is covered in "${chTitle.slice(0, 32)}..."?`
-          : `What is covered in "${chTitle}"?`,
-      );
-    }
-    questions.push("Can you summarize the main takeaways of this video?");
-    return questions.slice(0, 3);
-  }, [messages.length, lesson]);
+    // Filter out questions that have already been asked
+    const askedSet = new Set(
+      messages.filter((m) => m.role === "user").map((m) => m.text.toLowerCase().trim()),
+    );
+    return pool.filter((q) => !askedSet.has(q.toLowerCase().trim())).slice(0, 3);
+  }, [messages, lesson]);
+
 
   if (loadError) {
     return (
@@ -382,8 +412,13 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             )}
 
             <div className="mt-4">
-              <QuestionInput disabled={asking} onAsk={ask} />
+              <QuestionInput
+                disabled={asking}
+                onAsk={ask}
+                language={settings.answerLanguage}
+              />
             </div>
+
           </motion.section>
         </div>
 

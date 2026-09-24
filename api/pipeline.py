@@ -425,3 +425,61 @@ def run_analysis(
         if isinstance(exc, PipelineError):
             raise
         raise PipelineError(str(exc)) from exc
+
+
+def transcribe_audio(
+    audio_bytes: bytes,
+    mime_type: str,
+    settings: Settings,
+    language_hint: str | None = None,
+) -> str:
+    """Transcribe spoken audio using Gemini multimodal understanding.
+
+    Accepts audio/webm, audio/wav, audio/mp4, audio/ogg, audio/mpeg.
+    Returns the verbatim transcribed text, or empty string if no speech detected.
+    """
+    if not audio_bytes or len(audio_bytes) < 100:
+        return ""
+
+    from google.genai import types
+
+    # Normalize mime type for Gemini
+    normalized_mime = mime_type.split(";")[0].strip().lower()
+    if not normalized_mime or normalized_mime == "application/octet-stream":
+        normalized_mime = "audio/webm"
+
+    lang_instr = (
+        f" The speaker may be speaking {language_hint}."
+        if language_hint and language_hint != "auto"
+        else ""
+    )
+    prompt = (
+        "You are an expert speech-to-text system."
+        f"{lang_instr} "
+        "Listen to this audio recording of a user asking a question about a lesson. "
+        "Transcribe the spoken speech verbatim in its spoken language (e.g. English, Hindi, Hinglish, etc.). "
+        "Output ONLY the transcribed question text without any quotes, brackets, prefixes, or markdown. "
+        "If there is NO speech, or only background silence/noise, or unintelligible noise, output exactly: EMPTY"
+    )
+
+    for client in _clients(settings):
+        try:
+            response = client.models.generate_content(
+                model=settings.vertex_model_id,
+                contents=[
+                    types.Part.from_bytes(data=audio_bytes, mime_type=normalized_mime),
+                    types.Part.from_text(text=prompt),
+                ],
+                config=types.GenerateContentConfig(temperature=0.0),
+            )
+            raw = (response.text or "").strip()
+            raw = raw.removeprefix("```").removesuffix("```").strip()
+            raw = raw.strip('\'"')
+            if not raw or raw.upper() in {"EMPTY", "NO_SPEECH", "SILENCE", "UH", "NONE"}:
+                return ""
+            return raw
+        except Exception as exc:
+            logger.warning("Transcription attempt failed with client: %s", exc)
+            continue
+
+    return ""
