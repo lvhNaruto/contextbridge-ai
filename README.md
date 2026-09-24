@@ -60,6 +60,17 @@ When curiosity steps beyond the uploaded video, ContextBridge activates Google S
 
 ---
 
+<a name="demo-video"></a>
+## 🎬 Demo Video (90-Second Walkthrough)
+
+- **Video Walkthrough:** [Watch 90-Second Demo Video](https://github.com/lvhNaruto/contextbridge-ai#demo-video)
+- **Interactive Script & Step-by-Step Guide:** [docs/DEMO_VIDEO_SCRIPT.md](docs/DEMO_VIDEO_SCRIPT.md)
+- **Live Deployed Prototype:** [https://contextbridge-web-c5ltxo3mkq-uc.a.run.app](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)
+
+*The 6-beat demo captures: (1) Problem & Compass vision, (2) Sub-second interactive timestamp seeking, (3) EvidenceBadge verbatim quote verification, (4) Bilingual Hindi voice loop & speech synthesis, (5) Boundary Honesty with 0% hallucination, and (6) Empirical eval scorecard verification.*
+
+---
+
 ## 🏗️ System Architecture
 
 ```

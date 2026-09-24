@@ -88,7 +88,7 @@
 
 ### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
 - [x] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
-- [ ] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
+- [x] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
 - [ ] **4.3** **Recorded backup demo:** Clean 90-second screen recording of live deployed app following demo script (<3 min public MP4).
 - [ ] **4.4** **Demo script rehearsal:** Rehearse the 90-second live presentation 5× until seamless.
 - [x] **4.5** **README + Pitch Deck:** Finalize README with architecture diagram and live links; produce 8-10 slide PDF deck citing metrics.
