@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Play } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
+import { ConfidenceBadge } from "@/components/evidence/evidence-badge";
 import type { Chapter } from "@/types";
 
 interface ChapterListProps {
@@ -63,7 +64,7 @@ export function ChapterList({
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="flex items-baseline gap-2">
+                <span className="flex items-center gap-2">
                   <span
                     className={cn(
                       "font-mono text-[11px] font-semibold tabular-nums",
@@ -80,6 +81,11 @@ export function ChapterList({
                   >
                     {chapter.title}
                   </span>
+                  {chapter.confidence != null && (
+                    <span className="ml-auto shrink-0">
+                      <ConfidenceBadge confidence={chapter.confidence} />
+                    </span>
+                  )}
                 </span>
                 <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-slate-500">
                   {chapter.description}
