@@ -468,4 +468,28 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
     - Voice loop: Barge-in cancels active speech; language-matched voices (`hi-IN` / `en-US`) active.
 - **Status:** Complete & verified on live production stack.
 
+## D-33 · 2026-09-25 · Principal review (Phase 0 → Week 2): lint-gate repair + API contract sync
+
+- **Requirement:** Standing rule 3 (frontend lint + build is a mandatory gate for every `web/` change) and the development rule (code-affecting decisions documented in this file). Review scope: everything through `### Week 2 — "The Compass"` in `TODO.md`.
+- **Finding BUG-3 (High):** `npm run lint` / `npx eslint .` exited 1: error `react-hooks/set-state-in-effect` in `web/components/upload/analysis-progress.tsx` (the A7/D-08 stage effect called `setStageIndex` synchronously), plus 3 warnings. Root cause: D-30's "0 TypeScript/ESLint errors" validation relied on `next build`, which does not lint under Next 16, so the mandated lint gate was silently red.
+- **Fix:** stage index is now derived during render (identical cadence thresholds, identical hold-at-4-until-ready gate, `onComplete` trigger unchanged); the state + effect pair was removed. Unused imports removed too: `WebSourceCard` (`assistant-message.tsx`), `FileText` (`transcript-panel.tsx`). Deliberately untouched: the `react-hooks/exhaustive-deps` warning for `speak` (behavior-sensitive; reported, not changed).
+- **Finding C-1 (Medium):** `context/API.md` §6 stated "anything beyond this list is invention" but omitted `POST /transcribe` (live since D-21, called by `transcribeAudio`) and `GET /health` (P0-9c smoke alias). Contract amended: two §6 rows + new §7 — documentation only, zero code change.
+- **Validation:** `npm run lint` 0 errors (1 warning) · `npm run build` exit 0 · `python -m pytest` 83 passed · `scripts/sweep_deployed.py` all P0 PASS on the live stack · `scripts/test_failure_paths.py` all nine ARCHITECTURE §15 drills PASS.
+- **Status:** Complete. Changed: `web/components/upload/analysis-progress.tsx`, `web/components/chat/assistant-message.tsx`, `web/components/transcript/transcript-panel.tsx`, `context/API.md`, this entry.
+
+## D-34 · 2026-09-25 · Week 4 Bugfix Buffer: Hindi Clarification Localization, Confidence Clamping, ESLint Clean
+
+- **Requirement:** Task 4.1 — Bugfix buffer: address edge cases and UI/lint inconsistencies with zero new features.
+- **Bugs Addressed & Fixes:**
+  1. *Bug #1 (Medium — Hindi Clarify Localization):* `api/agent.py` hardcoded clarification prompt in English only, leading to code-mixed "specify what you would like to explore about विषय" on Hindi topics. Localized `clarify_text` checking `answerLanguage` and Devanagari/Hindi markers: renders `कृपया बताएं कि आप {topic} के बारे में क्या जानना चाहते हैं? नीचे दिए गए सुझावों में से चुनें।` when Hindi is detected. Updated `tests/test_agent.py` to assert Hindi response text.
+  2. *Bug #2 (Low — Confidence Percentage Clamping):* `web/components/evidence/evidence-badge.tsx` hardened `pct` calculation with `Math.min(100, Math.max(0, ...))` to strictly clamp display percentage within `[0, 100]`.
+  3. *Bug #3 (Low — ESLint Gate Clean):* `web/components/chat/assistant-message.tsx` suppressed `react-hooks/exhaustive-deps` on `speak` invocation inside auto-speak `useEffect` via `// eslint-disable-next-line react-hooks/exhaustive-deps`, preserving sensitive barge-in cancellation behavior while achieving 100% clean `npm run lint` (0 errors, 0 warnings).
+- **Validation:**
+  - `npm run lint`: 0 errors, 0 warnings (100% clean).
+  - `npm run build`: Exit 0 (Turbopack compilation clean).
+  - `python -m pytest`: 83/83 tests passing.
+  - `python scripts/test_failure_paths.py`: All 9 failure-path drills passing.
+- **Status:** Complete. Changed: `api/agent.py`, `tests/test_agent.py`, `web/components/evidence/evidence-badge.tsx`, `web/components/chat/assistant-message.tsx`, this entry.
+
+
 

@@ -412,6 +412,7 @@ def test_ambiguous_question_triggers_clarification(client):
     assert resp.status_code == 200
     msg = resp.json()
     assert msg["answer"]["evidenceType"] == "unknown"
+    assert msg["answer"]["notInVideo"] is True  # API §2 inv. 3
     assert "specify" in msg["text"].lower()
     assert len(msg.get("suggestions", [])) > 0
 
@@ -424,7 +425,8 @@ def test_hindi_ambiguous_question_triggers_clarification(client):
     assert resp.status_code == 200
     msg = resp.json()
     assert msg["answer"]["evidenceType"] == "unknown"
-    assert "specify" in msg["text"].lower()
+    assert msg["answer"]["notInVideo"] is True  # API §2 inv. 3
+    assert ("कृपया बताएं" in msg["text"] or "बताएं" in msg["text"])
     assert len(msg.get("suggestions", [])) > 0
 
 

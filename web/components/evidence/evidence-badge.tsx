@@ -19,7 +19,7 @@ export function EvidenceBadge({ type, confidence }: EvidenceBadgeProps) {
   if (type === "video") {
     const pct =
       confidence != null && confidence > 0
-        ? Math.round(confidence <= 1 ? confidence * 100 : confidence)
+        ? Math.min(100, Math.max(0, Math.round(confidence <= 1 ? confidence * 100 : confidence)))
         : null;
 
     return (

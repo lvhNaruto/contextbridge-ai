@@ -87,7 +87,7 @@
 - [x] **3.6** **Deploy Checkpoint #3:** Deploy, sweep, eval v2 delta vs week-2 baseline (no regressions).
 
 ### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
-- [ ] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
+- [x] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
 - [ ] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
 - [ ] **4.3** **Recorded backup demo:** Clean 90-second screen recording of live deployed app following demo script (<3 min public MP4).
 - [ ] **4.4** **Demo script rehearsal:** Rehearse the 90-second live presentation 5× until seamless.

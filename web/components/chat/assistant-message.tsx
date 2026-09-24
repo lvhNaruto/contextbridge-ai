@@ -17,7 +17,6 @@ import {
   EvidenceBadge,
 } from "@/components/evidence/evidence-badge";
 import { TimestampButton } from "@/components/evidence/timestamp-button";
-import { WebSourceCard } from "@/components/evidence/web-source-card";
 import { BoundaryCard } from "@/components/evidence/boundary-card";
 import { ExploreSuggestions } from "@/components/chat/explore-suggestions";
 import type { ChatMessage } from "@/types";
@@ -129,6 +128,7 @@ export function AssistantMessage({
       spokenRef.current = true;
       speak(message.text, answerLanguage === "hi" ? "hi-IN" : "en-US");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSpeak, isLatest, message.processing, message.text, answerLanguage]);
 
   const copy = async () => {

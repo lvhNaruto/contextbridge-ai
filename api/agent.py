@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import secrets
 import time
 from typing import Any
@@ -169,10 +170,23 @@ def answer_question(
     if _is_ambiguous_query(question):
         topics = envelope.get("topics") or []
         first_topic = str(topics[0]) if topics else "this video"
-        clarify_text = f"Could you please specify what you would like to explore about {first_topic}? You can tap one of the suggested questions below."
+        ans_lang = (qa_settings.get("answerLanguage") or "auto").lower()
+        is_hindi = ans_lang == "hi" or bool(re.search(r"[\u0900-\u097F]", question)) or any(
+            w in question.lower() for w in ("kya", "kaise", "kyun", "batao", "samjhao", "madad")
+        )
+        if is_hindi:
+            topic_str = first_topic if first_topic != "this video" else "इस वीडियो"
+            clarify_text = f"कृपया बताएं कि आप {topic_str} के बारे में क्या जानना चाहते हैं? नीचे दिए गए सुझावों में से चुनें।"
+        else:
+            clarify_text = f"Could you please specify what you would like to explore about {first_topic}? You can tap one of the suggested questions below."
         _log_run(question, "clarify", False, 0, t0, 0.0, is_voice)
         return _chat_message(
-            {"text": clarify_text, "evidenceType": "unknown", "confidence": 0.0},
+            {
+                "text": clarify_text,
+                "evidenceType": "unknown",
+                "confidence": 0.0,
+                "notInVideo": True,  # API §2 inv. 3 — unknown always carries notInVideo
+            },
             is_voice=is_voice,
             suggestions=suggestions,
         )

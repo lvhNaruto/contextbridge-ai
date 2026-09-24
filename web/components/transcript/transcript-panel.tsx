@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, FileText, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import type { TranscriptSegment } from "@/types";
 

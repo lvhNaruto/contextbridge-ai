@@ -35,7 +35,6 @@ export function AnalysisProgress({
   isReady?: boolean;
 }) {
   const [elapsed, setElapsed] = useState(0);
-  const [stageIndex, setStageIndex] = useState(0);
   const [statusLine, setStatusLine] = useState(0);
 
   // Timer for elapsed seconds.
@@ -46,28 +45,24 @@ export function AnalysisProgress({
     return () => clearInterval(timer);
   }, []);
 
-  // Drive stage highlighting from elapsed time (A7, D-08).
+  // Stage highlighting is DERIVED during render from elapsed time (A7, D-08)
+  // instead of a setState-in-effect — fixes react-hooks/set-state-in-effect
+  // while keeping the exact cadence and the "hold at 4 until ready" gate (D-33).
   // Cadence:
   // 0: 0s  - Video uploaded
   // 1: 2s  - Audio extracted
   // 2: 5s  - Understanding the lesson
   // 3: 8s  - Creating chapters
   // 4: 12s - Indexing important moments
-  // 5: 16s - Preparing your learning workspace
-  useEffect(() => {
-    let targetStage = 0;
-    if (elapsed >= 16) targetStage = 5;
-    else if (elapsed >= 12) targetStage = 4;
-    else if (elapsed >= 8) targetStage = 3;
-    else if (elapsed >= 5) targetStage = 2;
-    else if (elapsed >= 2) targetStage = 1;
-
-    if (targetStage === 5 && !isReady) {
-      setStageIndex(4);
-    } else {
-      setStageIndex(targetStage);
-    }
-  }, [elapsed, isReady]);
+  // 5: 16s - Preparing your learning workspace (held at 4 until ready)
+  const stageIndex = (() => {
+    if (elapsed >= 16) return isReady ? 5 : 4;
+    if (elapsed >= 12) return 4;
+    if (elapsed >= 8) return 3;
+    if (elapsed >= 5) return 2;
+    if (elapsed >= 2) return 1;
+    return 0;
+  })();
 
   // Rotating status lines.
   useEffect(() => {

@@ -216,9 +216,23 @@ Cloud Run health/liveness check. `200 {"status":"ok","demoSeeded":true,"model":"
 | `GET /analyses/{id}/chapters` | none today | reserved, trivial |
 | `POST /analyses/{id}/voice-question` | none today | reserved alias |
 | `GET /analyses/{id}/conversation` | never fetched | **not built** |
+| `POST /transcribe` | `WorkspaceClient` voice flow → `transcribeAudio` | live helper added in D-21 (§7.1) |
+| `GET /health` | deployed smoke/sweep scripts | ops alias, P0-9c (§7.2) |
 | `GET /healthz` | Cloud Run | ops only |
 
-Four frontend-facing endpoints, two reserved, one ops. Anything beyond this list is invention.
+Four frontend-facing endpoints, two reserved, one ops — plus the two additive helpers in §7 (`POST /transcribe`, `GET /health`), both created by documented decisions. Anything beyond this list is invention.
+
+---
+
+## 7. Additive helpers (contract amendments, documented)
+
+### 7.1 `POST /transcribe` — voice transcription helper (D-21)
+
+Live and frontend-consumed: `transcribeAudio(audio, language)` in `web/lib/api.ts` sends `multipart/form-data` (`audio` Blob as `voice.webm`, `language` string) and returns `{"text": "…"}`. The backend (`api/main.py`) transcribes with Gemini multimodal audio, so the voice loop no longer depends on the browser Web Speech API. Added 2026-09-24 under D-21, before the Compass-era endpoint freeze; covered by `tests/test_api.py::test_post_transcribe_endpoint`.
+
+### 7.2 `GET /health` — smoke alias (P0-9c)
+
+Returns `{"status","service","phase","analysis_enabled","model","metrics"}`, where `metrics.questions_by_branch` carries the Week 1 structured agent-run counters (task 1.4). Used by the deployed smoke scripts; `GET /healthz` (§5) remains the Cloud Run liveness probe with the same metrics block.
 
 **Additive fields (2026-09-23 amendment, `FRONTEND_GAP_ANALYSIS.md` A1–A7):** `Lesson.contradictions?`, `Chapter.confidence?`, and the `POST …/questions` body's `history?` are **fields, not endpoints** — all optional, all ignored by untouched components. A2 (transcript panel), A5 (captions), A6 (evidence-card copy), and A7 (progress honesty) are purely client-side and consume data already in this contract.
 
