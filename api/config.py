@@ -40,6 +40,7 @@ def get_settings() -> Settings:
         vertex_model_id=os.getenv("VERTEX_MODEL_ID", "gemini-2.5-flash"),
         db_path=os.getenv("CONTEXTBRIDGE_DB_PATH", "contextbridge.db"),
         bucket=os.getenv("CONTEXTBRIDGE_BUCKET") or None,
-        web_origin=os.getenv("WEB_ORIGIN", "http://localhost:3000"),
+        web_origin=os.getenv("WEB_ORIGIN")
+        or os.getenv("ALLOWED_ORIGINS", "http://localhost:3000"),
         google_api_key=os.getenv("GOOGLE_API_KEY") or None,
     )

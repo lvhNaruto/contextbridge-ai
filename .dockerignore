@@ -1,0 +1,10 @@
+.git
+.github
+__pycache__
+*.pyc
+.pytest_cache
+contextbridge.db
+uploaded_videos
+web/node_modules
+web/.next
+logs

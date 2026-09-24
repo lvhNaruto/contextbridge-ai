@@ -48,7 +48,7 @@
 - [x] **MOCK** Seed contradictions + confidence in `lib/mock-data.ts` / `demo-answers.ts`; `npm run build` clean
 
 ### Phase 4 · Integration
-- [ ] **P0-9a** FastAPI deployed to Cloud Run (env vars per ARCHITECTURE §16.3; startup seeding) — early, before features finish
+- [x] **P0-9a** FastAPI deployed to Cloud Run (env vars per ARCHITECTURE §16.3; startup seeding) — early, before features finish
 - [ ] **P0-9b** `web/` deployed as Next.js node server on Cloud Run; `NEXT_PUBLIC_API_BASE_URL` set; CORS updated
 - [ ] **P0-9c** Deployed smoke: fixture journey end to end (open → chapters → ask → answer → evidence seek)
 - [ ] **P0-9d** One real live upload through the deployed stack; progress cadence acceptable
