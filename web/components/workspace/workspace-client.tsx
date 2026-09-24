@@ -229,6 +229,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
               highlightSeconds={highlightSeconds}
               onActiveChapterChange={setActiveChapterId}
               ariaLabel={lesson.title}
+              transcript={lesson.transcript}
             />
           </motion.div>
 

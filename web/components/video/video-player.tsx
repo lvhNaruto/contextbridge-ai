@@ -24,7 +24,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn, formatTime } from "@/lib/utils";
-import type { Chapter } from "@/types";
+import { loadA11y } from "@/lib/store";
+import type { Chapter, TranscriptSegment } from "@/types";
 
 export interface VideoPlayerHandle {
   seek: (seconds: number) => void;
@@ -38,9 +39,30 @@ interface VideoPlayerProps {
   onTimeUpdate?: (seconds: number) => void;
   onActiveChapterChange?: (chapterId: string | null) => void;
   ariaLabel?: string;
+  transcript?: TranscriptSegment[];
 }
 
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;
+
+function formatVttTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const ms = Math.floor((seconds % 1) * 1000);
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}`;
+}
+
+function buildVttBlobUrl(transcript: TranscriptSegment[]): string {
+  let vtt = "WEBVTT\n\n";
+  transcript.forEach((seg, i) => {
+    const start = formatVttTime(seg.startSeconds);
+    const end = formatVttTime(Math.max(seg.endSeconds, seg.startSeconds + 0.5));
+    vtt += `${i + 1}\n${start} --> ${end}\n${seg.text}\n\n`;
+  });
+  const blob = new Blob([vtt], { type: "text/vtt" });
+  return URL.createObjectURL(blob);
+}
 
 export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
   function VideoPlayer(
@@ -51,6 +73,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       onTimeUpdate,
       onActiveChapterChange,
       ariaLabel,
+      transcript,
     },
     ref,
   ) {
@@ -66,6 +89,41 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     const [rate, setRate] = useState(1);
     const [captionsOn, setCaptionsOn] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
+    const [vttUrl, setVttUrl] = useState<string | null>(null);
+
+    // Initialise captions toggle from user's a11y preferences (A5).
+    useEffect(() => {
+      try {
+        const a11y = loadA11y();
+        if (a11y && typeof a11y.captionsPreferred === "boolean") {
+          setCaptionsOn(a11y.captionsPreferred);
+        }
+      } catch {
+        /* ignore */
+      }
+    }, []);
+
+    // Build client-side WebVTT blob from transcript segments (A5, D-06).
+    useEffect(() => {
+      if (!transcript || transcript.length === 0) {
+        setVttUrl(null);
+        return;
+      }
+      const url = buildVttBlobUrl(transcript);
+      setVttUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }, [transcript]);
+
+    // Keep HTMLVideoElement textTrack display in sync with toggle state.
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video || !video.textTracks || video.textTracks.length === 0) return;
+      for (let i = 0; i < video.textTracks.length; i++) {
+        video.textTracks[i].mode = captionsOn ? "showing" : "hidden";
+      }
+    }, [captionsOn, vttUrl]);
 
     const seek = useCallback((seconds: number) => {
       const video = videoRef.current;
@@ -161,9 +219,26 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             setCurrentTime(t);
             onTimeUpdate?.(t);
           }}
-          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onLoadedMetadata={(e) => {
+            setDuration(e.currentTarget.duration);
+            if (e.currentTarget.textTracks && e.currentTarget.textTracks.length > 0) {
+              for (let i = 0; i < e.currentTarget.textTracks.length; i++) {
+                e.currentTarget.textTracks[i].mode = captionsOn ? "showing" : "hidden";
+              }
+            }
+          }}
           aria-label={ariaLabel ?? "Lesson video"}
-        />
+        >
+          {vttUrl && (
+            <track
+              kind="captions"
+              label="English"
+              src={vttUrl}
+              srcLang="en"
+              default={captionsOn}
+            />
+          )}
+        </video>
 
         {/* Center play button */}
         {!playing && (
