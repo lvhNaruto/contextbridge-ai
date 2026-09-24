@@ -63,33 +63,35 @@ export function ChapterList({
                 )}
               </span>
 
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 flex flex-col gap-1">
+                <span className="flex items-center justify-between gap-2">
                   <span
                     className={cn(
                       "font-mono text-[11px] font-semibold tabular-nums",
-                      active ? "text-violet-300" : "text-slate-500",
+                      active ? "text-violet-300" : "text-slate-400",
                     )}
                   >
                     {formatTime(chapter.startSeconds)}
                   </span>
-                  <span
-                    className={cn(
-                      "truncate text-sm font-medium",
-                      active ? "text-white" : "text-slate-200",
-                    )}
-                  >
-                    {chapter.title}
-                  </span>
                   {chapter.confidence != null && (
-                    <span className="ml-auto shrink-0">
+                    <span className="shrink-0">
                       <ConfidenceBadge confidence={chapter.confidence} />
                     </span>
                   )}
                 </span>
-                <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-slate-500">
-                  {chapter.description}
+                <span
+                  className={cn(
+                    "text-sm font-medium leading-snug break-words",
+                    active ? "text-white" : "text-slate-200",
+                  )}
+                >
+                  {chapter.title}
                 </span>
+                {chapter.description && (
+                  <span className="line-clamp-2 block text-xs leading-relaxed text-slate-400">
+                    {chapter.description}
+                  </span>
+                )}
               </span>
 
               {/* Active edge indicator */}

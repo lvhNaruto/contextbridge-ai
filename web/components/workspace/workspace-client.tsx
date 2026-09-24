@@ -175,10 +175,35 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   );
 
   const chapters = lesson?.chapters ?? [];
-  const suggested = useMemo(
-    () => (messages.length === 0 ? DEMO_SUGGESTED_QUESTIONS.slice(0, 3) : []),
-    [messages.length],
-  );
+  const suggested = useMemo(() => {
+    if (messages.length > 0 || !lesson) return [];
+    // If it's the demo binary lesson, return the curated binary questions
+    if (lesson.id === "demo-binary") {
+      return DEMO_SUGGESTED_QUESTIONS.slice(0, 3);
+    }
+    // Dynamic questions tailored to the uploaded lesson:
+    const questions: string[] = [];
+    if (lesson.topics && lesson.topics.length > 0) {
+      questions.push(`What does the video explain about ${lesson.topics[0]}?`);
+    }
+    if (lesson.chapters && lesson.chapters.length > 1) {
+      const chTitle = lesson.chapters[1].title;
+      questions.push(
+        chTitle.length > 35
+          ? `What is covered in "${chTitle.slice(0, 32)}..."?`
+          : `What is covered in "${chTitle}"?`,
+      );
+    } else if (lesson.chapters && lesson.chapters.length > 0) {
+      const chTitle = lesson.chapters[0].title;
+      questions.push(
+        chTitle.length > 35
+          ? `What is covered in "${chTitle.slice(0, 32)}..."?`
+          : `What is covered in "${chTitle}"?`,
+      );
+    }
+    questions.push("Can you summarize the main takeaways of this video?");
+    return questions.slice(0, 3);
+  }, [messages.length, lesson]);
 
   if (loadError) {
     return (

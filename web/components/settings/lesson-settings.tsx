@@ -43,21 +43,17 @@ export function LessonSettingsBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {/* Language selector */}
       <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger
-              aria-label={`Answer language: ${langLabel}`}
-              className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
-            >
-              <Languages className="size-3.5 text-slate-400" aria-hidden="true" />
-              {langLabel}
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>Answer language</TooltipContent>
-        </Tooltip>
+        <DropdownMenuTrigger
+          aria-label={`Answer language: ${langLabel}`}
+          className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
+        >
+          <Languages className="size-3.5 text-violet-300" aria-hidden="true" />
+          <span>{langLabel}</span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Answer language</DropdownMenuLabel>
+          <DropdownMenuLabel>Answer Language</DropdownMenuLabel>
           {LANGUAGES.map((l) => (
             <DropdownMenuItem
               key={l.value}
@@ -72,21 +68,17 @@ export function LessonSettingsBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Explanation level selector */}
       <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger
-              aria-label={`Explanation level: ${levelLabel}`}
-              className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
-            >
-              <SignalHigh className="size-3.5 text-slate-400" aria-hidden="true" />
-              {levelLabel}
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>Explanation level</TooltipContent>
-        </Tooltip>
+        <DropdownMenuTrigger
+          aria-label={`Explanation level: ${levelLabel}`}
+          className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
+        >
+          <SignalHigh className="size-3.5 text-violet-300" aria-hidden="true" />
+          <span>{levelLabel}</span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Explanation level</DropdownMenuLabel>
+          <DropdownMenuLabel>Explanation Level</DropdownMenuLabel>
           {LEVELS.map((l) => (
             <DropdownMenuItem
               key={l.value}
@@ -101,19 +93,45 @@ export function LessonSettingsBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Web search toggle ("Research missing context") */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <label className="flex h-8 cursor-pointer items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-violet-400/70">
-            <Globe className="size-3.5 text-slate-400" aria-hidden="true" />
-            Research missing context
-            <Switch
-              checked={settings.researchMissingContext}
-              onCheckedChange={(checked) =>
-                onChange({ ...settings, researchMissingContext: checked })
-              }
-              aria-label="Research missing context on the web"
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.researchMissingContext}
+            onClick={() =>
+              onChange({
+                ...settings,
+                researchMissingContext: !settings.researchMissingContext,
+              })
+            }
+            className={`flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-violet-400/70 ${
+              settings.researchMissingContext
+                ? "border-violet-500/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/15"
+                : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:bg-white/[0.07]"
+            }`}
+          >
+            <Globe
+              className={`size-3.5 ${
+                settings.researchMissingContext ? "text-violet-300" : "text-slate-500"
+              }`}
+              aria-hidden="true"
             />
-          </label>
+            <span>Web research</span>
+            <span
+              aria-hidden="true"
+              className={`inline-flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                settings.researchMissingContext ? "bg-violet-500" : "bg-white/20"
+              }`}
+            >
+              <span
+                className={`size-3 rounded-full bg-white transition-transform ${
+                  settings.researchMissingContext ? "translate-x-3" : "translate-x-0"
+                }`}
+              />
+            </span>
+          </button>
         </TooltipTrigger>
         <TooltipContent>
           Search the web only when the video doesn&apos;t answer

@@ -23,6 +23,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn, formatTime } from "@/lib/utils";
 import { loadA11y } from "@/lib/store";
 import type { Chapter, TranscriptSegment } from "@/types";
@@ -42,7 +49,7 @@ interface VideoPlayerProps {
   transcript?: TranscriptSegment[];
 }
 
-const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 function formatVttTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -389,26 +396,34 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                 <TooltipContent>Captions</TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <button
-                    onClick={() => {
-                      const idx = PLAYBACK_RATES.indexOf(rate as (typeof PLAYBACK_RATES)[number]);
-                      const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length];
-                      setRate(next);
-                      if (videoRef.current) videoRef.current.playbackRate = next;
-                    }}
-                    aria-label={`Playback speed, currently ${rate}x`}
-                    className="flex h-9 items-center justify-center rounded-full px-2 font-mono text-xs text-slate-300 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-violet-400/70"
+                    aria-label={`Playback speed: currently ${rate}x`}
+                    className="flex h-9 items-center justify-center rounded-full px-2.5 font-mono text-xs text-slate-300 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:bg-white/10"
                   >
-                    <span className="flex items-center gap-1">
-                      <Gauge className="size-4" aria-hidden="true" />
+                    <span className="flex items-center gap-1.5">
+                      <Gauge className="size-4 text-violet-300" aria-hidden="true" />
                       {rate}x
                     </span>
                   </button>
-                </TooltipTrigger>
-                <TooltipContent>Playback speed</TooltipContent>
-              </Tooltip>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="min-w-[7rem]">
+                  <DropdownMenuLabel>Playback Speed</DropdownMenuLabel>
+                  {PLAYBACK_RATES.map((r) => (
+                    <DropdownMenuItem
+                      key={r}
+                      selected={rate === r}
+                      onSelect={() => {
+                        setRate(r);
+                        if (videoRef.current) videoRef.current.playbackRate = r;
+                      }}
+                    >
+                      {r === 1 ? "1x (Normal)" : `${r}x`}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <button
                 onClick={toggleFullscreen}
