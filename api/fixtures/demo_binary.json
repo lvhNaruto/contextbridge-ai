@@ -1,93 +1,197 @@
 {
-  "title": "Understanding binary & computer language",
+  "title": "Tokyo Night Videography: Low-Light Camera & Video Boost",
   "createdAt": "2026-09-20T10:00:00.000Z",
-  "durationSeconds": 888,
-  "summary": "An introduction to binary language: how computers represent every kind of information using only 0 and 1, with practical examples.",
+  "durationSeconds": 57.2,
+  "summary": "Photographer Saeka Shimada explores Tokyo at night, demonstrating low-light mobile videography using Video Boost and Night Sight features across Sancha and Shibuya.",
   "language": "English",
-  "topics": ["Binary", "Data representation", "Computers"],
+  "topics": [
+    "Videography",
+    "Night photography",
+    "Tokyo",
+    "Low-light camera",
+    "Mobile technology"
+  ],
   "events": [
     {
       "id": "ch-intro",
-      "startSeconds": 0,
-      "endSeconds": 173,
-      "title": "Introduction",
-      "description": "What this lesson covers and why binary matters.",
-      "confidence": 0.95,
+      "startSeconds": 1,
+      "endSeconds": 4,
+      "title": "Introduction: Saeka Shimada",
+      "description": "Tokyo photographer Saeka Shimada introduces herself and her creative background.",
+      "confidence": 0.98,
       "evidence": [
-        {"startSeconds": 4, "endSeconds": 16, "quote": "Today we're going to learn how computers speak."}
+        {
+          "startSeconds": 1,
+          "endSeconds": 3,
+          "quote": "My name is Saeka Shimada. I'm a photographer in Tokyo."
+        }
       ]
     },
     {
-      "id": "ch-binary",
-      "startSeconds": 173,
-      "endSeconds": 376,
-      "title": "What is binary language?",
-      "description": "How computers represent information using only 0 and 1.",
+      "id": "ch-tokyo-night",
+      "startSeconds": 5,
+      "endSeconds": 12,
+      "title": "Tokyo City at Night",
+      "description": "Contrasting daytime vs nighttime atmospheres in Tokyo streets.",
       "confidence": 0.97,
       "evidence": [
-        {"startSeconds": 173, "endSeconds": 210, "quote": "Binary language uses only two digits: zero and one."}
+        {
+          "startSeconds": 5,
+          "endSeconds": 9,
+          "quote": "Tokyo has many faces. The city at night is totally different from what you see during the day."
+        }
       ]
     },
     {
-      "id": "ch-represent",
-      "startSeconds": 376,
-      "endSeconds": 642,
-      "title": "How computers represent information",
-      "description": "Numbers, text, images, and sound as patterns of bits.",
-      "confidence": 0.94,
+      "id": "ch-videoboost",
+      "startSeconds": 13,
+      "endSeconds": 22,
+      "title": "Video Boost & Night Sight",
+      "description": "Demonstrating how computational low-light Night Sight activates during evening recording.",
+      "confidence": 0.99,
       "evidence": [
-        {"startSeconds": 376, "endSeconds": 430, "quote": "Every letter, pixel, and sound becomes a pattern of bits."}
+        {
+          "startSeconds": 13,
+          "endSeconds": 21,
+          "quote": "The new Pixel has a feature called 'Video Boost.' In low light, it activates 'Night Sight' to make the quality even better."
+        }
       ]
     },
     {
-      "id": "ch-example",
-      "startSeconds": 642,
-      "endSeconds": 860,
-      "title": "Practical example",
-      "description": "Converting a number to binary, step by step.",
-      "confidence": 0.92,
+      "id": "ch-sancha",
+      "startSeconds": 23,
+      "endSeconds": 27,
+      "title": "Sancha Alleyway Memories",
+      "description": "Exploring personal memories while walking through the Sangenjaya neighbourhood.",
+      "confidence": 0.96,
       "evidence": [
-        {"startSeconds": 642, "endSeconds": 680, "quote": "To write five in binary, we use one-zero-one."}
+        {
+          "startSeconds": 23,
+          "endSeconds": 26,
+          "quote": "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here."
+        }
       ]
     },
     {
-      "id": "ch-summary",
-      "startSeconds": 860,
-      "endSeconds": 888,
-      "title": "Summary",
-      "description": "Binary is the foundation of all digital information.",
-      "confidence": 0.9,
+      "id": "ch-puddle",
+      "startSeconds": 28,
+      "endSeconds": 36,
+      "title": "Filming Puddle Reflections",
+      "description": "Capturing creative low-angle reflection compositions off street puddles.",
+      "confidence": 0.97,
       "evidence": [
-        {"startSeconds": 860, "endSeconds": 888, "quote": "Binary turns the physical world into digital information."}
+        {
+          "startSeconds": 28,
+          "endSeconds": 30,
+          "quote": "Oh, I like this."
+        }
+      ]
+    },
+    {
+      "id": "ch-review",
+      "startSeconds": 37,
+      "endSeconds": 39,
+      "title": "Reviewing Low-Light Clarity",
+      "description": "Inspecting captured video playback quality in dark alley conditions.",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "startSeconds": 37,
+          "endSeconds": 39,
+          "quote": "Beautiful!"
+        }
+      ]
+    },
+    {
+      "id": "ch-montage",
+      "startSeconds": 40,
+      "endSeconds": 52,
+      "title": "Night Shots Montage",
+      "description": "Atmospheric evening scenes and neon lighting across Tokyo alleyways.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "startSeconds": 40,
+          "endSeconds": 52,
+          "quote": "Visual montage of night scenes."
+        }
+      ]
+    },
+    {
+      "id": "ch-shibuya",
+      "startSeconds": 53,
+      "endSeconds": 57,
+      "title": "Shibuya Evening Exploration",
+      "description": "Arriving at the iconic Shibuya pedestrian crossing and bridge lights.",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "startSeconds": 53,
+          "endSeconds": 54,
+          "quote": "Next, I came to Shibuya."
+        }
       ]
     }
   ],
   "transcript": [
-    {"startSeconds": 4, "endSeconds": 16, "text": "Today we're going to learn how computers speak."},
-    {"startSeconds": 173, "endSeconds": 210, "text": "Binary language uses only two digits: zero and one."},
-    {"startSeconds": 210, "endSeconds": 224, "text": "Remember: everything a computer stores is always pure binary, no exceptions."},
-    {"startSeconds": 376, "endSeconds": 430, "text": "Every letter, pixel, and sound becomes a pattern of bits."},
-    {"startSeconds": 615, "endSeconds": 630, "text": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata."},
-    {"startSeconds": 642, "endSeconds": 680, "text": "To write five in binary, we use one-zero-one."},
-    {"startSeconds": 860, "endSeconds": 888, "text": "Binary turns the physical world into digital information."}
+    {
+      "startSeconds": 1,
+      "endSeconds": 3,
+      "text": "My name is Saeka Shimada. I'm a photographer in Tokyo."
+    },
+    {
+      "startSeconds": 5,
+      "endSeconds": 9,
+      "text": "Tokyo has many faces. The city at night is totally different from what you see during the day."
+    },
+    {
+      "startSeconds": 13,
+      "endSeconds": 15,
+      "text": "The new Pixel has a feature called 'Video Boost.'"
+    },
+    {
+      "startSeconds": 15,
+      "endSeconds": 21,
+      "text": "In low light, it activates 'Night Sight' to make the quality even better."
+    },
+    {
+      "startSeconds": 23,
+      "endSeconds": 26,
+      "text": "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here."
+    },
+    {
+      "startSeconds": 28,
+      "endSeconds": 30,
+      "text": "Oh, I like this."
+    },
+    {
+      "startSeconds": 37,
+      "endSeconds": 39,
+      "text": "Beautiful!"
+    },
+    {
+      "startSeconds": 53,
+      "endSeconds": 57,
+      "text": "Next, I came to Shibuya."
+    }
   ],
   "contradictions": [
     {
       "id": "cx-1",
-      "claim": "Whether everything a computer stores is pure binary",
+      "claim": "Whether night videography preserves natural darkness or computationally enhances clarity",
       "statementA": {
-        "text": "Remember: everything a computer stores is always pure binary, no exceptions.",
-        "startSeconds": 210,
-        "endSeconds": 224,
-        "quote": "Remember: everything a computer stores is always pure binary, no exceptions."
+        "text": "Tokyo has many faces. The city at night is totally different from what you see during the day.",
+        "startSeconds": 5,
+        "endSeconds": 9,
+        "quote": "The city at night is totally different from what you see during the day."
       },
       "statementB": {
-        "text": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata.",
-        "startSeconds": 615,
-        "endSeconds": 630,
-        "quote": "But in practice, not everything is stored as pure binary; real files wrap binary data in headers and metadata."
+        "text": "In low light, it activates 'Night Sight' to make the quality even better.",
+        "startSeconds": 15,
+        "endSeconds": 21,
+        "quote": "In low light, it activates 'Night Sight' to make the quality even better."
       },
-      "note": "The second statement qualifies the first; both sides are shown without picking a winner."
+      "note": "Statement A highlights the distinct, natural darkness of the city at night; Statement B explains how Night Sight computationally clarifies and boosts low-light scenes."
     }
   ]
 }

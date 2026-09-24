@@ -32,11 +32,11 @@ def envelope() -> dict:
 
 
 def test_retrieve_ranks_relevant_event(envelope: dict):
-    slices = tools.retrieve_video_context(envelope, "What does binary language mean?")
+    slices = tools.retrieve_video_context(envelope, "What feature is introduced?")
     event_ids = [e["id"] for e in slices["events"]]
-    assert "ch-binary" in event_ids
+    assert "ch-videoboost" in event_ids
     texts = [s["text"] for s in slices["transcript"]]
-    assert any("two digits" in t for t in texts)
+    assert any("Video Boost" in t or "Night Sight" in t for t in texts)
     # chronological order preserved for prompt coherence
     starts = [s["startSeconds"] for s in slices["transcript"]]
     assert starts == sorted(starts)
@@ -53,11 +53,11 @@ def test_retrieve_no_overlap_returns_fewer_slices(envelope: dict):
 
 def test_quote_matches_transcript(envelope: dict):
     assert tools.quote_matches_transcript(
-        "Binary language uses only two digits: zero and one.", envelope
+        "Tokyo has many faces. The city at night is totally different from what you see during the day.", envelope
     )
     # fuzzy: extra whitespace still matches
     assert tools.quote_matches_transcript(
-        "binary  language uses only two digits: zero and one.", envelope
+        "Tokyo  has many faces. The city at night is totally different from what you see during the day.", envelope
     )
     # fabricated quote must NOT pass
     assert not tools.quote_matches_transcript(
@@ -71,13 +71,13 @@ def test_quote_matches_transcript(envelope: dict):
 
 def _good_draft() -> dict:
     return {
-        "text": "Binary is introduced at 02:53.",
+        "text": "Video Boost is introduced at 00:13.",
         "found": True,
         "confidence": 0.96,
         "evidence": {
-            "startSeconds": 173,
-            "endSeconds": 210,
-            "quote": "Binary language uses only two digits: zero and one.",
+            "startSeconds": 13,
+            "endSeconds": 21,
+            "quote": "In low light, it activates 'Night Sight' to make the quality even better.",
         },
     }
 
@@ -86,7 +86,7 @@ def test_validate_answer_draft_accepts_video_evidence(envelope: dict):
     draft = tools.validate_answer_draft(_good_draft(), envelope)
     assert draft["found"] is True
     assert draft["confidence"] == 0.96
-    assert draft["evidence"]["startSeconds"] == 173.0
+    assert draft["evidence"]["startSeconds"] == 13.0
 
 
 @pytest.mark.parametrize(
@@ -339,18 +339,18 @@ def test_answer_prompt_carries_expert_and_en_settings(monkeypatch, envelope: dic
 def test_accessible_answer_preserves_source_timestamps(envelope: dict):
     # P0-5 acceptance: accessible answer preserves source timestamps and quotes
     hindi_draft = {
-        "text": "बाइनरी भाषा केवल दो अंकों का उपयोग करती है: शून्य और एक।",
+        "text": "कम रोशनी में, यह वीडियो क्वालिटी को और बेहतर बनाने के लिए नाइट साइट को सक्रिय करता है।",
         "found": True,
         "confidence": 0.95,
         "evidence": {
-            "startSeconds": 173,
-            "endSeconds": 210,
-            "quote": "Binary language uses only two digits: zero and one.",
+            "startSeconds": 15,
+            "endSeconds": 21,
+            "quote": "In low light, it activates 'Night Sight' to make the quality even better.",
         },
     }
     validated = tools.validate_answer_draft(hindi_draft, envelope)
     assert validated["found"] is True
-    assert validated["evidence"]["startSeconds"] == 173.0
-    assert validated["evidence"]["endSeconds"] == 210.0
-    assert "two digits" in validated["evidence"]["quote"]
+    assert validated["evidence"]["startSeconds"] == 15.0
+    assert validated["evidence"]["endSeconds"] == 21.0
+    assert "Night Sight" in validated["evidence"]["quote"]
 

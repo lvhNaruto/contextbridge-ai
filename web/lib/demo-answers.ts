@@ -13,22 +13,16 @@ import type {
 
 const WEB_SOURCES = [
   {
-    title: "Binary number — Wikipedia",
+    title: "Night photography — Wikipedia",
     domain: "wikipedia.org",
-    url: "https://en.wikipedia.org/wiki/Binary_number",
-    description: "The base-2 numeral system used by all digital electronics.",
+    url: "https://en.wikipedia.org/wiki/Night_photography",
+    description: "Techniques and camera sensors used to capture low-light environments.",
   },
   {
-    title: "How Computers Work: Binary & Data",
-    domain: "code.org",
-    url: "https://code.org/educate/resources/videos-for-teachers",
-    description: "Short visual explanations of bits, bytes, and data.",
-  },
-  {
-    title: "Binary explained — Khan Academy",
-    domain: "khanacademy.org",
-    url: "https://www.khanacademy.org/computing/computers-internet",
-    description: "Interactive lessons on place value and number systems.",
+    title: "Computational Photography & Low-Light Sensors",
+    domain: "google.com",
+    url: "https://blog.google/products/pixel",
+    description: "How computational algorithms merge frames to enhance night footage.",
   },
 ];
 
@@ -58,98 +52,126 @@ export function resolveDemoAnswer(
   const lang =
     settings.answerLanguage === "auto" ? "en" : settings.answerLanguage;
 
-  // The signature demo moment — "Right here — at 02:53."
-  if (q.includes("where") && (q.includes("binary") || q.includes("explain"))) {
+  // The signature demo moment — "Right here — at 00:13."
+  if (q.includes("where") && (q.includes("feature") || q.includes("video boost") || q.includes("night sight") || q.includes("explain"))) {
     return {
       text: localized(
         {
-          en: "Right here — at 02:53. The teacher introduces binary language in the “What is binary language?” chapter.",
-          hi: "यहीं — 02:53 पर। शिक्षक बाइनरी भाषा का परिचय इसी अध्याय में देते हैं।",
+          en: "Right here — at 00:13. The photographer introduces 'Video Boost' and explains that in low light, 'Night Sight' activates to improve video quality.",
+          hi: "यहीं — 00:13 पर। फ़ोटोग्राफ़र 'Video Boost' और 'Night Sight' फ़ीचर का परिचय देती हैं।",
         },
         lang,
       ),
       evidenceType: "video",
-      evidence: { startSeconds: 173, endSeconds: 376, quote: "Binary language uses only two digits: zero and one." },
-      confidence: 0.97,
+      evidence: {
+        startSeconds: 13,
+        endSeconds: 22,
+        quote: "The new Pixel has a feature called 'Video Boost.' In low light, it activates 'Night Sight' to make the quality even better.",
+      },
+      confidence: 0.98,
     };
   }
 
-  if (/(binary|bits?|0 and 1|zero and one|base.?2)/.test(q)) {
+  if (/(feature|video boost|night sight|boost|low light|dark)/.test(q)) {
     const variant = pickLevel(
       {
-        en: "Binary language is like a light switch that is either off (0) or on (1). The video explains at 02:53 that computers use just these two states to store every kind of information.",
-        hi: "बाइनरी भाषा एक लाइट स्विच जैसी है — बंद (0) या चालू (1)। वीडियो 02:53 पर समझाता है कि कंप्यूटर हर सूचना इन्हीं दो अवस्थाओं में रखते हैं।",
+        en: "The video shows that when it is dark outside, 'Night Sight' automatically turns on to make nighttime videos look much brighter and clearer (00:13).",
+        hi: "वीडियो में बताया गया है कि कम रोशनी में 'Night Sight' चालू हो जाता है जिससे रात के वीडियो बहुत स्पष्ट बनते हैं (00:13)।",
       },
       {
-        en: "Binary language is the way computers represent information using only two symbols: 0 and 1. The video introduces this concept at 02:53. Each digit is called a bit, and groups of bits can represent numbers, text, sounds, and images.",
-        hi: "बाइनरी भाषा वह तरीका है जिससे कंप्यूटर सूचना को 0 और 1 से दर्शाते हैं। वीडियो यह विचार 02:53 पर समझाता है।",
+        en: "The video highlights 'Video Boost' at 00:13. In low light, it triggers 'Night Sight' computational processing to dramatically increase video clarity and reduce noise.",
+        hi: "वीडियो 00:13 पर 'Video Boost' समझाता है, जो कम रोशनी में 'Night Sight' एक्टिवेट करके वीडियो क्लैरिटी बढ़ाता है।",
       },
       {
-        en: "Binary is a base-2 positional numeral system. As the video states at 02:53, all digital information is encoded as bit sequences mapping to voltage states in hardware and interpreted by instruction sets.",
+        en: "At 00:13, the video demonstrates computational low-light HDR multi-frame synthesis via 'Video Boost' and 'Night Sight', recovering dynamic range in low-lux conditions.",
       },
       level,
     );
     return {
       text: localized(variant, lang),
       evidenceType: "video",
-      evidence: { startSeconds: 173, endSeconds: 376, quote: "Binary language uses only two digits: zero and one." },
+      evidence: {
+        startSeconds: 13,
+        endSeconds: 22,
+        quote: "The new Pixel has a feature called 'Video Boost.' In low light, it activates 'Night Sight' to make the quality even better.",
+      },
+      confidence: 0.97,
+    };
+  }
+
+  if (/(tokyo|city|night|atmosphere|faces)/.test(q)) {
+    return {
+      text: localized(
+        {
+          en: "At 00:05, Saeka explains that Tokyo has many different faces, and the city at night is completely different from what you experience during the daytime.",
+          hi: "00:05 पर, सायका बताती हैं कि टोक्यो के कई रूप हैं, और रात का शहर दिन के अनुभव से बिल्कुल अलग होता है।",
+        },
+        lang,
+      ),
+      evidenceType: "video",
+      evidence: {
+        startSeconds: 5,
+        endSeconds: 9,
+        quote: "Tokyo has many faces. The city at night is totally different from what you see during the day.",
+      },
       confidence: 0.96,
     };
   }
 
-  if (/(why|how).*(computer|represent|store|information)|represent/.test(q)) {
+  if (/(sancha|sangenjaya|live|memories|memory|alley)/.test(q)) {
     return {
       text: localized(
         {
-          en: "Computers represent information by turning it into patterns of bits. The video covers this at 06:16 — numbers, text, images, and sound all become binary patterns.",
-          hi: "कंप्यूटर सूचना को बिट्स के पैटर्न में बदलकर दर्शाते हैं। वीडियो इसे 06:16 पर समझाता है।",
+          en: "At 00:23, Saeka shares that Sancha is where she first lived when she moved to Tokyo, and she holds many fond memories walking through its alleyways.",
+          hi: "00:23 पर, सायका बताती हैं कि जब वह टोक्यो आई थीं तो सांचा में रहती थीं, और वहाँ उनकी कई यादें हैं।",
         },
         lang,
       ),
       evidenceType: "video",
       evidence: {
-        startSeconds: 376,
-        endSeconds: 642,
-        quote: "Every letter, pixel, and sound becomes a pattern of bits.",
-      },
-      confidence: 0.94,
-    };
-  }
-
-  if (/(example|five|convert|beginner|like i'm|simple)/.test(q)) {
-    return {
-      text: localized(
-        {
-          en: "At 10:42 the video shows a practical example: the number five is written as 101 in binary — one group of four, no twos, and one single.",
-          hi: "10:42 पर वीडियो में एक उदाहरण है: पाँच को बाइनरी में 101 लिखा जाता है — एक चार का समूह, कोई दो नहीं, और एक इकाई।",
-        },
-        lang,
-      ),
-      evidenceType: "video",
-      evidence: {
-        startSeconds: 642,
-        endSeconds: 860,
-        quote: "To write five in binary, we use one-zero-one.",
+        startSeconds: 23,
+        endSeconds: 26,
+        quote: "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here.",
       },
       confidence: 0.95,
     };
   }
 
-  if (/(summary|recap|conclusion)/.test(q)) {
+  if (/(puddle|reflection|water|shot)/.test(q)) {
     return {
       text: localized(
         {
-          en: "The video's summary at 14:20: binary turns the physical world into digital information — every piece of content a computer handles is, at its core, a pattern of 0s and 1s.",
+          en: "At 00:28, the photographer crouches down to capture a puddle reflection shot, highlighting creative camera angles in the dark alley.",
+          hi: "00:28 पर फ़ोटोग्राफ़र पानी के गड्ढे में परछाईं का शॉट लेती हैं।",
         },
         lang,
       ),
       evidenceType: "video",
       evidence: {
-        startSeconds: 860,
-        endSeconds: 888,
-        quote: "Binary turns the physical world into digital information.",
+        startSeconds: 28,
+        endSeconds: 30,
+        quote: "Oh, I like this.",
       },
-      confidence: 0.93,
+      confidence: 0.96,
+    };
+  }
+
+  if (/(shibuya|friend|bridge)/.test(q)) {
+    return {
+      text: localized(
+        {
+          en: "At 00:53, the video moves to Shibuya, where Saeka meets with friends on an elevated pedestrian walkway amidst the neon lights.",
+          hi: "00:53 पर सायका शिबुया पहुँचती हैं और दोस्तों के साथ शहर की रोशनी का आनंद लेती हैं।",
+        },
+        lang,
+      ),
+      evidenceType: "video",
+      evidence: {
+        startSeconds: 53,
+        endSeconds: 57,
+        quote: "Next, I came to Shibuya.",
+      },
+      confidence: 0.94,
     };
   }
 
@@ -180,10 +202,10 @@ export function resolveDemoAnswer(
     ),
     evidenceType: "unknown",
     notInVideo: true,
-    confidence: 0,
+    confidence: 0.0,
   };
 }
 
 /** Mock transcription for voice questions when the browser lacks SpeechRecognition. */
-export const MOCK_VOICE_TRANSCRIPT = "What does binary language mean?";
+export const MOCK_VOICE_TRANSCRIPT = "What features are introduced in the video?";
 

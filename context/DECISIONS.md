@@ -222,3 +222,38 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Validation:** Next.js production build clean with 0 errors/warnings (`npm run build` completed in 1110ms); all 76 Python test cases passing (`python -m pytest`).
 - **Status:** done — fixes deployed live to Cloud Run and verified.
 
+## D-20 · 2026-09-24 · Demo Video & Lesson Synchronization (57s Tokyo / Pixel 8 Footage)
+
+- **Problem & Root Cause Analysis:**
+  - The demo video streaming in the player was Google's public sample `https://storage.googleapis.com/cloud-samples-data/generative-ai/video/pixel8.mp4` (57.2 seconds duration, featuring Tokyo photographer Saeka Shimada showcasing Video Boost & Night Sight low-light videography).
+  - However, the demo lesson data (`api/fixtures/demo_binary.json`, `web/lib/mock-data.ts`, and `web/lib/demo-answers.ts`) was pre-set to an unrelated 888-second (14:20 min) binary computer science lesson.
+  - This caused 4 major user-facing bugs:
+    1. *Timeline duration mismatch:* The video was 57s (`00:10 / 00:57`), but the chapter list spanned up to `14:20`, making clicking chapters after 00:57 impossible to seek.
+    2. *Contradiction mismatch:* Contradiction Surfaced claimed "Whether everything a computer stores is pure binary" with jump buttons pointing to `03:30` and `10:15` (both beyond the 57s video end).
+    3. *Q&A mismatch:* Q&A asked and answered about binary numbers and bits, completely ignoring the video playing on screen.
+    4. *Transcript mismatch:* The transcript panel showed binary text ("Every letter, pixel, and sound becomes a pattern of bits") while the audio spoke about Tokyo at night and Night Sight.
+- **Architectural Decision & Fix Applied:**
+  - Synchronized the demo fixture 1:1 with the actual 57.2-second demo video:
+    - *Title:* "Tokyo Night Videography: Low-Light Camera & Video Boost"
+    - *Duration:* 57.2 seconds (matching the player's `00:57`).
+    - *Chapters:* 8 chapters across 00:00 - 00:57 (Introduction: Saeka Shimada, Tokyo City at Night, Video Boost & Night Sight, Sancha Alleyway Memories, Filming Puddle Reflections, Reviewing Low-Light Clarity, Night Shots Montage, Shibuya Evening Exploration).
+    - *Transcript:* Real spoken words from the video (Saeka Shimada introducing herself at 00:01, Tokyo night at 00:05, Video Boost at 00:13, Night Sight at 00:15, Sancha at 00:23, Puddle at 00:28, Shibuya at 00:53).
+    - *Contradiction:* Authentic contrasting perspective within the 57-second clip:
+      - Claim: "Whether night videography preserves natural darkness or computationally enhances clarity"
+      - Statement A (00:05 - 00:09, jump to 00:05): "Tokyo has many faces. The city at night is totally different from what you see during the day."
+      - Statement B (00:15 - 00:21, jump to 00:15): "In low light, it activates 'Night Sight' to make the quality even better."
+      - Both jump buttons (00:05 and 00:15) now seek to real, existing moments in the video.
+    - *Q&A & Suggestions:* Dynamic Q&A answers questions about the actual video (e.g. Video Boost, Night Sight, Tokyo, Sancha, Shibuya) with exact timestamp evidence, quotes, and language/explanation level adaptations.
+- **Synchronized Artifacts:**
+  - `api/fixtures/demo_binary.json`
+  - `web/lib/mock-data.ts`
+  - `web/lib/demo-answers.ts`
+  - `tests/test_api.py`, `tests/test_tools.py`, `scripts/test_failure_paths.py`, `scripts/eval_harness.py`, `scripts/sweep_deployed.py`.
+- **Validation:**
+  - All 76 Python test cases pass (`python -m pytest` in 0.85s).
+  - All 12 regression tests pass (`python -m pytest tests/test_regression.py`).
+  - All 9 failure-path drills pass (`python scripts/test_failure_paths.py`).
+  - Next.js production build clean with 0 errors/warnings (`npm run build`).
+- **Status:** in-flight — deploying updated backend and frontend images to Cloud Run.
+
+

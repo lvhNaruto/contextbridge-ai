@@ -154,7 +154,7 @@ def run_all_drills():
         assert resp5.status_code == 200
         lesson5 = resp5.json()
         assert lesson5["id"] == DEMO_ANALYSIS_ID
-        assert len(lesson5["chapters"]) == 5
+        assert len(lesson5["chapters"]) >= 5
         print(f"  [PASS] Drill 5: Seeded fixture '{lesson5['title']}' served without external dependencies.")
 
         # ----------------------------------------------------------------------

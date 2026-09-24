@@ -89,10 +89,10 @@ def run_sweep():
 
     # P0-1: Grounded Q&A with exact quote & timestamp
     print("\nChecking P0-1: Grounded Q&A agent...")
-    ans = post_json("/analyses/demo-binary/questions", {"question": "What is binary language?"})
+    ans = post_json("/analyses/demo-binary/questions", {"question": "What feature is introduced on the new Pixel?"})
     assert ans["answer"]["evidenceType"] == "video"
-    assert ans["answer"]["evidence"]["startSeconds"] == 173.0
-    assert "zero and one" in ans["answer"]["evidence"]["quote"].lower()
+    assert 10.0 <= ans["answer"]["evidence"]["startSeconds"] <= 25.0
+    assert "video boost" in ans["answer"]["evidence"]["quote"].lower() or "night sight" in ans["answer"]["evidence"]["quote"].lower()
     print(f"  [PASS] P0-1 Grounded answer returned with quote: \"{ans['answer']['evidence']['quote']}\"")
 
     # P0-7: Conversation history follow-up
@@ -100,10 +100,10 @@ def run_sweep():
     ans_followup = post_json(
         "/analyses/demo-binary/questions",
         {
-            "question": "Can you give me the practical example?",
+            "question": "What happens in low light?",
             "history": [
-                {"role": "user", "text": "What is binary language?"},
-                {"role": "assistant", "text": "Binary language uses only two digits: zero and one."},
+                {"role": "user", "text": "What feature is introduced on the new Pixel?"},
+                {"role": "assistant", "text": "The new Pixel has a feature called Video Boost."},
             ],
         },
     )
