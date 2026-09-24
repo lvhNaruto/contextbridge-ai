@@ -130,10 +130,20 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
         );
       }, 900);
 
+      // Send last ≤ 6 resolved turns so follow-ups resolve (A3, P0-7).
+      const historyTurns = messages
+        .filter((m) => m.text && !m.processing)
+        .map((m) => ({ role: m.role, text: m.text }))
+        .slice(-6);
+
       try {
-        const resolved = isVoice
-          ? await askQuestion(lessonId, question, settings, true)
-          : await askQuestion(lessonId, question, settings);
+        const resolved = await askQuestion(
+          lessonId,
+          question,
+          settings,
+          isVoice,
+          historyTurns,
+        );
         setMessages((prev) =>
           prev.map((m) => (m.id === pendingId ? resolved : m)),
         );

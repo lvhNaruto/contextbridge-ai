@@ -21,7 +21,7 @@ import {
 import { resolveDemoAnswer } from "@/lib/demo-answers";
 import { loadConversation } from "@/lib/store";
 import { saveVideoBlob } from "@/lib/blob-store";
-import type { Chapter, ChatMessage, Lesson, LessonSettings } from "@/types";
+import type { Chapter, ChatMessage, HistoryTurn, Lesson, LessonSettings } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const USE_MOCK = !API_BASE;
@@ -139,12 +139,22 @@ export async function askQuestion(
   question: string,
   settings: LessonSettings,
   isVoice = false,
+  history?: HistoryTurn[],
 ): Promise<ChatMessage> {
   if (!USE_MOCK) {
+    const payload: {
+      question: string;
+      settings: LessonSettings;
+      isVoice: boolean;
+      history?: HistoryTurn[];
+    } = { question, settings, isVoice };
+    if (history && history.length > 0) {
+      payload.history = history.slice(-6);
+    }
     return request<ChatMessage>(`/analyses/${lessonId}/questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, settings }),
+      body: JSON.stringify(payload),
     });
   }
   // Simulated evidence-search latency so loading states are visible.

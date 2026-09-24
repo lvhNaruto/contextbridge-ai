@@ -40,7 +40,7 @@
 - [x] **A1** `components/contradictions/contradiction-card.tsx` — both timestamps seek (P0-4 UI)
 - [x] **A2** `components/transcript/transcript-panel.tsx` — searchable, rows seek (P0-3)
 - [x] **A4** ✳ `Chapter.confidence` badge via existing `ConfidenceBadge` (P0-3)
-- [ ] **A3** `lib/api.ts` sends last ≤ 6 messages as `history` (P0-7, no visual change)
+- [x] **A3** `lib/api.ts` sends last ≤ 6 messages as `history` (P0-7, no visual change)
 - [ ] **A5** Client-side WebVTT captions from `lesson.transcript`; toggle + `captionsPreferred` honoured
 - [ ] **A6** Copyable evidence card: answer + quote + mm:ss + title (P1-2, pulled forward)
 - [ ] **A7** Elapsed-time line in `AnalysisProgress`
