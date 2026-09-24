@@ -18,6 +18,28 @@ export interface Chapter {
   endSeconds: number;
   title: string;
   description: string;
+  /** 0–1 confidence score (P0-3, A4). */
+  confidence?: number;
+}
+
+export interface ContradictionStatement {
+  text?: string;
+  startSeconds: number;
+  endSeconds: number;
+  quote?: string;
+}
+
+export interface ContradictionPair {
+  id: string;
+  claim: string;
+  statementA: ContradictionStatement;
+  statementB: ContradictionStatement;
+  note?: string;
+}
+
+export interface HistoryTurn {
+  role: "user" | "assistant";
+  text: string;
 }
 
 export interface TranscriptSegment {
@@ -85,6 +107,8 @@ export interface Lesson {
   topics: string[];
   chapters: Chapter[];
   transcript: TranscriptSegment[];
+  /** Surfaced contradictory claims with verbatim quotes & timestamps (P0-4, A1). */
+  contradictions?: ContradictionPair[];
 }
 
 export interface LessonSettings {

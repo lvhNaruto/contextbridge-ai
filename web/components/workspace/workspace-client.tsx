@@ -7,6 +7,7 @@ import { ListVideo, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/video-player";
 import { ChapterList } from "@/components/chapters/chapter-list";
+import { ContradictionCard } from "@/components/contradictions/contradiction-card";
 import { Conversation } from "@/components/chat/conversation";
 import { QuestionInput } from "@/components/chat/question-input";
 import { LessonSettingsBar } from "@/components/settings/lesson-settings";
@@ -254,6 +255,14 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Contradiction findings card (A1, P0-4 UI) */}
+          {lesson.contradictions && lesson.contradictions.length > 0 && (
+            <ContradictionCard
+              contradictions={lesson.contradictions}
+              onJump={handleJump}
+            />
+          )}
 
           {/* Conversation */}
           <motion.section

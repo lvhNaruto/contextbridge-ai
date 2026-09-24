@@ -37,14 +37,14 @@
 - [x] **P0-5** Accessible artifact from stored index (plain-language / translation / TTS-ready) with source timestamps
 
 ### Phase 3 · Frontend additions (additive only, preserved design)
-- [ ] **A1** `components/contradictions/contradiction-card.tsx` — both timestamps seek (P0-4 UI)
+- [x] **A1** `components/contradictions/contradiction-card.tsx` — both timestamps seek (P0-4 UI)
 - [ ] **A2** `components/transcript/transcript-panel.tsx` — searchable, rows seek (P0-3)
 - [ ] **A4** ✳ `Chapter.confidence` badge via existing `ConfidenceBadge` (P0-3)
 - [ ] **A3** `lib/api.ts` sends last ≤ 6 messages as `history` (P0-7, no visual change)
 - [ ] **A5** Client-side WebVTT captions from `lesson.transcript`; toggle + `captionsPreferred` honoured
 - [ ] **A6** Copyable evidence card: answer + quote + mm:ss + title (P1-2, pulled forward)
 - [ ] **A7** Elapsed-time line in `AnalysisProgress`
-- [ ] **TYPES** ✳ optional fields in `web/types/index.ts` (`Lesson.contradictions?`, `Chapter.confidence?`, `ContradictionPair`)
+- [x] **TYPES** ✳ optional fields in `web/types/index.ts` (`Lesson.contradictions?`, `Chapter.confidence?`, `ContradictionPair`)
 - [ ] **MOCK** Seed contradictions + confidence in `lib/mock-data.ts` / `demo-answers.ts`; `npm run build` clean
 
 ### Phase 4 · Integration
