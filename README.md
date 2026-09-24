@@ -189,6 +189,15 @@ npm run build   # Turbopack clean production build
 
 ---
 
+## 📊 Pitch Decks & Submissions
+
+- **Official Template Pitch Deck (PDF):** [docs/contextbridge_official_submission_deck.pdf](docs/contextbridge_official_submission_deck.pdf) — Formatted strictly per the AI Builder Cup Google Slides submission template (14 slides).
+- **Interactive Official Deck (Web):** [docs/official_submission_deck.html](docs/official_submission_deck.html) — Key-navigable presentation deck with dark-mode glassmorphic styling.
+- **Comprehensive Pitch Deck (PDF):** [docs/contextbridge_pitch_deck.pdf](docs/contextbridge_pitch_deck.pdf) — 10-slide architectural deep dive.
+- **Interactive Comprehensive Deck (Web):** [docs/pitch_deck.html](docs/pitch_deck.html)
+
+---
+
 ## 📄 License & Attribution
 
 Built for the **AI Builder Cup 2026**. Video sample courtesy of Google Cloud Samples (`pixel8.mp4`). Licensed under the [MIT License](LICENSE).
