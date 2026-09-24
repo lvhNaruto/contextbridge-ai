@@ -104,20 +104,22 @@ export function HeroVisual() {
                 <ListVideo className="size-4" aria-hidden="true" />
                 In this video
               </div>
-              {CHAPTER_CHIPS.map((c, i) => (
-                <motion.div
-                  key={c.title}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.15 + i * 0.18 }}
-                  className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2"
-                >
-                  <span className="font-mono text-[11px] font-semibold text-violet-300">
-                    {formatTime(c.t)}
-                  </span>
-                  <span className="truncate text-xs text-slate-300">{c.title}</span>
-                </motion.div>
-              ))}
+              <div className="flex flex-col gap-2">
+                {CHAPTER_CHIPS.map((c, i) => (
+                  <motion.div
+                    key={c.title}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + i * 0.18 }}
+                    className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2"
+                  >
+                    <span className="font-mono text-[11px] font-semibold text-violet-300">
+                      {formatTime(c.t)}
+                    </span>
+                    <span className="truncate text-xs text-slate-300">{c.title}</span>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           )}
 
