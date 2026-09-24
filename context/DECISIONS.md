@@ -156,5 +156,14 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Validation:** `npm run build` compiles with 0 errors/warnings; all 64 Python tests green (`python -m pytest`).
 - **Status:** done — Phase 3 complete; Phase 4 (Deployment & Integration) unblocked.
 
+## D-17 · 2026-09-24 · Phase 4 complete — Deployment & Cloud Run Integration (P0-9)
+
+- **P0-9a Backend Cloud Run Deployment (`contextbridge-api`):** Deployed FastAPI container via Google Cloud Build to `us-central1` on project `quantum-device-401006` with startup fixture seeding. Public endpoint active at `https://contextbridge-api-c5ltxo3mkq-uc.a.run.app`. Verified `/health` returns 200 OK with `gemini-2.5-flash` active.
+- **P0-9b Frontend Cloud Run Deployment (`contextbridge-web`):** Containerized Next.js 16 App Router as node server in `web/Dockerfile` with `NEXT_PUBLIC_API_BASE_URL=https://contextbridge-api-c5ltxo3mkq-uc.a.run.app` baked into build. Deployed to `us-central1` at `https://contextbridge-web-c5ltxo3mkq-uc.a.run.app`. CORS allowlist configured on backend.
+- **P0-9c Deployed Smoke Test:** Scripted verification (`scripts/smoke_deployed.py`) confirmed end-to-end fixture journey: landing page 200 OK → demo lesson 200 OK → backend lesson retrieval (5 chapters with confidence, 1 contradiction pair) → live Gemini Q&A agent response with exact quote, timestamp (173.0s), and confidence (0.97) → Range-supporting 302 video redirect.
+- **P0-9d Live Upload Verification:** Real video upload (`scripts/smoke_upload.py`, 4.72 MB clip) to `POST /analyses` completed in **24.5s** (within honest progress expectation). Created 6 chapters with confidence (0.97–0.99), 14 transcript segments, and answered subsequent question citing newly extracted timestamp `00:12`.
+- **Status:** done — Phase 4 complete; Phase 5 (Testing & Evaluation Harness) unblocked.
+
+
 
 
