@@ -144,3 +144,85 @@
 | P0-6 | 1 | P1-1 | 6 | P2-* | deferred (D-09) |
 
 **Critical path:** P0-10 → P0-2 → P0-6 → P0-1 → {P0-4, P0-5, P0-7} → A1–A7 → P0-9 → P0-8 → P0-11. P0-9's skeleton deploy starts in parallel with Phase 2.
+
+---
+
+## The Compass Era — Practical Sweet Spot Execution Plan (Winning Path)
+
+**Strategy:** Zero compromises on code quality, zero dropped features. Execute strictly task-by-task, maintaining all 78 green tests and deployable revisions at every checkpoint.
+
+### 🔒 Standing Rules for Every Task
+1. **The gate is sacred:** `quote_matches_transcript`, timestamp-range validation, and `MediaAnalysis.from_dict` must never be weakened — only extended.
+2. **Governance first:** Every UI addition requires a `DECISIONS.md` entry (D-XX) answering the seven checks before code is touched.
+3. **Continuous test verification:** All 78 tests must pass before and after every backend change. `npm run build` must succeed before every frontend commit.
+4. **Deployable at all times:** Every milestone concludes with a deployed Cloud Run revision and a `sweep_deployed.py` pass.
+5. **Contract consistency:** camelCase on the wire; snake_case only inside internal Python logic.
+
+---
+
+### Week 1 — "Trust Visible" (The Moat Becomes Obvious in 10 Seconds)
+**Goal:** Anyone looking at the screen for 10 seconds immediately understands the proof system.
+
+| # | Task | Scope & Implementation | Done When |
+|---|---|---|---|
+| **1.1** | Decision records | Formally document D-23…D-28 in `context/DECISIONS.md` answering the 7 checks. | Entries merged and referenced. |
+| **1.2** | `EvidenceBadge` polish | Update `web/components/evidence/evidence-badge.tsx` with 3 explicit states: `✅ Verified from this video · 96%` (emerald), `🌐 Beyond this video` (sky), `🤷 Not covered` (muted). | All 3 states render cleanly in assistant answers. |
+| **1.3** | `TranscriptSync` wiring | Enhance `web/components/transcript/transcript-panel.tsx` so clicking evidence or seeking auto-scrolls the active segment into view (`scrollIntoView({ behavior: 'smooth', block: 'nearest' })`). | Clicking evidence seeks video AND scrolls transcript to the exact row. |
+| **1.4** | Structured agent-run logging | Add structured JSON logging per agent query in `api/agent.py` & `api/main.py`: `branch, verified, retries, latency_ms, cost_estimate`, plus a `/healthz` metrics counter. | Logs visible in Cloud Run console; `/healthz` shows query breakdown. |
+| **1.5** | Deploy Checkpoint #1 | Deploy backend and frontend revisions to Cloud Run; execute `python scripts/sweep_deployed.py`. | Both services live, healthy, and verified. |
+
+---
+
+### Week 2 — "The Compass" (Self-Learning Becomes Visible)
+**Goal:** The product actively guides curiosity from the video's own concepts — establishing the "Compass, Not a Tutor" identity.
+
+| # | Task | Scope & Implementation | Done When |
+|---|---|---|---|
+| **2.1** | Backend `suggestions` field | In `api/agent.py`, derive 2–3 next-question exploration anchors from stored chapters and topics without adding LLM round overhead; return in `ChatMessage.suggestions`. | `POST /questions` returns `suggestions: string[]`. |
+| **2.2** | `ExploreSuggestions` component | Build `web/components/chat/explore-suggestions.tsx` rendering *"Explore from here →"* clickable chips under each answer. Clicking sends the question. | Chips render, click sends question, respects language. |
+| **2.3** | `BoundaryCard` component | Frame external web research answers in a distinctive container: *"You've stepped beyond this video — external research, real sources"* + source chips. Video answers never get this frame. | Web answer visibly distinct from video answers. |
+| **2.4** | Teaching moves (`clarify` + `simplify`) | Ambiguous input triggers a clarifying question; "I don't understand / samajh nahi aaya" triggers a beginner-friendly analogy. Keep within $\le 2$ round budget. | Unit tests pass for both moves; round budget invariant holds. |
+| **2.5** | `eval_harness v2` baseline | Expand `scripts/eval_harness.py` to 25 benchmark cases (in-video, out-of-video, Hindi, contradictions). Save scorecard to `context/eval_results.json`. | Baseline recorded; reports citation accuracy and latency. |
+| **2.6** | Deploy Checkpoint #2 | Deploy updates to Cloud Run; run eval harness against deployed URL. | Live deployment passes full suite. |
+
+---
+
+### Week 3 — "Speak My Language" (Multilingual & Voice Loop)
+**Goal:** Flawless bilingual voice exploration in Hindi and English.
+
+| # | Task | Scope & Implementation | Done When |
+|---|---|---|---|
+| **3.1** | TTS answers (speak-aloud) | Upgrade `useSpeak` with language-matched voice selection (`hi-IN` / `en-US`), interruptible on mic tap, and audio playback toggle. | Hindi answers speak in authentic Hindi voice; barge-in cancels on mic tap. |
+| **3.2** | Voice loop states | Show dynamic listening… / thinking… / speaking… visual avatar states during voice interactions. | Avatar states visible during live voice input. |
+| **3.3** | Hinglish input hardening | Refine prompt instructions for code-mixed queries (Hindi + English) to answer naturally in the same mix. Add 3 Hinglish eval cases. | Hinglish eval cases pass language fidelity check. |
+| **3.4** | Landing page rewrite | Update hero copy in `web/components/hero.tsx` to the vision line: *"Not a tutor. A compass for self-learners"*, with the 3 pillars. Zero CSS/layout breakage. | Landing page clearly conveys compass positioning. |
+| **3.5** | Transcript i18n polish | Verify Hindi transcript search, font rendering (Noto Sans Devanagari fallback), and character matching. | Search in Hindi works seamlessly; clean typography. |
+| **3.6** | Deploy Checkpoint #3 | Deploy to Cloud Run; run `sweep_deployed.py` and verify eval v2 delta $\ge$ baseline. | Live revision green with zero regressions. |
+
+---
+
+### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
+**Goal:** Bulletproof reliability, recorded backup, and judge-ready presentation.
+
+| # | Task | Scope & Implementation | Done When |
+|---|---|---|---|
+| **4.1** | Bugfix buffer | Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes. | Zero open P0/P1 defects. |
+| **4.2** | Quota-death & fallback drill | Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store. | Fixture demo operates independently of live API quota. |
+| **4.3** | Recorded backup demo | Record a clean 90-second screen recording of the live deployed app following the demo script. | Offline MP4 artifact ready and verified. |
+| **4.4** | Rehearse demo script 5× | Practice the 90-second live presentation until completely second-nature. | Demo runs smoothly within $\le 90$ seconds. |
+| **4.5** | README & Deck (PDF) | Finalize GitHub README with architecture diagram, live links, and eval scorecard; produce 8-10 slide PDF deck citing metrics. | Submission-ready deck and public repo. |
+| **4.6** | Final deploy freeze | Deploy final frozen revision $\ge 48$h before deadline. Run full test suite, sweep, and lock revision. | Final Cloud Run revision frozen and tagged. |
+
+---
+
+### The 90-Second Winning Demo Script
+
+| Beat | Duration | Action | The Line You Say |
+|---|---|---|---|
+| **1 · Hook** | 10s | Landing page | *"Self-learners don't want a tutor. They want to explore — and know what to trust. This is a compass, anchored to the video you choose."* |
+| **2 · Explore** | 20s | Ask a question in the demo lesson $\rightarrow$ answer with quote $\rightarrow$ click evidence button | *"Every answer is verified against this actual transcript — click the proof, and the video jumps to the exact second while the transcript syncs. Our AI structurally cannot invent a quote."* |
+| **3 · Compass** | 15s | Click an *"Explore from here →"* chip | *"It guides exploration directly from the video's own concepts — not generic chatbot suggestions."* |
+| **4 · Boundary** | 15s | Ask a question NOT in the video with web research enabled | *"When curiosity steps beyond the video, it says so clearly with a distinct Boundary Card and verified Google Search grounding. The boundary is a feature, not a failure."* |
+| **5 · Language** | 15s | Voice question in Hindi $\rightarrow$ Hindi answer + 🔊 listen | *"Learners explore in the language they think in — full bidirectional voice in Hindi and English."* |
+| **6 · Proof** | 15s | Show eval scorecard slide + decision log | *"We measure quality on every single deploy: 100% verified citations, 78 green tests, and an append-only decision record. This is reliable GenAI."* |
+

@@ -59,40 +59,52 @@
 - [x] **FAIL** ARCHITECTURE §15 nine failure-path drills verified
 - [x] **REG** `_mock_answer` absent; schema rejects malformed output; mock mode unbroken
 
-### Phase 7 · Submission (P0-11)
-- [ ] **P0-11** Dry-run ≥ 2 days early: deployed URL · public repo (in-window history) · video < 3:00 public · English PDF deck
-- [ ] **VIDEO** Demo video scripted + recorded (< 3 min strict)
-- [ ] **DECK** PDF deck with P0-8 metrics, architecture one-liners, P1-5 auth scoping, P2 as scalability lines
+---
+
+## 🧭 The Compass Era — Practical Sweet Spot Tasks (Winning Path)
+
+### Week 1 — "Trust Visible" (The Moat Becomes Obvious in 10 Seconds)
+- [x] **1.1** **Decision records first:** Write D-23…D-28 entries (`EvidenceBadge`, `ExploreSuggestions`, `BoundaryCard`, `VoiceLoop`, `TranscriptSync`, `Landing`) answering the 7 checks in `context/DECISIONS.md`.
+- [x] **1.2** **`EvidenceBadge` visual trust upgrade:** Update `web/components/evidence/evidence-badge.tsx` with 3 explicit states: `Verified from this video · 96%` (emerald), `Beyond this video (web, clearly labeled)` (sky), ` Not covered (honest boundary)` (muted). Data already exists (`evidenceType`, `confidence`).
+- [x] **1.3** **`TranscriptSync` wiring:** Evidence click $\rightarrow$ `onJump` seeks video and auto-scrolls the active segment row into view in `TranscriptPanel` (`scrollIntoView({ behavior: 'smooth', block: 'nearest' })`).
+- [x] **1.4** **Structured agent-run logging:** Per question: branch, verified, retries, latency_ms, cost_estimate as JSON logs; keep tiny metrics counter in `/healthz` (questions answered by branch).
+- [x] **1.5** **Deploy Checkpoint #1:** Deploy both services to Cloud Run; run `python scripts/sweep_deployed.py`; record revision.
+
+### Week 2 — "The Compass" (Self-Learning Becomes Visible)
+- [x] **2.1** **Backend: `suggestions` field:** Derive 2–3 next-explore questions from video's own content (topics/chapters) without adding LLM round overhead; return in `ChatMessage.suggestions`.
+- [x] **2.2** **`ExploreSuggestions` component:** Create `web/components/chat/explore-suggestions.tsx` with *"Explore from here →"* clickable chips under each answer; clicking sends the question.
+- [x] **2.3** **`BoundaryCard` component:** Web-research answers get distinct framed container: *"You've stepped beyond this video — external research, real sources"* + source chips. Video answers never get this frame.
+- [x] **2.4** **Backend: `clarify` + `simplify` moves:** Ambiguous/short input triggers a clarifying question; "I don't understand / samajh nahi aaya" triggers beginner analogy mode. Kept within $\le 2$ LLM round budget.
+- [x] **2.5** **`eval_harness v2` baseline:** Expand `scripts/eval_harness.py` to 25 benchmark cases (in-video, out-of-video, Hindi, contradictions); store scorecard in `context/eval_results.json`.
+- [x] **2.6** **Deploy Checkpoint #2:** Deploy, sweep, record revision; run eval v2 against deployed Cloud Run.
+
+### Week 3 — "Speak My Language" (Multilingual + Voice Loop)
+- [ ] **3.1** **TTS answers (speak-aloud):** Per-answer 🔊 Listen + auto-speak toggle. Language-matched voice selection (`hi-IN` / `en-US`), interruptible on mic tap.
+- [ ] **3.2** **Voice loop states:** Dynamic listening… / thinking… / speaking… avatar states during voice flow.
+- [ ] **3.3** **Hinglish input hardening:** Answer prompt rules for code-mixed queries $\rightarrow$ answer in same mix. Add 3 Hinglish eval cases to suite.
+- [ ] **3.4** **Landing page rewrite:** Additive copy change on hero (`components/hero.tsx`): vision line, the 3 pillars (Anchored / Proof / Boundary), one CTA. Layout untouched.
+- [ ] **3.5** **Transcript panel i18n polish:** Verify Hindi transcript search, font rendering (Noto Sans Devanagari fallback), and character matching.
+- [ ] **3.6** **Deploy Checkpoint #3:** Deploy, sweep, eval v2 delta vs week-2 baseline (no regressions).
+
+### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
+- [ ] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
+- [ ] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
+- [ ] **4.3** **Recorded backup demo:** Clean 90-second screen recording of live deployed app following demo script (<3 min public MP4).
+- [ ] **4.4** **Demo script rehearsal:** Rehearse the 90-second live presentation 5× until seamless.
+- [ ] **4.5** **README + Pitch Deck:** Finalize README with architecture diagram and live links; produce 8-10 slide PDF deck citing metrics.
+- [ ] **4.6** **Final deploy freeze:** Deploy final frozen revision $\ge 48$h before deadline. Run full test suite, sweep, and lock revision.
 
 ---
 
-## P1 — Should ship (start only when every P0 above is green)
-
-- [ ] **P1-1** Scale eval set to 20 videos / 100 questions; targets refined from first fixture run
-- [ ] **P1-2** Evidence-card rendering polish across answer types (core built as A6)
-- [ ] **P1-3** Mobile/responsive validation of workspace incl. A1/A2 panels
-- [ ] **P1-4** Shareable lesson links (only if no new endpoints needed)
-- [ ] **P1-5** Auth scoping note for deck (design only — no build)
-- [ ] **P1-7** Backup demo recording captured early; live path rehearsed on stable network
-
----
-
-## P2 — Deferred (deck narrative only; needs a new directive to build — D-09)
-
-- [ ] Multi-video projects / cross-video search
-- [ ] Automatic external actions (email, posting, integrations)
-- [ ] Enterprise permissions / multi-tenant / roles
-- [ ] Clip rendering pipeline (vertical re-encode, StorySplice)
-- [ ] FGA §5 frontend P2 set: summary/topics header · `plainLanguage` wiring · AI-disclaimer microcopy · multi-fixture picker · `uncertaintyReason` note · REQUIREMENTS.md Streamlit-wording reconciliation
-- [ ] Roadmap verticals (FixFlow / ShelfSense / TrustLens / RescueGrid class)
-
----
-
-## Definition of done — MVP (check all, then Phase 6 may start)
+## 🏆 Definition of Done — Hackathon Win
 
 - [x] 1. Deployed URL: visitor picks fixture → timeline + transcript → question → timestamped grounded answer or honest "not found", no local setup
 - [x] 2. Evidence click seeks video to the correct moment (~1 s)
 - [x] 3. Contradictory pair surfaced, both timestamps clickable
 - [x] 4. One accessible artifact generates from the stored index, timestamps preserved
-- [x] 5. Eval script reports the four metrics; numbers in the deck
-- [ ] 6. Four submission artifacts pass the P0-11 dry run
+- [x] 5. Eval script reports baseline metrics; numbers in the deck
+- [x] 6. Visual trust indicators live (`EvidenceBadge`, `BoundaryCard`, `TranscriptSync`)
+- [x] 7. Guided exploration active (`ExploreSuggestions` derived from video)
+- [ ] 8. Full bilingual voice loop verified in Hindi and English
+- [ ] 9. Eval harness v2 reports $\ge 92\%$ correct branch and 100% verified citations on 25 cases
+- [ ] 10. Four submission artifacts pass the P0-11 dry run (deployed URL, public repo, <3 min video, PDF deck)

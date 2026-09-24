@@ -92,7 +92,25 @@ The frontend lock was amended to *locked-but-extensible* (`CONSTRAINTS.md` §1).
 | A6 | Copyable evidence card (P1-2) | none — clipboard formatting only |
 | A7 | Honest analysis progress | none — client-side elapsed-time display |
 
-Everything else in this document — endpoints, agent, storage, deployment — is unchanged.
+### 3.5 Compass Era Additions (Additive Only — Same Shape, Deeper Product)
+
+To fully deliver the "Compass for Self-Learners" vision, the architecture incorporates the following additive-only extensions approved via the gap-analysis governance gate:
+
+| Component / Layer | Name | Purpose & Implementation | Architectural Impact |
+|---|---|---|---|
+| **Frontend** | `EvidenceBadge` | Visible trust indicator: `✅ Verified from this video · 96%` (emerald), `🌐 Beyond this video` (sky), `🤷 Not covered` (muted). | Purely additive UI in `components/evidence/evidence-badge.tsx`. Reads existing `evidenceType` & `confidence`. |
+| **Frontend** | `ExploreSuggestions` | "Explore from here →" 2–3 next-question chips rendered under each assistant answer, inviting exploration of the video's own unasked concepts. | New small component in `components/chat/explore-suggestions.tsx`. Consumes optional `ChatMessage.suggestions?`. |
+| **Frontend** | `BoundaryCard` | Distinct visual frame for web research answers (*"You've stepped beyond this lesson — external research, real sources"*). Video answers never get this frame. | Small container in `components/chat/assistant-message.tsx`. Video and web remain strictly unmixed. |
+| **Frontend** | `VoiceLoop` Upgrade | Speak answers aloud (`window.speechSynthesis`) with language-matched voices (`hi-IN` / `en-US`), interruptible on mic tap, and visual listening/thinking/speaking avatar states. | Extends `useSpeak()` in `assistant-message.tsx` and status indicators in `question-input.tsx`. |
+| **Frontend** | `TranscriptSync` | Evidence click jumps the video playback (`onJump`) and smoothly auto-scrolls the active segment row into view in `TranscriptPanel`. | Enhances `components/transcript/transcript-panel.tsx` via `scrollIntoView({ behavior: 'smooth', block: 'nearest' })`. |
+| **Frontend** | `Landing Rewrite` | Hero copy reframed from "tutor" to "A compass for self-learners", highlighting the Three Pillars (Anchored, Proof, Boundary Honesty). | Minimal text update in `components/hero.tsx`. Layout, styles, and upload dropzone completely untouched. |
+| **Backend API** | `suggestions?: string[]` | Deterministically derived 2–3 next-question anchors included in `ChatMessage` responses. | Additive optional field in `api/agent.py` response. Zero new endpoints. |
+| **Backend API** | `explanationOf?: string` | Optional one-line rationale explaining why this branch was selected (e.g., "Answer verified in Tokyo Night video at 00:15"). | Additive optional field on `AssistantAnswer`. |
+| **Backend Agent** | Teaching Moves (`clarify` & `simplify`) | Ambiguous input triggers a clarifying question; "I don't understand / samajh nahi aaya" triggers a beginner-friendly analogy. | Handled within existing $\le 2$ LLM round budget in `api/agent.py`. Invariants preserved. |
+| **Backend Ops** | Structured Logging & Metrics | Structured JSON logging per agent run (branch, latency_ms, verified, retries) + query counter in `/healthz`. | Internal logging enhancements in `api/main.py`. |
+| **Evaluation** | `eval_harness v2` | Expanded 25-question test suite (in-video, out-of-video, Hindi, contradictions) generating a reproducible `eval_results.json` scorecard. | Script in `scripts/eval_harness.py`. |
+
+Architecture rule: **Zero new endpoints. Zero breaking changes. Zero infra migration. 100% additive.**
 
 ---
 

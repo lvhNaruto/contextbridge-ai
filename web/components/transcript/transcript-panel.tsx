@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, FileText, X } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import type { TranscriptSegment } from "@/types";
@@ -22,6 +22,7 @@ export function TranscriptPanel({
   activeSeconds,
 }: TranscriptPanelProps) {
   const [query, setQuery] = useState("");
+  const segmentRefs = useRef(new Map<number, HTMLButtonElement>());
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -32,6 +33,20 @@ export function TranscriptPanel({
         formatTime(seg.startSeconds).includes(q),
     );
   }, [transcript, query]);
+
+  useEffect(() => {
+    if (activeSeconds == null) return;
+
+    const activeSegment = filtered.find(
+      (seg) =>
+        activeSeconds >= seg.startSeconds && activeSeconds < seg.endSeconds,
+    );
+    if (activeSegment) {
+      segmentRefs.current
+        .get(activeSegment.startSeconds)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [activeSeconds, filtered]);
 
   if (!transcript || transcript.length === 0) {
     return (
@@ -91,6 +106,13 @@ export function TranscriptPanel({
             return (
               <button
                 key={`${seg.startSeconds}-${idx}`}
+                ref={(element) => {
+                  if (element) {
+                    segmentRefs.current.set(seg.startSeconds, element);
+                  } else {
+                    segmentRefs.current.delete(seg.startSeconds);
+                  }
+                }}
                 onClick={() => onJump(seg.startSeconds)}
                 aria-label={`Jump to ${formatTime(seg.startSeconds)}: ${seg.text}`}
                 className={cn(

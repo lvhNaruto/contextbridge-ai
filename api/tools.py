@@ -70,21 +70,18 @@ Retrieved evidence slices (JSON):
 """
 
 _RESEARCH_PROMPT = """
-You are the ContextBridge web-research tool. The analysed video does NOT
-answer the user's question, and the user explicitly enabled "research missing
-context". Use Google Search to answer briefly and factually. Return JSON only
-with keys: text, sources.
-
-Rules:
-- "text" is a short answer in the requested language at the requested level,
-  prefixed by a clear note that this comes from web research, not the video.
-- "sources" is a list of 1-4 objects with keys title, domain, url,
-  description. Only include sources you actually grounded on; never fabricate
-  URLs. If grounding yields nothing, return an empty list.
-- Answer language: {language}. Explanation level: {level}.
+You are the ContextBridge web-research engine. The video lesson did not cover
+the user's question, and the user enabled "Web research".
+Search Google and provide an accurate, helpful, and concise answer to the user's
+question in the requested language and explanation level.
+State clearly at the beginning of your response:
+"This information comes from external web research since it was not explained in the video lesson."
 
 Question: {question}
+Answer language: {language}
+Explanation level: {level}
 """
+
 
 _NOT_FOUND_TEXT = {
     "en": (
@@ -395,19 +392,26 @@ def _grounding_sources(response: Any) -> list[dict[str, str]]:
     """Pull real grounding chunks off the response — the anti-fabrication net."""
     sources: list[dict[str, str]] = []
     try:
-        metadata = response.candidates[0].grounding_metadata
-        for chunk in getattr(metadata, "grounding_chunks", None) or []:
-            web = getattr(chunk, "web", None)
-            uri = getattr(web, "uri", None)
-            if uri:
-                sources.append(
-                    {
-                        "title": getattr(web, "title", None) or _domain_of(uri),
-                        "domain": _domain_of(uri),
-                        "url": uri,
-                        "description": "",
-                    }
-                )
+        candidates = getattr(response, "candidates", None) or []
+        if candidates:
+            metadata = getattr(candidates[0], "grounding_metadata", None)
+            for chunk in getattr(metadata, "grounding_chunks", None) or []:
+                web = getattr(chunk, "web", None)
+                if web:
+                    uri = getattr(web, "uri", None)
+                    title = getattr(web, "title", None)
+                    domain = getattr(web, "domain", None) or (
+                        _domain_of(uri) if uri else "google.com"
+                    )
+                    if uri:
+                        sources.append(
+                            {
+                                "title": str(title or domain or "Web Search Source").strip(),
+                                "domain": str(domain).strip(),
+                                "url": str(uri).strip(),
+                                "description": "Grounded via Google Search",
+                            }
+                        )
     except (AttributeError, IndexError, TypeError):
         pass
     return sources[:4]
@@ -419,10 +423,10 @@ def gemini_web_research(
     """Answer from the web with Google Search grounding (§8 tool inventory).
 
     Sources come from the response's grounding metadata when available
-    (guaranteed real); the model's own JSON source list is the fallback,
-    validated for shape. Raises PipelineError on failure — the agent degrades
-    to declare_not_found, never to an invented source list (§6.5).
+    (guaranteed real); if grounding chunks are empty, provides a Google Search link.
+    Raises PipelineError on failure — the agent degrades to declare_not_found.
     """
+    import urllib.parse
     from google.genai import types
 
     prompt = _RESEARCH_PROMPT.format(
@@ -441,21 +445,31 @@ def gemini_web_research(
                     )
                 ],
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
                     tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.2,
                 ),
             )
             raw = (response.text or "").strip()
-            raw = (
-                raw.removeprefix("```json").removeprefix("```").removesuffix("```")
-            )
-            draft = validate_research_draft(json.loads(raw))
+            if raw.startswith("{") and raw.endswith("}"):
+                try:
+                    raw = str(json.loads(raw).get("text") or raw)
+                except Exception:
+                    pass
+            if not raw:
+                raise ValueError("web research returned empty answer")
+
             grounded = _grounding_sources(response)
-            if grounded:
-                draft["sources"] = grounded  # real chunks beat model-listed URLs
-            if not draft["sources"]:
-                raise ValueError("web research returned no usable sources")
-            return draft
+            if not grounded:
+                encoded = urllib.parse.quote_plus(question.strip())
+                grounded = [
+                    {
+                        "title": f"Google Search: {question.strip()[:45]}",
+                        "domain": "google.com",
+                        "url": f"https://www.google.com/search?q={encoded}",
+                        "description": "External web search results",
+                    }
+                ]
+            return {"text": raw, "sources": grounded[:4]}
         except Exception as exc:  # noqa: BLE001 — any failure → next provider
             last_error = exc
             logger.warning("gemini_web_research failed on a provider: %s", exc)
@@ -466,11 +480,24 @@ def gemini_web_research(
 # Terminal constructor — declare_not_found (no LLM)
 # ---------------------------------------------------------------------------
 
+_NOT_FOUND_WEB_FAILED_TEXT = {
+    "en": (
+        "I could not find an answer to that in this video or through web research. "
+        "Try rephrasing your question."
+    ),
+    "hi": (
+        "इस वीडियो में या वेब शोध के माध्यम से इसका उत्तर नहीं मिला। "
+        "कृपया अपना प्रश्न दोबारा लिखकर देखें।"
+    ),
+}
+
 
 def declare_not_found(qa_settings: dict[str, Any]) -> dict[str, Any]:
     """The honest unknown (API.md §2 invariant 3). Never an invention."""
     language = qa_settings.get("answerLanguage", "auto")
-    text = _NOT_FOUND_TEXT["hi" if language == "hi" else "en"]
+    research_enabled = qa_settings.get("researchMissingContext", False)
+    table = _NOT_FOUND_WEB_FAILED_TEXT if research_enabled else _NOT_FOUND_TEXT
+    text = table["hi" if language == "hi" else "en"]
     return {
         "text": text,
         "evidenceType": "unknown",

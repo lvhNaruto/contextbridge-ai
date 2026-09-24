@@ -69,3 +69,41 @@ An older/leftover requirements item reportedly names Healthcare, Education, Sust
 ## Development rule
 
 Whatever changes or whatever decision we take that affects the code, we have to document it somewhere. Somewhere is this `context/DECISIONS.md` file.
+
+---
+
+## Engineering & Product Guardrails (The Compass Era)
+
+### 1. The Vision Line (Core Invariant)
+> **"Not a tutor. A compass for self-learners — every answer anchored to the video you chose, in your language, with proof, and honest about where the video ends."**
+
+Every product, architectural, and code decision must strictly serve this vision line.
+
+### 2. The Three Pillars (Priority Order)
+
+| Pillar | Meaning | Invariant (Never Violate) |
+|---|---|---|
+| **P1 — Anchored** | The student's chosen video is the source of truth. Video answers must come from the video, verified against its transcript, with a clickable timestamp. | **Never weaken quote_matches_transcript / validate_answer_draft** — the anti-fabrication gate is the company. |
+| **P2 — Proof** | Trust must be visible: every answer shows what world it came from (video / web-beyond / honestly not covered) and its evidence is one click from the exact video moment. | **Never blend video and web evidence in one answer** (`notInVideo: true` invariant stands). |
+| **P3 — Boundary Honesty** | When curiosity steps beyond the video, the companion says so clearly and offers labeled web research — the boundary is a designed feature, not a failure. | **Never silently degrade** — the user must always know which branch answered. |
+
+**Secondary Identity:** Multilingual self-learner — Hindi and English first-class, code-mixed (Hinglish) input supported, answers in the language the learner thinks in.
+
+### 3. Standing Rules for Every Task
+1. **The gate is sacred:** `quote_matches_transcript`, timestamp-range validation, and `MediaAnalysis.from_dict` must never be weakened — only extended in coverage.
+2. **Governance first:** Every UI addition must have a `DECISIONS.md` entry (D-XX) answering the seven checks before code is touched. No ad-hoc UI edits.
+3. **Tests before and after:** Every backend change ships with pytest coverage; all 78 baseline tests must pass before and after every task. Frontend lint + build (`npm run build`) is a mandatory gate for every `web/` change.
+4. **Deployable at all times:** Every task ends with a green pytest + green `npm run build` + a deployable revision. No long-lived broken states.
+5. **Wire format contract:** camelCase wire format everywhere on the external interface; snake_case only inside internal Python logic.
+6. **No compromise on quality:** Never cut corners or omit tests for speed. Maintain clean architecture and strict type safety throughout.
+
+### 4. What the Model Must Not Do
+- ❌ **No new pages, routes, or navigation items** (the Next.js page topology is locked).
+- ❌ **No new API endpoints** (additive optional fields on existing endpoints only; zero breaking changes).
+- ❌ **No auth, payments, multi-tenancy, Postgres, or heavy queues** (post-hackathon backlog).
+- ❌ **No weakening of gates:** quote verification, timestamp boundary checks, honest fallbacks, round budget ($\le 2$ LLM calls), `notInVideo` invariant.
+- ❌ **No restyling of locked components** — only new small, focused additive components in `web/components/`.
+- ❌ **No new external library dependencies in `web/`** except zero-dep utilities.
+- ❌ **No backend dependency churn** unless strictly required; keep the provider ladder intact.
+- ❌ **Never deploy without verification:** green pytest $\rightarrow$ green `npm run build` $\rightarrow$ `sweep_deployed.py` pass.
+

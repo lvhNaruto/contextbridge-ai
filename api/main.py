@@ -41,6 +41,26 @@ settings = get_settings()
 
 ID_PATTERN = re.compile(r"^[a-zA-Z0-9-]{1,64}$")  # §4.2 — blocks traversal
 
+METRICS: dict[str, Any] = {
+    "questions_total": 0,
+    "questions_by_branch": {
+        "video": 0,
+        "web": 0,
+        "not_found": 0,
+    },
+}
+
+
+def _record_question_metric(answer: dict[str, Any] | None) -> None:
+    METRICS["questions_total"] += 1
+    evidence_type = (answer or {}).get("evidenceType", "unknown")
+    if evidence_type == "video":
+        METRICS["questions_by_branch"]["video"] += 1
+    elif evidence_type == "web":
+        METRICS["questions_by_branch"]["web"] += 1
+    else:
+        METRICS["questions_by_branch"]["not_found"] += 1
+
 
 def _envelope(code: str, message: str) -> dict[str, Any]:
     """The one error shape everywhere (API.md §1, ARCHITECTURE §4.3)."""
@@ -251,7 +271,9 @@ def health() -> dict[str, Any]:
         "phase": "1-analysis-pipeline",
         "analysis_enabled": settings.analysis_enabled,
         "model": settings.vertex_model_id if settings.analysis_enabled else None,
+        "metrics": METRICS,
     }
+
 
 
 @app.get("/healthz")
@@ -270,7 +292,12 @@ def healthz(request: Request) -> JSONResponse:
         )
     return JSONResponse(
         status_code=200,
-        content={"status": "ok", "demoSeeded": True, "model": settings.vertex_model_id},
+        content={
+            "status": "ok",
+            "demoSeeded": True,
+            "model": settings.vertex_model_id,
+            "metrics": METRICS,
+        },
     )
 
 
@@ -376,7 +403,7 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
         else None
     )
     try:
-        return agent.answer_question(
+        msg = agent.answer_question(
             question,
             envelope,
             payload.settings.model_dump(),
@@ -384,6 +411,8 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
             is_voice=payload.isVoice,
             history=history_dicts,
         )
+        _record_question_metric(msg.get("answer"))
+        return msg
     except pipeline.PipelineError:
         # §6.5 last resort — total LLM failure, honestly reported (API.md §3.4).
         raise ApiError(
@@ -468,6 +497,7 @@ def ask_voice_question(
             history=history_dicts,
         )
         msg["transcribedQuestion"] = text
+        _record_question_metric(msg.get("answer"))
         return msg
     except pipeline.PipelineError:
         raise ApiError(

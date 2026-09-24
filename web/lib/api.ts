@@ -160,6 +160,11 @@ export async function askQuestion(
   // Simulated evidence-search latency so loading states are visible.
   await delay(1400 + Math.random() * 600);
   const answer = resolveDemoAnswer(question, settings);
+  const suggestions = [
+    "What is covered in 'Low Light Test'?",
+    "Why is there a contradiction about natural darkness?",
+    "How does the video explain Video Boost?",
+  ].slice(0, 2);
   return {
     id: `msg-${Date.now().toString(36)}`,
     role: "assistant",
@@ -167,6 +172,7 @@ export async function askQuestion(
     isVoice,
     createdAt: Date.now(),
     answer,
+    suggestions,
   };
 }
 

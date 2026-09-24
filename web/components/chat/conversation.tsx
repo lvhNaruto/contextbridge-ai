@@ -34,6 +34,7 @@ export function Conversation({
   answerLanguage,
   emptyHint,
   lessonTitle,
+  onSelectSuggestion,
 }: {
   messages: ChatMessage[];
   /** The message whose moment is currently highlighted on the timeline. */
@@ -42,6 +43,7 @@ export function Conversation({
   answerLanguage: string;
   emptyHint?: string;
   lessonTitle?: string;
+  onSelectSuggestion?: (question: string) => void;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +88,7 @@ export function Conversation({
                 onJump={onJump}
                 answerLanguage={answerLanguage}
                 lessonTitle={lessonTitle}
+                onSelectSuggestion={onSelectSuggestion}
               />
             </div>
           ),

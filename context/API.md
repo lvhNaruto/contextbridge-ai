@@ -62,19 +62,25 @@ Field names are camelCase and exact. The backend serialises `MediaAnalysis` (`co
 {
   "id": "msg-m4x8k2",
   "role": "assistant",
-  "text": "Binary language is introduced at 02:53…",
+  "text": "In low light, Night Sight is activated…",
   "isVoice": false,
   "createdAt": 1759161600000,                 // epoch ms — a NUMBER, not a string
+  "suggestions": [                            // ✳ optional: 2-3 explore anchors derived from video
+    "How does Video Boost compare to Night Sight?",
+    "Where in Tokyo was this video filmed?",
+    "What camera settings were recommended?"
+  ],
   "answer": {
-    "text": "Binary language is introduced at 02:53…",
+    "text": "In low light, Night Sight is activated…",
     "evidenceType": "video",                  // "video" | "web" | "unknown"
-    "evidence": { "startSeconds": 173, "endSeconds": 376,
-                  "quote": "Binary language uses only two digits: zero and one." },
+    "evidence": { "startSeconds": 15, "endSeconds": 21,
+                  "quote": "In low light, it activates 'Night Sight' to make the quality even better." },
     "confidence": 0.96,                       // 0–1; badge hidden when 0
+    "explanationOf": "Verified against spoken transcript at 00:15", // ✳ optional branch rationale
     "sources": [                              // only when evidenceType = "web"
-      { "title": "Binary number — Wikipedia", "domain": "wikipedia.org",
-        "url": "https://en.wikipedia.org/wiki/Binary_number",
-        "description": "The base-2 numeral system…" }
+      { "title": "Google Pixel Night Sight Explained", "domain": "support.google.com",
+        "url": "https://support.google.com/pixelphone/answer/...",
+        "description": "How computational photography powers low light video..." }
     ],
     "notInVideo": true                        // only when the video lacks the answer
   }

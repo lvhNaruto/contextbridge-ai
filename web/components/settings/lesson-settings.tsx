@@ -8,12 +8,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { AnswerLanguage, ExplanationLevel, LessonSettings } from "@/types";
 
 const LANGUAGES: { value: AnswerLanguage; label: string }[] = [
@@ -94,49 +88,43 @@ export function LessonSettingsBar({
       </DropdownMenu>
 
       {/* Web search toggle ("Research missing context") */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.researchMissingContext}
-            onClick={() =>
-              onChange({
-                ...settings,
-                researchMissingContext: !settings.researchMissingContext,
-              })
-            }
-            className={`flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-violet-400/70 ${
-              settings.researchMissingContext
-                ? "border-violet-500/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/15"
-                : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:bg-white/[0.07]"
+      <button
+        type="button"
+        role="switch"
+        aria-checked={settings.researchMissingContext}
+        title="Search the web only when the video doesn't answer"
+        onClick={() =>
+          onChange({
+            ...settings,
+            researchMissingContext: !settings.researchMissingContext,
+          })
+        }
+        className={`flex h-8 cursor-pointer select-none items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-violet-400/70 ${
+          settings.researchMissingContext
+            ? "border-violet-500/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/15"
+            : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:bg-white/[0.07]"
+        }`}
+      >
+        <Globe
+          className={`size-3.5 transition-colors ${
+            settings.researchMissingContext ? "text-violet-300" : "text-slate-500"
+          }`}
+          aria-hidden="true"
+        />
+        <span>Web research</span>
+        <span
+          aria-hidden="true"
+          className={`inline-flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+            settings.researchMissingContext ? "bg-violet-500" : "bg-white/20"
+          }`}
+        >
+          <span
+            className={`size-3 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+              settings.researchMissingContext ? "translate-x-3" : "translate-x-0"
             }`}
-          >
-            <Globe
-              className={`size-3.5 ${
-                settings.researchMissingContext ? "text-violet-300" : "text-slate-500"
-              }`}
-              aria-hidden="true"
-            />
-            <span>Web research</span>
-            <span
-              aria-hidden="true"
-              className={`inline-flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-                settings.researchMissingContext ? "bg-violet-500" : "bg-white/20"
-              }`}
-            >
-              <span
-                className={`size-3 rounded-full bg-white transition-transform ${
-                  settings.researchMissingContext ? "translate-x-3" : "translate-x-0"
-                }`}
-              />
-            </span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          Search the web only when the video doesn&apos;t answer
-        </TooltipContent>
-      </Tooltip>
+          />
+        </span>
+      </button>
     </div>
   );
 }

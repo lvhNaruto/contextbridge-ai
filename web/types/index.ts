@@ -93,6 +93,8 @@ export interface ChatMessage {
   answer?: AssistantAnswer;
   /** Present while the assistant is working. */
   processing?: ProcessingStage;
+  /** Optional next-explore suggestions derived from video content (D-25). */
+  suggestions?: string[];
 }
 
 export interface Lesson {

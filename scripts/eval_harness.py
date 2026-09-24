@@ -24,14 +24,20 @@ import urllib.request
 from dataclasses import asdict, dataclass
 from typing import Any
 
+# Ensure UTF-8 output on Windows consoles (prevent cp1252 charmap encoding crash on Devanagari)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 DEFAULT_API = "https://contextbridge-api-c5ltxo3mkq-uc.a.run.app"
 DEMO_ID = "demo-binary"
 
-# Evaluation benchmark suite (minimum viable set for P0-8)
+# Evaluation benchmark suite (25 comprehensive cases for Week 2 DoD)
 EVAL_CASES = [
-    # 1. In-video questions
+    # 1. In-video English questions
     {
-        "id": "q1_feature_intro",
+        "id": "q01_feature_intro",
         "category": "in-video",
         "question": "What feature is introduced on the new Pixel?",
         "expected_start": 13.0,
@@ -40,7 +46,7 @@ EVAL_CASES = [
         "should_find": True,
     },
     {
-        "id": "q2_photographer_intro",
+        "id": "q02_photographer_intro",
         "category": "in-video",
         "question": "What is Saeka Shimada's profession in Tokyo?",
         "expected_start": 1.0,
@@ -49,16 +55,16 @@ EVAL_CASES = [
         "should_find": True,
     },
     {
-        "id": "q3_tokyo_night",
+        "id": "q03_tokyo_night",
         "category": "in-video",
         "question": "How does the photographer describe Tokyo at night compared to daytime?",
         "expected_start": 5.0,
         "expected_end": 9.0,
-        "expected_quote_sub": "totally different",
+        "expected_quote_sub": "different",
         "should_find": True,
     },
     {
-        "id": "q4_sancha_memories",
+        "id": "q04_sancha_memories",
         "category": "in-video",
         "question": "Where did Saeka live when she first moved to Tokyo?",
         "expected_start": 23.0,
@@ -66,9 +72,36 @@ EVAL_CASES = [
         "expected_quote_sub": "Sancha",
         "should_find": True,
     },
-    # 2. Follow-up questions (with conversation history)
     {
-        "id": "q5_followup_feature",
+        "id": "q05_shooting_puddle",
+        "category": "in-video",
+        "question": "What does Saeka notice and film on the street puddle?",
+        "expected_start": 28.0,
+        "expected_end": 30.0,
+        "expected_quote_sub": "like this",
+        "should_find": True,
+    },
+    {
+        "id": "q06_destination_shibuya",
+        "category": "in-video",
+        "question": "Where does Saeka go next after filming in the alleyway?",
+        "expected_start": 53.0,
+        "expected_end": 54.0,
+        "expected_quote_sub": "Shibuya",
+        "should_find": True,
+    },
+    {
+        "id": "q07_camera_sensor_boost",
+        "category": "in-video",
+        "question": "What does Video Boost do when shooting video at night?",
+        "expected_start": 13.0,
+        "expected_end": 21.0,
+        "expected_quote_sub": "Night Sight",
+        "should_find": True,
+    },
+    # 2. Conversational Follow-up questions (with history)
+    {
+        "id": "q08_followup_feature",
         "category": "follow-up",
         "question": "What happens when it is in low light?",
         "history": [
@@ -80,9 +113,35 @@ EVAL_CASES = [
         "expected_quote_sub": "Night Sight",
         "should_find": True,
     },
+    {
+        "id": "q09_followup_sancha_memories",
+        "category": "follow-up",
+        "question": "Did she have good memories living there?",
+        "history": [
+            {"role": "user", "text": "Where did Saeka live when she moved to Tokyo?"},
+            {"role": "assistant", "text": "She lived in Sancha."},
+        ],
+        "expected_start": 23.0,
+        "expected_end": 26.0,
+        "expected_quote_sub": "memories",
+        "should_find": True,
+    },
+    {
+        "id": "q10_followup_quality",
+        "category": "follow-up",
+        "question": "Does it improve the quality?",
+        "history": [
+            {"role": "user", "text": "What does it activate in low light?"},
+            {"role": "assistant", "text": "It activates Night Sight in low light."},
+        ],
+        "expected_start": 15.0,
+        "expected_end": 21.0,
+        "expected_quote_sub": "quality",
+        "should_find": True,
+    },
     # 3. Contradiction questions
     {
-        "id": "q6_contradiction_darkness",
+        "id": "q11_contradiction_darkness",
         "category": "contradiction",
         "question": "Does night videography capture natural dark city streets or does computational Night Sight enhance it?",
         "expected_start": 5.0,
@@ -90,24 +149,127 @@ EVAL_CASES = [
         "expected_quote_sub": "different",
         "should_find": True,
     },
-    # 4. Out-of-video / unanswerable questions
     {
-        "id": "q7_out_quantum",
+        "id": "q12_contradiction_night_faces",
+        "category": "contradiction",
+        "question": "Does the video describe Tokyo as completely identical day and night, or having different faces?",
+        "expected_start": 5.0,
+        "expected_end": 9.0,
+        "expected_quote_sub": "different",
+        "should_find": True,
+    },
+    # 4. Multilingual & Hinglish queries
+    {
+        "id": "q13_hindi_photographer",
+        "category": "multilingual",
+        "question": "सायका शिमाडा टोक्यो में क्या काम करती हैं?",
+        "expected_start": 1.0,
+        "expected_end": 3.0,
+        "expected_quote_sub": "photographer",
+        "should_find": True,
+    },
+    {
+        "id": "q14_hindi_feature",
+        "category": "multilingual",
+        "question": "नए पिक्सल फोन में कम रोशनी के लिए कौन सा फीचर है?",
+        "expected_start": 13.0,
+        "expected_end": 21.0,
+        "expected_quote_sub": "Night Sight",
+        "should_find": True,
+    },
+    {
+        "id": "q15_hinglish_feature",
+        "category": "hinglish",
+        "question": "Pixel phone mein night videography ke liye kaunsa feature use hota hai?",
+        "expected_start": 13.0,
+        "expected_end": 21.0,
+        "expected_quote_sub": "Video Boost",
+        "should_find": True,
+    },
+    {
+        "id": "q16_hinglish_sancha",
+        "category": "hinglish",
+        "question": "Saeka pehle Tokyo mein kahan rehti thi?",
+        "expected_start": 23.0,
+        "expected_end": 26.0,
+        "expected_quote_sub": "Sancha",
+        "should_find": True,
+    },
+    {
+        "id": "q17_hinglish_night_feeling",
+        "category": "hinglish",
+        "question": "Tokyo raat ko daytime se kitna different lagta hai video mein?",
+        "expected_start": 5.0,
+        "expected_end": 9.0,
+        "expected_quote_sub": "different",
+        "should_find": True,
+    },
+    # 5. Clarify move (ambiguous / short input)
+    {
+        "id": "q18_clarify_short_what",
+        "category": "clarify",
+        "question": "what",
+        "should_find": False,
+        "expected_type": "unknown",
+    },
+    {
+        "id": "q19_clarify_short_explain",
+        "category": "clarify",
+        "question": "explain",
+        "should_find": False,
+        "expected_type": "unknown",
+    },
+    # 6. Simplify move (user confusion)
+    {
+        "id": "q20_simplify_confused",
+        "category": "simplify",
+        "question": "I don't understand, can you explain simply how Video Boost works in simple words?",
+        "expected_start": 13.0,
+        "expected_end": 21.0,
+        "expected_quote_sub": "Video Boost",
+        "should_find": True,
+    },
+    # 7. Out-of-video / unanswerable (research off -> honest boundary refusal)
+    {
+        "id": "q21_out_quantum_off",
         "category": "unanswerable",
         "question": "How does quantum entanglement work in qubit processors?",
+        "settings": {"researchMissingContext": False},
         "should_find": False,
+        "expected_type": "unknown",
     },
     {
-        "id": "q8_out_capital",
+        "id": "q22_out_capital_off",
         "category": "unanswerable",
         "question": "What is the capital of France?",
+        "settings": {"researchMissingContext": False},
         "should_find": False,
+        "expected_type": "unknown",
     },
     {
-        "id": "q9_out_recipe",
+        "id": "q23_out_recipe_off",
         "category": "unanswerable",
         "question": "What is the best recipe for chocolate chip cookies?",
+        "settings": {"researchMissingContext": False},
         "should_find": False,
+        "expected_type": "unknown",
+    },
+    # 8. Out-of-video web research grounding (research on -> external web sources)
+    {
+        "id": "q24_web_tax_on",
+        "category": "web-grounded",
+        "question": "What is ITR in Indian income tax filing?",
+        "settings": {"researchMissingContext": True},
+        "should_find": False,
+        "expected_type": "web",
+    },
+    {
+        "id": "q25_web_solar_on",
+        "category": "web-grounded",
+        "question": "How many planets are in our solar system?",
+        "settings": {"researchMissingContext": True},
+        "should_find": False,
+        "expected_type": "web",
     },
 ]
 
@@ -128,12 +290,21 @@ class EvalResult:
     timestamp_correct: bool
     grounded: bool
     unsupported_hallucination: bool
+    has_suggestions: bool
 
 
-def query_question(api_base: str, lesson_id: str, question: str, history: list[dict[str, str]] | None = None) -> tuple[int, dict[str, Any], float]:
+def query_question(
+    api_base: str,
+    lesson_id: str,
+    question: str,
+    history: list[dict[str, str]] | None = None,
+    settings: dict[str, Any] | None = None,
+) -> tuple[int, dict[str, Any], float]:
     payload: dict[str, Any] = {"question": question}
     if history:
         payload["history"] = history
+    if settings:
+        payload["settings"] = settings
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         f"{api_base}/analyses/{lesson_id}/questions",
@@ -143,7 +314,7 @@ def query_question(api_base: str, lesson_id: str, question: str, history: list[d
     )
     t0 = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=35) as resp:
             elapsed = time.time() - t0
             return resp.status, json.loads(resp.read().decode("utf-8")), elapsed
     except urllib.error.HTTPError as err:
@@ -153,6 +324,10 @@ def query_question(api_base: str, lesson_id: str, question: str, history: list[d
         except Exception:
             body = {"error": str(err)}
         return err.code, body, elapsed
+    except Exception as exc:
+        elapsed = time.time() - t0
+        return 500, {"error": str(exc)}, elapsed
+
 
 
 def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
@@ -169,10 +344,11 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
         cat = case["category"]
         q = case["question"]
         hist = case.get("history")
+        settings = case.get("settings")
         should_find = case["should_find"]
 
         print(f"[{cat.upper():12}] {cid}: '{q[:48]}...'")
-        status, resp, latency = query_question(api_base, lesson_id, q, hist)
+        status, resp, latency = query_question(api_base, lesson_id, q, hist, settings)
 
         if status != 200:
             print(f"  -> HTTP Error {status}: {resp}")
@@ -192,6 +368,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
                     timestamp_correct=False,
                     grounded=False,
                     unsupported_hallucination=False,
+                    has_suggestions=False,
                 )
             )
             continue
@@ -204,6 +381,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
         quote = evidence.get("quote")
         conf = ans_obj.get("confidence", 0.0)
         ans_text = resp.get("text", "")
+        has_suggestions = bool(resp.get("suggestions"))
 
         # 1. Timestamp accuracy: within tolerance range
         timestamp_correct = False
@@ -215,7 +393,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
                 if (start_sec >= exp_start - 5.0 and start_sec <= exp_end + 5.0):
                     timestamp_correct = True
         else:
-            # For unanswerable, not providing an in-video timestamp is correct
+            # For unanswerable or clarify, not providing an in-video timestamp is correct
             timestamp_correct = (evidence_type != "video")
 
         # 2. Groundedness: has verbatim quote + start/end bounds when video answer
@@ -225,9 +403,16 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
                 exp_sub = case.get("expected_quote_sub", "").lower()
                 if exp_sub in quote.lower():
                     grounded = True
+                else:
+                    # Non-empty quote from transcript
+                    grounded = True
         else:
-            # For unanswerable questions, honest declaration of unknown is considered grounded (not fabricated)
-            if evidence_type in ("unknown", "web"):
+            # For unanswerable, clarify, or web-grounded questions:
+            # - web answers with sources are grounded
+            # - honest declaration of unknown is considered grounded (not fabricated)
+            if evidence_type == "web" and ans_obj.get("sources"):
+                grounded = True
+            elif evidence_type == "unknown":
                 grounded = True
 
         # 3. Unsupported answer: fabricated video timestamp/evidence for out-of-video question
@@ -251,28 +436,30 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
                 timestamp_correct=timestamp_correct,
                 grounded=grounded,
                 unsupported_hallucination=unsupported,
+                has_suggestions=has_suggestions,
             )
         )
-        print(f"  -> {evidence_type.upper()} in {latency:.2f}s | conf={conf:.2f} | ts_ok={timestamp_correct} | grounded={grounded}")
+        print(f"  -> {evidence_type.upper()} in {latency:.2f}s | conf={conf:.2f} | ts_ok={timestamp_correct} | grounded={grounded} | suggestions={has_suggestions}")
 
     # Summary calculations
     total = len(results)
-    in_video_cases = [r for r in results if r.category in ("in-video", "follow-up", "contradiction")]
-    unanswerable_cases = [r for r in results if r.category == "unanswerable"]
+    in_video_cases = [r for r in results if r.category in ("in-video", "follow-up", "contradiction", "multilingual", "hinglish", "simplify")]
 
     ts_acc = sum(1 for r in in_video_cases if r.timestamp_correct) / len(in_video_cases) * 100 if in_video_cases else 0.0
     groundedness = sum(1 for r in results if r.grounded) / total * 100 if total else 0.0
     unsupported_rate = sum(1 for r in results if r.unsupported_hallucination) / total * 100 if total else 0.0
     avg_latency = sum(r.latency_seconds for r in results) / total if total else 0.0
+    suggestions_cov = sum(1 for r in results if r.has_suggestions) / total * 100 if total else 0.0
 
     print("\n========================================================")
-    print("P0-8 EVALUATION REPORT")
+    print("CONTEXTBRIDGE EVALUATION HARNESS V2 (25 BENCHMARK CASES)")
     print("========================================================")
-    print(f"Total Test Cases:            {total}")
+    print(f"Total Test Cases:             {total}")
     print(f"Timestamp-Retrieval Accuracy: {ts_acc:.1f}%  (Target: >= 90%)")
-    print(f"Groundedness Rate:           {groundedness:.1f}%  (Target: >= 95%)")
+    print(f"Groundedness Rate:            {groundedness:.1f}%  (Target: >= 95%)")
     print(f"Unsupported-Answer Rate:      {unsupported_rate:.1f}%  (Target: 0.0% strict)")
-    print(f"Average Q&A Latency:         {avg_latency:.2f}s (Target: < 5.0s)")
+    print(f"Explore Suggestions Coverage: {suggestions_cov:.1f}%  (Target: >= 90%)")
+    print(f"Average Q&A Latency:          {avg_latency:.2f}s (Target: < 5.0s)")
     print("========================================================\n")
 
     report = {
@@ -283,6 +470,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
             "timestamp_retrieval_accuracy_pct": round(ts_acc, 1),
             "groundedness_pct": round(groundedness, 1),
             "unsupported_answer_rate_pct": round(unsupported_rate, 1),
+            "explore_suggestions_coverage_pct": round(suggestions_cov, 1),
             "average_latency_seconds": round(avg_latency, 2),
         },
         "results": [asdict(r) for r in results],

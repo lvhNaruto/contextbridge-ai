@@ -18,6 +18,8 @@ import {
 } from "@/components/evidence/evidence-badge";
 import { TimestampButton } from "@/components/evidence/timestamp-button";
 import { WebSourceCard } from "@/components/evidence/web-source-card";
+import { BoundaryCard } from "@/components/evidence/boundary-card";
+import { ExploreSuggestions } from "@/components/chat/explore-suggestions";
 import type { ChatMessage } from "@/types";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -78,6 +80,7 @@ export function AssistantMessage({
   onJump,
   answerLanguage,
   lessonTitle,
+  onSelectSuggestion,
 }: {
   message: ChatMessage;
   /** True when this answer's moment is the current timeline highlight. */
@@ -85,6 +88,7 @@ export function AssistantMessage({
   onJump: (seconds: number) => void;
   answerLanguage: string;
   lessonTitle?: string;
+  onSelectSuggestion?: (question: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const { speaking, speak } = useSpeak();
@@ -166,24 +170,37 @@ export function AssistantMessage({
             : "border-white/[0.07] bg-white/[0.03]",
         )}
       >
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-100">
-          {message.text}
-        </p>
-
-        {answer?.evidence?.quote && (
-          <blockquote className="mt-3 flex gap-2.5 rounded-xl border-l-2 border-violet-400/50 bg-violet-500/[0.06] px-3.5 py-2.5">
-            <Quote className="mt-0.5 size-3.5 shrink-0 text-violet-300/70" aria-hidden="true" />
-            <p className="text-xs italic leading-relaxed text-slate-300">
-              “{answer.evidence.quote}”
+        {answer?.evidenceType === "web" ? (
+          <BoundaryCard sources={answer.sources}>
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-100">
+              {message.text}
             </p>
-          </blockquote>
+          </BoundaryCard>
+        ) : (
+          <>
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-100">
+              {message.text}
+            </p>
+
+            {answer?.evidence?.quote && (
+              <blockquote className="mt-3 flex gap-2.5 rounded-xl border-l-2 border-violet-400/50 bg-violet-500/[0.06] px-3.5 py-2.5">
+                <Quote className="mt-0.5 size-3.5 shrink-0 text-violet-300/70" aria-hidden="true" />
+                <p className="text-xs italic leading-relaxed text-slate-300">
+                  “{answer.evidence.quote}”
+                </p>
+              </blockquote>
+            )}
+          </>
         )}
 
         {/* Evidence footer — video and web are never mixed */}
         {answer && (
           <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3.5">
-            <EvidenceBadge type={answer.evidenceType} />
-            {answer.confidence > 0 && (
+            <EvidenceBadge
+              type={answer.evidenceType}
+              confidence={answer.confidence}
+            />
+            {answer.evidenceType !== "video" && answer.confidence > 0 && (
               <ConfidenceBadge confidence={answer.confidence} />
             )}
 
@@ -199,15 +216,12 @@ export function AssistantMessage({
           </div>
         )}
 
-        {answer?.sources && answer.sources.length > 0 && (
-          <div
-            className="mt-3.5 grid gap-2 sm:grid-cols-2"
-            aria-label="Web sources"
-          >
-            {answer.sources.map((source) => (
-              <WebSourceCard key={source.url} source={source} />
-            ))}
-          </div>
+        {/* Explore from here suggestions (A9, D-25) */}
+        {message.suggestions && message.suggestions.length > 0 && (
+          <ExploreSuggestions
+            suggestions={message.suggestions}
+            onSelect={onSelectSuggestion}
+          />
         )}
 
         {/* Copy + listen */}

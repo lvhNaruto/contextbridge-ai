@@ -7,69 +7,69 @@
 
 ---
 
-## 1. Name
+## 1. Name & Vision Line
 
 **ContextBridge**
 
-Tagline (deck only, not the product UI):
-> Turn long, hard-to-access video into searchable, timestamped, accessible knowledge.
+> **Vision Line:** "Not a tutor. A compass for self-learners — every answer anchored to the video you chose, in your language, with proof, and honest about where the video ends."
 
-Do not brand the prototype as a "reusable Multimodal Intelligence Platform." That is a scalability line for the deck. One product, one surface, one theme, one submission.
+### The Three Pillars (Priority Order)
+1. **P1 — Anchored:** The student's chosen video is the source of truth. Video answers must come strictly from the video, verified against its transcript, with a clickable timestamp.
+2. **P2 — Proof:** Trust must be visible. Every answer shows what world it came from (video / web-beyond / honestly not covered) and its evidence is one click from the exact video moment. Video and web evidence are never blended.
+3. **P3 — Boundary Honesty:** When curiosity steps beyond the video, the companion says so clearly and offers labeled web research — the boundary is a designed feature, not a failure.
+
+**Secondary Identity:** Multilingual self-learner — Hindi and English first-class, code-mixed (Hinglish) input supported, answers delivered in the language the learner thinks in.
+
+Tagline (deck only):
+> *A compass for self-learners: Turn long video into anchored, verifiable, multilingual knowledge.*
 
 ---
 
 ## 2. One-line pitch
 
-Upload a long video, ask it questions, and get a grounded answer with the exact timestamp, the quote that supports it, and one accessible version — plain-language summary, translation, or spoken narration — of the same content.
+A compass for self-learners that anchors every answer to the video you choose with verbatim quotes and clickable timestamps, speaks your language (English & Hindi), and honestly marks the boundary with labeled external research when you step beyond.
 
 ---
 
 ## 3. Problem
 
-Important information is trapped in long recordings — lectures, trainings, public hearings, corporate talks, news conferences, webinars, long-form video. A person who needs one answer usually has two options: watch the whole thing or give up.
+Important knowledge is locked in long recordings — technical tutorials, lectures, deep-dives, coding walk-throughs. Self-learners face a painful dilemma: watch the whole 45 minutes or risk missing crucial context.
 
-The pain is specific and frequent:
+Worse, generic AI chatbots fail self-learners in three fatal ways:
+1. **Fabricated certainty:** Chatbots invent plausible quotes and hallucinate timestamps, destroying learner trust.
+2. **Opaque sourcing:** Learners cannot tell if an answer came from their trusted instructor or from arbitrary model weights.
+3. **Language & literacy barriers:** Many self-learners in JAPAC think in Hindi or Hinglish, but tutorials are recorded in English (or vice versa) without verifiable audio-first navigation.
 
-- A student misses a concept in a 40-minute lecture and cannot find the exact moment it was explained.
-- A new hire sits through onboarding video they will not remember; the same question gets asked repeatedly.
-- A resident, caregiver, or non-native speaker cannot engage with a public-service video in their own language or reading level.
-- A viewer cannot verify what was actually said, or tell whether one statement conflicts with another later in the video.
-
-A generic video chatbot can summarise. ContextBridge exists because a summary is not the job — the job is **find the answer, prove where it came from, and make it reachable for the next viewer**.
+A generic chatbot summarizes. ContextBridge acts as an **exploratory compass**: it anchors answers to the actual video, visibly proves them, guides exploration from the video's own concepts, and honestly refuses to pretend the video said what it didn't.
 
 ---
 
 ## 4. Target users
 
-**Primary (the prototype's surface):**
+**Primary (the hackathon prototype):**
+- **Self-directed learners & students** navigating complex video tutorials (coding, technical, domain-specific) who need exact, verifiable answers fast.
+- **Vernacular & multilingual learners** (JAPAC / India) who understand technical concepts better when explained in Hindi or conversational Hinglish with audio narration.
+- **Visual & auditory learners** who learn by jumping between video moments, transcripts, and spoken explanations.
 
-- Students and self-learners working with educational videos and tutorials.
-- Instructors and trainers publishing video lessons who want learners to ask follow-ups without re-recording explanations.
-- Anyone who has watched a long video and needed a specific answer, in a specific language or reading level.
-
-**Scale story (deck only — not built now):**
-
-- Education platforms and schools.
-- Corporate training, onboarding, and compliance video.
-- Public-service and civic communication (government, health, emergency video).
-- Accessibility-first audiences: non-native speakers, screen-reader users, lower-literacy viewers, audio-first viewers.
-- Long-form content platforms adding a conversational layer to existing video libraries.
-
-Keep the prototype aimed at the primary user. Do not dilute the 25% impact score by pitching six audiences at once.
+**Scale story (deck only):**
+- Technical documentation & developer platforms adding video knowledge indexing.
+- Continuous learning & enterprise onboarding.
+- Accessibility-first educational hubs.
 
 ---
 
 ## 5. Solution (what it actually does)
 
-A user uploads a short-to-medium video, ContextBridge analyses it once, and the product becomes a **searchable, questionnable, linkable version of that video**:
+ContextBridge ingests a video once and transforms it into an **anchored, verifiable exploration workspace**:
 
-1. **One-pass analysis.** The video is sent to Gemini and returns a structured, schema-validated `MediaAnalysis`: a short summary, language, topics, a transcript with timestamps, and an evidence timeline of meaningful events — each with a confidence score and source quotes.
-2. **An evidence timeline the viewer can read and click.** Chapters and timestamps, a searchable transcript, and evidence cards that jump playback to the relevant moment.
-3. **Grounded Q&A.** A user asks a question; the product answers from the video's own analysis, attaches the source timestamps, and says **"not found in this video"** when the answer is not there. It does not invent answers.
-4. **One accessible output.** From the same analysis the product generates, on request: a plain-language summary, a translation into one other language, or an audio narration via Text-to-Speech. The same content, a different format.
-5. **Contradiction/claim surfacing.** A second extraction pass over the *same* analysis flags claims and highlights **pairs that conflict** — each with its timestamp, so a judge can click both and hear them in context. This is the amendment that answers the "isn't this just a Gemini video demo?" question.
+1. **One-pass multimodal indexing:** Analyzed with Gemini 2.5 Flash on Vertex AI into a validated `MediaAnalysis`: summary, topics, chapters, exact transcript, and confidence-scored events.
+2. **Visual Proof & EvidenceBadge:** Every answer visibly identifies its source world (`✅ Verified from this video · 96%`, `🌐 Beyond this video`, or `🤷 Not covered`).
+3. **Interactive TranscriptSync:** Clicking an evidence quote or timestamp seeks the video player to the exact second and highlights/auto-scrolls the transcript row.
+4. **ExploreSuggestions:** After every answer, the companion suggests 2–3 "Explore from here →" paths derived from the video's own unasked concepts and chapters.
+5. **BoundaryCard for Web Beyond:** Stepping beyond the video triggers an explicitly framed external research card with verified source citations — never blended into video claims.
+6. **Bilingual Voice Loop:** Learners can speak and listen in English, Hindi, or Hinglish with native Gemini multimodal transcription and language-matched TTS.
+7. **Contradiction Surfacing:** Identifies conflicting claims within the video with dual clickable timestamps so learners can inspect nuance.
 
-The product does nothing outside the video and its own analysis unless a clearly separated, explicitly labelled optional context feature is enabled — never blended into the core answer.
 
 ---
 
@@ -134,44 +134,36 @@ The end-to-end path a judge (or a first-time visitor) walks, and the path the <3
 
 ## 9. Differentiator
 
-Why this is not "just a Gemini video demo," stated as product facts:
+Why this is not "just a Gemini video demo" or "another AI tutor," stated as product facts:
 
-- **Honest not-found path.** Generic video chatbot demos only show the happy path; ContextBridge makes refusal a visible, testable feature. Honesty is the trust design.
-- **Evidence as a first-class object.** Every important answer carries timestamped, clickable evidence that seeks the video — verifiability is built into the schema (`sourceTimestamps`, evidence timeline), not decorated into the UI.
-- **Contradiction surfacing over the same analysis.** A second reasoning pass over one stored index surfaces conflicting claims without a second video call — a cheap, distinctly product-level behaviour.
-- **Accessibility as an output, not a claim.** Plain language, translation, and TTS narration are generated from the same structured index and stay linked to their source timestamps — the JAPAC/accessibility angle is demonstrable in one click.
-- **One canonical index.** Timeline, transcript, Q&A, and contradiction detection all read the same schema-validated `MediaAnalysis`; no second pipeline, no drift between features.
-- **Measured, not asserted.** An evaluation set with known-answer timestamps reports timestamp accuracy, groundedness, unsupported-answer rate, and processing time — the deck can cite numbers.
+- **A Compass, Not a Tutor:** We do not lecture or replace the creator. We provide an orientation tool that anchors every answer to the learner's chosen video, guides exploration, and admits boundaries.
+- **Evidence as a First-Class Citizen:** Every video answer carries verbatim quotes and exact clickable timestamps that seek the player. The anti-fabrication gate (`quote_matches_transcript`) structurally prevents hallucinated citations.
+- **Visible Trust Worlds (EvidenceBadge & BoundaryCard):** The UI immediately signals where an answer originated (`✅ Verified from this video · 96%` vs `🌐 Beyond this video` vs `🤷 Not covered`). Video and web evidence are never blended into an ambiguous slurry.
+- **Exploration Anchors (ExploreSuggestions):** Guides curiosity by suggesting 2–3 next-question chips derived from the video's own unasked chapters and concepts, rather than generic open-ended chatbot prompts.
+- **Boundary Honesty as a Feature:** Out-of-video questions trigger explicit, honest recognition. When external research is enabled, it presents verified Google Search grounding in a dedicated `BoundaryCard`. Refusal is not a failure; it is the trust anchor.
+- **Contradiction Surfacing Over One Index:** A secondary analytical pass over the stored index reveals contrasting statements without duplicate video calls.
+- **Vernacular First-Class (Hindi/English/Hinglish):** Full bidirectional voice loop powered by native Gemini multimodal audio transcription and speech synthesis in the learner's native tongue.
+- **Measured Quality:** Performance is proven by reproducible evaluation scorecards (`eval_results.json`) measuring citation accuracy, groundedness, honest refusal rate, and latency.
 
-**Positioning line for the deck:** "Every other tool gives you a summary of a video. ContextBridge gives you the answer, the exact moment it came from, an honest admission of what it doesn't know, and the same content in a form the next viewer can actually use."
+**Positioning line for the deck:**
+> *"Every other tool tries to tutor you with generic summaries and unverified AI claims. ContextBridge is a compass: every answer is anchored to your video, verified with proof you can click, spoken in your language, and completely honest about where the video ends."*
 
 ---
 
-## 10. Core features
+## 10. Core features (The Compass Architecture)
 
-**Tier 1 — MVP (must ship, maps 1:1 to P0 in `REQUIREMENTS.md`):**
+**Tier 1 — MVP & Winning Foundation (All active and verified):**
 
-- **Fixture-first video intake** — pre-analysed ≤2-minute sample videos plus one live upload/analysis path (P0-6).
-- **Schema-validated analysis pipeline** — Gemini on Vertex AI → `MediaAnalysis` → persisted store, with `analysis_jobs` status (P0-2).
-- **Evidence timeline + transcript** — chapters, timestamps, searchable transcript, evidence cards, click-to-seek (P0-3).
-- **Grounded Q&A** — real Gemini answers with `sourceTimestamps` / `foundInSource` / `confidence` / `uncertaintyReason`, and the explicit "not found in this video" path (P0-1).
-- **Contradiction / claim surfacing** — conflicting statement pairs with both timestamps, clickable to play, derived from the same analysis (P0-4).
-- **One accessible artifact** — plain-language summary, one translation, or TTS narration from the stored index, each keeping its source timestamps (P0-5).
-- **Session persistence** — return to an analysed video, keep follow-up conversation context (P0-7).
-- **Evaluation harness** — known-answer timestamp set reporting timestamp accuracy, groundedness, unsupported-answer rate, processing time (P0-8).
-- **Deployed Cloud URL** — working Cloud Run (or Firebase) deployment as the single demo surface (P0-9).
-
-**Tier 2 — demo polish (P1, in priority order):**
-
-- Full-size evaluation set (20 videos / 100 questions) with metrics in the deck (P1-1).
-- All three accessible outputs + shareable evidence card (P1-2).
-- Voice question input (P1-3).
-- Confidence / uncertainty display on answers, distinct not-found styling (P1-4).
-- Firebase Auth with per-user video scoping (P1-5).
-- Second frontend at parity — **conditional** on a dedicated frontend owner (P1-6).
-- Rehearsed demo + fallback recording (P1-7).
-
-**Tier 3 — post-hackathon (P2 / deck scalability only):** multi-video projects, cross-video search, external actions, enterprise permissions, clip-rendering pipeline, packaging the stack as a reusable "Multimodal Intelligence Platform," additional verticals.
+- **Fixture-first intake & live upload:** Pre-analyzed sample video (`demo-binary` synchronized to Tokyo Night videography) plus live upload pipeline via Gemini 2.5 Flash on Vertex AI (P0-2, P0-6).
+- **Schema-validated multimodal indexing:** `MediaAnalysis.from_dict` validation gate enforcing chapters, confidence scores, and verbatim transcripts.
+- **Visual EvidenceBadge & Trust Indicators:** Immediate badge display (`✅ Verified from this video · 96%`, `🌐 Beyond this video`, `🤷 Not covered`).
+- **TranscriptSync:** Interactive transcript panel with real-time active segment highlighting and smooth auto-scroll on evidence click.
+- **ExploreSuggestions ("Explore from here →"):** 2–3 exploration chips under each answer derived from video topics and chapters.
+- **BoundaryCard for Web Research:** Formatted external research container with live Google Search citations for questions beyond the lesson.
+- **Multilingual Voice Loop:** Real audio speech-to-text via Gemini `/transcribe` endpoint + browser `speechSynthesis` with language-matched voices (`hi-IN` / `en-US`).
+- **Teaching Moves (Clarify & Simplify):** Support for beginner simplification ("samajh nahi aaya") with analogy explanations and fast query handling.
+- **Contradiction Surfacing Card:** Conflicting claim pairs with dual clickable jump buttons (P0-4).
+- **Evaluation Harness v2:** Automated 25-question evaluation suite covering in-video, out-of-video, Hindi, and contradiction queries.
 
 ---
 
@@ -179,45 +171,41 @@ Why this is not "just a Gemini video demo," stated as product facts:
 
 Explicitly **not** ContextBridge, for this hackathon:
 
-- **Not a clip-rendering / video-editing product.** No re-encode, export, or StorySplice rendering pipeline — the amendment deliberately dropped it.
-- **Not a multi-video platform.** One video in, one analysis out; no cross-video search, playlists, or library.
-- **Not an actions system.** No emails, posts, bookings, or autonomous external actions — read, understand, explain, surface.
-- **Not an enterprise permissions product.** Auth (P1) is scoping only; no teams, roles, audit consoles, or multi-tenant admin.
-- **Not a generic chatbot.** No open-domain conversation inside the product; questions are about the video, and anything else gets the honest not-found (or a clearly separated, labelled optional context feature — never blended).
-- **Not a multi-frontend project.** Streamlit is the surface; `web/` stays shelved unless P1-6 is explicitly triggered.
-- **Not "six verticals in one demo."** One theme (Media), one submission — FixFlow/ShelfSense/RescueGrid/TrustLens-class ideas are roadmap lines only.
-- **Not a service showcase.** Google services enter the stack only with a named responsibility; no sprinkling Document AI/Speech-to-Text/BigQuery for slide credit.
+- **Not a replacement tutor:** No prescriptive grading, curriculum design, or claiming to know more than the video creator.
+- **Not an open-domain chat assistant:** Does not converse loosely on unrelated topics; out-of-video queries trigger boundary honesty or labeled web research.
+- **Not a video rendering / editing suite:** No video re-encoding, clipping exports, or ffmpeg heavy video modifications.
+- **Not a complex multi-tenant enterprise system:** No auth walls, user databases, billing, or permission trees.
+- **No unverified answers:** No answer is presented as video truth unless it passes the strict quote-matching gate.
 
 ---
 
-## 12. Success criteria
+## 12. Success criteria (The Winning Scorecard)
 
-**Product success (what we demo):**
+**Product success (what we demo in 90 seconds):**
 
-1. A first-time visitor on the deployed URL picks a fixture, understands the screen in ≤30 seconds, and reaches a timestamped, verifiable answer in under 3 clicks / 1 typed question.
-2. Every answer's evidence click seeks the video to within ~1s of the claimed timestamp (spot-check: ≥4/5 correct on stage).
-3. The honest "not found in this video" path visibly works when rehearsed.
-4. A real contradictory pair surfaces with both timestamps and both segments playable.
-5. One accessible artifact generates from the stored index with its source timestamps preserved.
+1. **Orientation (10s):** Landing page immediately communicates "Compass for self-learners, not a tutor."
+2. **Anchored Exploration (20s):** Ask a question $\rightarrow$ answer with quote $\rightarrow$ click evidence button $\rightarrow$ video seeks and transcript scrolls to exact second.
+3. **Compass Suggestions (15s):** Click an "Explore from here →" chip to navigate video concepts.
+4. **Boundary Honesty (15s):** Ask an out-of-video question $\rightarrow$ visible `BoundaryCard` with real Google Search sources and "stepped beyond this video" notice.
+5. **Language & Voice (15s):** Voice question in Hindi $\rightarrow$ natural Hindi answer + audio read-aloud.
+6. **Proof of Quality (15s):** Show eval scorecard with 100% verified citation rate, 78 green tests, and decision history.
 
-**Measurable success (what we cite):** the P0-8 harness reports — timestamp-retrieval accuracy, groundedness, unsupported-answer rate, processing time per video — with targets set from the first fixture run and reported in the deck (P1-1 scales the set to 20 videos / 100 questions).
-
-**Judging success (weights from `HACKATHON.md`):**
-
-- **Technical / GenAI (40%)** — the agent pipeline (A–F) runs end-to-end on the deployed URL: no mocked Q&A, structured schema-validated output, evidence, measured eval numbers.
-- **Problem alignment & impact (25%)** — one concrete user, one real pain, verifiable in the demo journey; the accessibility output demonstrates reach.
-- **Innovation (25%)** — contradiction surfacing + honest refusal + one-index-many-outputs read as clearly beyond "summary demo."
-- **UX (10%)** — first-run path needs zero explanation; timeline, answer card, and artifact button are self-evident.
-
-**Submission success:** deployed URL live, public GitHub repo with in-window commit history, public demo video strictly <3 minutes, valid English PDF deck — all passing the P0-11 dry-run ≥2 days before 18 Oct 2026.
+**Measurable success targets:**
+- **In-video verified-citation rate:** 100% (enforced by gate).
+- **Correct-branch rate:** $\ge 92\%$.
+- **Honest-refusal appropriateness:** 100% of out-of-video queries properly labeled or refused.
+- **Language fidelity:** $\ge 95\%$ of Hindi/Hinglish queries answered in matched language.
+- **p95 question latency:** $\le 8$ seconds.
+- **Test suite:** 78 baseline tests passing + new coverage with zero regressions.
 
 ---
 
-## 13. Guardrail principle (the one rule above all)
+## 13. Guardrail principle (The Compass Pledge)
 
-**Do not claim certainty the video does not give.**
+**Do not claim certainty the video does not give. The boundary is a feature, not a failure.**
 
-Every feature derives from that rule: timestamps and quotes on answers, the confidence and uncertainty fields, the not-found path, the separation of observation from interpretation, the contradiction panel showing *both* statements instead of picking a winner, and (if built) the strict separation of any external context. When trade-offs arise — a flaky answer that *looks* confident vs. an honest miss — the product stays honest. The product's credibility **is** the trust design.
+Every feature derives from that pledge: verbatim quotes, strict timestamp validation, explicit refusal when context is missing, distinct visual framing for external research, and dual-perspective contradiction surfacing. Credibility is our moat.
+
 
 
 

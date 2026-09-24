@@ -385,12 +385,33 @@ def test_post_transcribe_endpoint(client, monkeypatch):
     assert resp.json()["text"] == "Transcribed speech text"
 
 
-# --- REG: _mock_answer absent from the product (REQUIREMENTS risk table) -----
-
-
 def test_api_package_contains_no_mock_answer_path():
     api_dir = Path(__file__).resolve().parent.parent / "api"
     sources = {p.name: p.read_text(encoding="utf-8") for p in api_dir.glob("*.py")}
     assert sources, "api/ package not found"
     for name, text in sources.items():
         assert "_mock_answer" not in text, f"mock path still present in {name}"
+
+
+def test_derive_suggestions_produces_anchored_questions():
+    envelope = {
+        "topics": ["Video Boost", "Night Sight", "Low light videography"],
+        "events": [{"title": "Saeka in Tokyo"}, {"title": "Exploring Sancha at Night"}],
+        "contradictions": [{"claim": "natural darkness vs computational enhancement"}],
+    }
+    s = agent.derive_suggestions(envelope, "Tell me about Tokyo")
+    assert len(s) >= 2
+    assert any("contradiction" in q.lower() for q in s)
+
+
+def test_ambiguous_question_triggers_clarification(client):
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={"question": "what"},
+    )
+    assert resp.status_code == 200
+    msg = resp.json()
+    assert msg["answer"]["evidenceType"] == "unknown"
+    assert "specify" in msg["text"].lower()
+    assert len(msg.get("suggestions", [])) > 0
+

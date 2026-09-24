@@ -24,6 +24,8 @@ api/main.py; tools and verification live in api/tools.py.
 
 from __future__ import annotations
 
+import json
+import logging
 import secrets
 import time
 from typing import Any
@@ -31,14 +33,21 @@ from typing import Any
 from api import pipeline, tools
 from api.config import Settings
 
+logger = logging.getLogger(__name__)
+
 # The locked mock shows 0.72 for web answers (web/lib/demo-answers.ts);
 # AssistantAnswer.confidence is a required field in the locked types.
 _WEB_CONFIDENCE = 0.72
 
 
-def _chat_message(answer: dict[str, Any], *, is_voice: bool) -> dict[str, Any]:
+def _chat_message(
+    answer: dict[str, Any],
+    *,
+    is_voice: bool,
+    suggestions: list[str] | None = None,
+) -> dict[str, Any]:
     """Wrap a verified AssistantAnswer in the ChatMessage envelope (API §2)."""
-    return {
+    msg: dict[str, Any] = {
         "id": f"msg-{secrets.token_hex(3)}",
         "role": "assistant",
         "text": answer["text"],
@@ -46,6 +55,90 @@ def _chat_message(answer: dict[str, Any], *, is_voice: bool) -> dict[str, Any]:
         "createdAt": int(time.time() * 1000),  # epoch ms — a NUMBER, not a string
         "answer": answer,
     }
+    if suggestions:
+        msg["suggestions"] = suggestions
+    return msg
+
+
+_AMBIGUOUS_KEYWORDS = frozenset({"what", "why", "how", "explain", "tell me", "help", "hello", "hi", "hey", "video"})
+
+
+def _is_ambiguous_query(text: str) -> bool:
+    cleaned = text.strip().lower().strip("?!.,")
+    if not cleaned or (len(cleaned.split()) <= 1 and cleaned in _AMBIGUOUS_KEYWORDS):
+        return True
+    return False
+
+
+def _wants_simplification(text: str) -> bool:
+    low = text.strip().lower()
+    return any(p in low for p in (
+        "i don't understand", "i dont understand", "samajh nahi", "samajh nhi",
+        "confused", "explain simply", "simple terms", "eli5", "easy words",
+        "saral bhasha", "kuch samajh nahi"
+    ))
+
+
+def derive_suggestions(envelope: dict[str, Any], current_question: str) -> list[str]:
+    """Derive 2–3 next-explore questions from the video's own content (D-25).
+
+    Zero extra LLM calls: inspects unused chapters, topics, and contradictions.
+    """
+    suggestions: list[str] = []
+    q_norm = current_question.lower()
+
+    # 1. Contradictions if available and not already asked
+    for pair in envelope.get("contradictions", []):
+        claim = str(pair.get("claim", "")).strip()
+        if claim and claim.lower() not in q_norm:
+            clean_claim = claim if len(claim) <= 45 else f"{claim[:42]}..."
+            suggestions.append(f"Why is there a contradiction about {clean_claim}?")
+            break
+
+    # 2. Chapters not mentioned
+    chapters = envelope.get("events") or envelope.get("chapters") or []
+    for ch in chapters:
+        title = str(ch.get("title", "")).strip()
+        if not title:
+            continue
+        if title.lower() not in q_norm and len(title) > 3:
+            clean_title = title if len(title) <= 40 else f"{title[:37]}..."
+            suggestions.append(f"What happens in '{clean_title}'?")
+        if len(suggestions) >= 2:
+            break
+
+    # 3. Topics if we still need more
+    for topic in envelope.get("topics", []):
+        topic_str = str(topic).strip()
+        if topic_str and topic_str.lower() not in q_norm:
+            suggestions.append(f"How does the video explain {topic_str}?")
+        if len(suggestions) >= 3:
+            break
+
+    return suggestions[:3]
+
+
+def _log_run(
+    question: str,
+    branch: str,
+    verified: bool,
+    retries: int,
+    t0: float,
+    cost_estimate: float,
+    is_voice: bool,
+) -> None:
+    latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+    entry = {
+        "event": "agent_run",
+        "branch": branch,
+        "verified": verified,
+        "retries": retries,
+        "latency_ms": latency_ms,
+        "cost_estimate_usd": cost_estimate,
+        "is_voice": is_voice,
+        "question_preview": question[:80],
+    }
+    logger.info("AGENT_RUN_METRIC %s", json.dumps(entry))
 
 
 def answer_question(
@@ -64,38 +157,69 @@ def answer_question(
     in [0, 1]) lives inside gemini_answer's draft gate; this function does
     Select plus the honest fallbacks.
     """
+    t0 = time.perf_counter()
+    retries = 0
+    suggestions = derive_suggestions(envelope, question)
+
+    # Move: Clarify ambiguous or ultra-short input without wasting LLM budget
+    if _is_ambiguous_query(question):
+        topics = envelope.get("topics") or []
+        first_topic = str(topics[0]) if topics else "this video"
+        clarify_text = f"Could you please specify what you would like to explore about {first_topic}? You can tap one of the suggested questions below."
+        _log_run(question, "not_found", False, 0, t0, 0.0, is_voice)
+        return _chat_message(
+            {"text": clarify_text, "evidenceType": "unknown", "confidence": 0.0},
+            is_voice=is_voice,
+            suggestions=suggestions,
+        )
+
+    # Move: Simplify if the student expressed confusion or asked for beginner level
+    active_qa_settings = dict(qa_settings)
+    if _wants_simplification(question):
+        active_qa_settings["explanationLevel"] = "beginner"
+
     # Observe — top-k evidence slices, no LLM (§8 retrieve_video_context).
     slices = tools.retrieve_video_context(envelope, question)
 
     # Act on the video branch; the draft gate inside gemini_answer is Evaluate.
     try:
         draft = tools.gemini_answer(
-            question, slices, envelope, qa_settings, settings, history
+            question, slices, envelope, active_qa_settings, settings, history
         )
     except tools.AnswerValidationExhausted:
         # §6.3 Fallback: the model could not produce a *verified* video answer
         # even with its one retry — honest refusal, never an unverified jump
         # button. The §6.4 round budget is spent, so no web round is taken.
-        return _chat_message(tools.declare_not_found(qa_settings), is_voice=is_voice)
+        retries = 1
+        _log_run(question, "not_found", False, retries, t0, 0.00025, is_voice)
+        return _chat_message(
+            tools.declare_not_found(active_qa_settings),
+            is_voice=is_voice,
+            suggestions=suggestions,
+        )
     except pipeline.PipelineError:
         raise  # infra failure → the endpoint's honest 502 (§6.5 last resort)
 
     if draft["found"]:
+        _log_run(question, "video", True, retries, t0, 0.00015, is_voice)
         video_answer: dict[str, Any] = {
             "text": draft["text"],
             "evidenceType": "video",
             "evidence": draft["evidence"],
             "confidence": draft["confidence"],
         }
-        return _chat_message(video_answer, is_voice=is_voice)
+        return _chat_message(video_answer, is_voice=is_voice, suggestions=suggestions)
 
     # Reason: the video does not answer it. Select per researchMissingContext.
-    if qa_settings.get("researchMissingContext", False):
+    if active_qa_settings.get("researchMissingContext", False):
         try:
-            research = tools.gemini_web_research(question, qa_settings, settings)
-        except pipeline.PipelineError:
+            logger.info("Triggering gemini_web_research for: %s", question)
+            research = tools.gemini_web_research(question, active_qa_settings, settings)
+        except pipeline.PipelineError as exc:
+            logger.warning("gemini_web_research failed in agent: %s", exc)
             pass  # §6.5 — a failed web search degrades to honest not-found
         else:
+            _log_run(question, "web", True, retries, t0, 0.00035, is_voice)
             web_answer = {
                 "text": research["text"],
                 "evidenceType": "web",
@@ -103,6 +227,12 @@ def answer_question(
                 "sources": research["sources"],
                 "notInVideo": True,  # API §2 inv. 2 — video and web never blend
             }
-            return _chat_message(web_answer, is_voice=is_voice)
+            return _chat_message(web_answer, is_voice=is_voice, suggestions=suggestions)
 
-    return _chat_message(tools.declare_not_found(qa_settings), is_voice=is_voice)
+    _log_run(question, "not_found", False, retries, t0, 0.00008, is_voice)
+    return _chat_message(
+        tools.declare_not_found(active_qa_settings),
+        is_voice=is_voice,
+        suggestions=suggestions,
+    )
+

@@ -41,6 +41,8 @@ def test_healthz_reports_seeded_demo(client: TestClient):
     assert body["status"] == "ok"
     assert body["demoSeeded"] is True
     assert body["model"]
+    assert "metrics" in body
+    assert "questions_by_branch" in body["metrics"]
 
 
 # --- the seeded demo lesson (P0-6 + P0-2c + P0-4a) ------------------------
