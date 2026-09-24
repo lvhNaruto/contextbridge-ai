@@ -57,7 +57,7 @@
 - [x] **P0-8** Evaluation harness: fixtures × {in-video, follow-up, contradiction, unanswerable}; reports timestamp accuracy, groundedness, unsupported-answer rate, processing time
 - [x] **SWEEP** All P0-1…P0-9 acceptance criteria executed on the deployed URL
 - [x] **FAIL** ARCHITECTURE §15 nine failure-path drills verified
-- [ ] **REG** `_mock_answer` absent; schema rejects malformed output; mock mode unbroken
+- [x] **REG** `_mock_answer` absent; schema rejects malformed output; mock mode unbroken
 
 ### Phase 7 · Submission (P0-11)
 - [ ] **P0-11** Dry-run ≥ 2 days early: deployed URL · public repo (in-window history) · video < 3:00 public · English PDF deck
