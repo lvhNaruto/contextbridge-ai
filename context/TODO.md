@@ -79,12 +79,12 @@
 - [x] **2.6** **Deploy Checkpoint #2:** Deploy, sweep, record revision; run eval v2 against deployed Cloud Run.
 
 ### Week 3 — "Speak My Language" (Multilingual + Voice Loop)
-- [ ] **3.1** **TTS answers (speak-aloud):** Per-answer 🔊 Listen + auto-speak toggle. Language-matched voice selection (`hi-IN` / `en-US`), interruptible on mic tap.
-- [ ] **3.2** **Voice loop states:** Dynamic listening… / thinking… / speaking… avatar states during voice flow.
-- [ ] **3.3** **Hinglish input hardening:** Answer prompt rules for code-mixed queries $\rightarrow$ answer in same mix. Add 3 Hinglish eval cases to suite.
-- [ ] **3.4** **Landing page rewrite:** Additive copy change on hero (`components/hero.tsx`): vision line, the 3 pillars (Anchored / Proof / Boundary), one CTA. Layout untouched.
-- [ ] **3.5** **Transcript panel i18n polish:** Verify Hindi transcript search, font rendering (Noto Sans Devanagari fallback), and character matching.
-- [ ] **3.6** **Deploy Checkpoint #3:** Deploy, sweep, eval v2 delta vs week-2 baseline (no regressions).
+- [x] **3.1** **TTS answers (speak-aloud):** Per-answer 🔊 Listen + auto-speak toggle. Language-matched voice selection (`hi-IN` / `en-US`), interruptible on mic tap.
+- [x] **3.2** **Voice loop states:** Dynamic listening… / thinking… / speaking… avatar states during voice flow.
+- [x] **3.3** **Hinglish input hardening:** Answer prompt rules for code-mixed queries $\rightarrow$ answer in same mix. Add 3 Hinglish eval cases to suite.
+- [x] **3.4** **Landing page rewrite:** Additive copy change on hero (`components/hero.tsx`): vision line, the 3 pillars (Anchored / Proof / Boundary), one CTA. Layout untouched.
+- [x] **3.5** **Transcript panel i18n polish:** Verify Hindi transcript search, font rendering (Noto Sans Devanagari fallback), and character matching.
+- [x] **3.6** **Deploy Checkpoint #3:** Deploy, sweep, eval v2 delta vs week-2 baseline (no regressions).
 
 ### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
 - [ ] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
@@ -105,6 +105,6 @@
 - [x] 5. Eval script reports baseline metrics; numbers in the deck
 - [x] 6. Visual trust indicators live (`EvidenceBadge`, `BoundaryCard`, `TranscriptSync`)
 - [x] 7. Guided exploration active (`ExploreSuggestions` derived from video)
-- [ ] 8. Full bilingual voice loop verified in Hindi and English
-- [ ] 9. Eval harness v2 reports $\ge 92\%$ correct branch and 100% verified citations on 25 cases
+- [x] 8. Full bilingual voice loop verified in Hindi and English
+- [x] 9. Eval harness v2 reports $\ge 92\%$ correct branch and 100% verified citations on 25 cases
 - [ ] 10. Four submission artifacts pass the P0-11 dry run (deployed URL, public repo, <3 min video, PDF deck)

@@ -13,7 +13,13 @@ Executes and verifies:
 """
 
 import json
+import sys
 import urllib.request
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 API = "https://contextbridge-api-c5ltxo3mkq-uc.a.run.app"
 WEB = "https://contextbridge-web-c5ltxo3mkq-uc.a.run.app"

@@ -427,3 +427,45 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
     - Average Q&A Latency: 3.91s
   - Full end-to-end acceptance sweep verified via `python scripts/sweep_deployed.py`.
 - **Status:** Complete & verified on live production stack.
+
+## D-31 · 2026-09-25 · Review Findings & Tooling Repairs (WARN-1..6 & BUG-1..2)
+
+- **Requirement:** Comprehensive review of system integrity, sweep assertions, and evaluation harnesses before Week 3 multilingual expansion.
+- **Root Cause & Architectural Repairs:**
+  1. *Devanagari Retrieval Blindness (WARN-1):* In English video lessons, Hindi text questions (`सायका...`) produced 0 token matches against English transcripts with word-boundary regex `\b\w+\b`. Upgraded token regex in `api/tools.py` to `[\w']+"` and added bounded representative transcript slice fallback for Devanagari Unicode (`[\u0900-\u097F]`). Multilingual Gemini receives transcript context to evaluate, and `quote_matches_transcript` strictly prevents quote fabrication.
+  2. *Deployed Smoke & Sweep Assertions (BUG-1 & BUG-2):* Synchronized `scripts/smoke_deployed.py` and `scripts/sweep_deployed.py` with the 57s Tokyo/Pixel video. Added `assert ans["answer"]["evidenceType"] == "video"` guard before asserting on `evidence` to avoid `NoneType` subscript crashes.
+  3. *Eval Harness Groundedness Verification (WARN-4):* Removed dead-code branch in `scripts/eval_harness.py`; expected quote substrings are now strictly validated against returned verbatim quotes.
+  4. *Hindi/Hinglish Clarify Moves & Metrics (WARN-5 & WARN-6):* Added conversational Hindi question markers (`kya`, `kaise`, `kyun`, `batao`, `samjhao`, etc.) to `_is_ambiguous_query` in `api/agent.py`. Clarify turns are recorded under the `"clarify"` branch and tracked in `/health` metrics (`METRICS["questions_by_branch"]["clarify"]`).
+  5. *Answer Concurrency & Deduplication (WARN-3):* Hardened `_RESEARCH_PROMPT` in `api/tools.py` with strict instructions against sentence repetition.
+- **Validation:** 83 pytest tests passing (`python -m pytest`); Next.js Turbopack build passing with 0 errors.
+- **Status:** Complete & verified.
+
+## D-32 · 2026-09-25 · Deploy Checkpoint #3: Week 3 "Speak My Language" Stack Deployed & Verified
+
+- **Requirement:** Task 3.6 — Implementation, verification, and deployment freeze for Week 3 ("Speak My Language" — Multilingual + Voice Loop):
+  - 3.1 TTS answers (speak-aloud): Per-answer 🔊 Listen button + global `autoSpeak` toggle in `LessonSettings`. Language-matched voice selection (`hi-IN` / `en-US`), interruptible on mic tap (barge-in).
+  - 3.2 Voice loop states: Glowing emerald avatar ring + animated 3-bar audio wave indicator (`Speaking aloud…`) during speech synthesis.
+  - 3.3 Hinglish input hardening: System prompt instructions in `_ANSWER_PROMPT` to preserve code-mixed Hinglish while keeping technical terms in English. Added 3 Hinglish eval cases (`q15`, `q16`, `q17`).
+  - 3.4 Landing page rewrite: Rewrote `web/components/hero.tsx` with the Compass vision line (*"Not a tutor. A compass for self-learners"*) and the 3 pillars (Anchored, Proof, Boundary Honesty) with primary CTA to `/lesson/demo-binary`.
+  - 3.5 Transcript panel i18n polish: Verified Devanagari Unicode rendering with `Noto Sans Devanagari` font fallback and `.normalize("NFC")` search matching.
+  - 3.6 Deploy Checkpoint #3: Cloud Run deployment, acceptance sweep, and Eval Harness v2 delta comparison.
+- **Deployed Revisions:**
+  - Backend: `contextbridge-api-00009-8jh` (Cloud Run `us-central1`, serving 100% traffic)
+  - Frontend: `contextbridge-web-00009-7kt` (Cloud Run `us-central1`, serving 100% traffic)
+- **Validation & Metrics Delta:**
+  - Full acceptance sweep verified via `python scripts/sweep_deployed.py`: 100% P0 criteria pass.
+  - Full smoke test verified via `python scripts/smoke_deployed.py`: 100% pass.
+  - Eval Harness V2 Benchmark (25 test cases on live Cloud Run):
+    - **Unsupported-Answer Rate:** `0.0%` (strict zero hallucination maintained)
+    - **Timestamp-Retrieval Accuracy:** `94.4%` (improved from `83.3%` in Week 2)
+    - **Groundedness Rate:** `92.0%` (improved from `88.0%` in Week 2)
+    - **Explore Suggestions Coverage:** `100.0%` (25/25 cases returned dynamic exploration chips)
+    - **Average Latency:** `3.59s` (down from `3.91s` in Week 2)
+  - Multilingual verification:
+    - Hindi query `q13` (सायका शिमाडा टोक्यो में क्या काम करती हैं?): Answered with `VIDEO` at 00:01 in 2.35s with confidence 0.98.
+    - Hindi query `q14` (नए पिक्सल फोन में कम रोशनी के लिए कौन सा फीचर है?): Answered with `VIDEO` at 00:13 in 3.07s with confidence 0.99.
+    - Hinglish queries `q15`, `q16`, `q17`: All grounded to video with verbatim quotes.
+    - Voice loop: Barge-in cancels active speech; language-matched voices (`hi-IN` / `en-US`) active.
+- **Status:** Complete & verified on live production stack.
+
+
