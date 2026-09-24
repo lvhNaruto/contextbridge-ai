@@ -144,4 +144,17 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **Validation:** `python -m compileall api tests` clean; full test suite green (64 passed — 54 pre-existing + 10 new).
 - **Status:** done — Phase 2 complete; Phase 3 (Frontend additions: A1–A7) unblocked.
 
+## D-16 · 2026-09-24 · Phase 3 complete — Frontend additions (A1–A7, TYPES, MOCK)
+
+- **A1 Contradiction Card (P0-4 UI):** Implemented `web/components/contradictions/contradiction-card.tsx` rendering detected contradictions with side-by-side statements and dual interactive `TimestampButton`s seeking video playback. Preserved amber palette strictly for contradictions.
+- **A2 Searchable Transcript Panel (P0-3):** Implemented `web/components/transcript/transcript-panel.tsx` with live search input, count summary, and interactive timestamped rows that seek the player. Embedded into right-rail (desktop) and collapsible drawer (mobile).
+- **A4 Chapter Confidence Badge (P0-3):** Integrated `ConfidenceBadge` alongside timestamp and duration in `web/components/chapters/chapter-list.tsx`.
+- **A3 Conversation History (P0-7):** Updated `askQuestion` in `web/lib/api.ts` to transmit the last ≤ 6 message turns (`HistoryTurn[]`), wired from `web/components/workspace/workspace-client.tsx`.
+- **A5 Client-Side WebVTT Captions (D-06):** In `web/components/video/video-player.tsx`, generated in-memory WebVTT blob URLs from `transcript` segments, initialized toggle from `loadA11y().captionsPreferred`, and synchronized `<track>` showing/hidden modes.
+- **A6 Copyable Evidence Card (D-07):** In `web/components/chat/assistant-message.tsx`, extended clipboard copy payload to include answer text, quote, timestamp (`mm:ss`), and lesson title. Triggered `toast.success("Evidence card copied")`.
+- **A7 & MOCK Honest Analysis Progress (D-08):** In `web/components/upload/analysis-progress.tsx`, added elapsed-time ticker line (`Analyzing… m:ss — usually under two minutes`) and drove stage highlights by elapsed time, with optional `isReady` gate for live upload responses. Seeded demo data with contradiction pairs and chapter confidences.
+- **Validation:** `npm run build` compiles with 0 errors/warnings; all 64 Python tests green (`python -m pytest`).
+- **Status:** done — Phase 3 complete; Phase 4 (Deployment & Integration) unblocked.
+
+
 
