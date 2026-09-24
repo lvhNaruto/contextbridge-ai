@@ -16,10 +16,13 @@ Still reserved (unwired): Phase 5's internal eval harness.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -386,6 +389,11 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
         )
+    except Exception as exc:
+        logger.exception("Unexpected error in agent loop: %s", exc)
+        raise ApiError(
+            502, "answer_failed", f"Agent error: {exc}"
+        )
 
 
 @app.post("/analyses/{analysis_id}/voice-question")
@@ -411,6 +419,11 @@ def ask_voice_question(
     except pipeline.PipelineError:
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
+        )
+    except Exception as exc:
+        logger.exception("Unexpected error in voice agent loop: %s", exc)
+        raise ApiError(
+            502, "answer_failed", f"Agent error: {exc}"
         )
 
 

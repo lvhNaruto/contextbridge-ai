@@ -56,7 +56,7 @@
 ### Phase 5 · Testing
 - [x] **P0-8** Evaluation harness: fixtures × {in-video, follow-up, contradiction, unanswerable}; reports timestamp accuracy, groundedness, unsupported-answer rate, processing time
 - [x] **SWEEP** All P0-1…P0-9 acceptance criteria executed on the deployed URL
-- [ ] **FAIL** ARCHITECTURE §15 nine failure-path drills verified
+- [x] **FAIL** ARCHITECTURE §15 nine failure-path drills verified
 - [ ] **REG** `_mock_answer` absent; schema rejects malformed output; mock mode unbroken
 
 ### Phase 7 · Submission (P0-11)
