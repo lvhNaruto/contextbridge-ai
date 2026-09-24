@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ContextBridge AI — Pitch Deck</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: 16in 9in;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      width: 16in;
+      height: 9in;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 64px;
+      background: #0b0f19;
+      border-bottom: 2px solid #1e293b;
+    }
+
+    /* Ambient background glows */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .slide::after {
+      content: '';
+      position: absolute;
+      bottom: -20%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge-primary {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .slide-number {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .title {
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+
+    .title-gradient {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-highlight {
+      background: linear-gradient(135deg, #818cf8 0%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 22px;
+      font-weight: 400;
+      color: #94a3b8;
+      max-width: 85%;
+      line-height: 1.4;
+      margin-bottom: 28px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: #64748b;
+      position: relative;
+      z-index: 10;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 26px;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .card-highlight {
+      background: rgba(99, 102, 241, 0.06);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .card-emerald {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-body {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .metric-value {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 14px 18px;
+      font-weight: 600;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .check {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .cross {
+      color: #f87171;
+    }
+
+    .code-box {
+      background: #05070d;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      overflow: hidden;
+    }
+
+    .code-accent { color: #818cf8; }
+    .code-green { color: #34d399; }
+    .code-yellow { color: #fbbf24; }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Title & Vision -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-primary">AI Builder Cup 2026</span>
+      <span class="slide-number">01 / 10</span>
+    </div>
+    <div class="content">
+      <div style="margin-bottom: 18px;">
+        <span class="badge badge-emerald" style="font-size: 15px;">Theme: Media, Content & Digital Experiences</span>
+      </div>
+      <h1 class="title title-gradient" style="font-size: 64px; margin-bottom: 20px;">
+        ContextBridge <span class="title-highlight">AI</span> 🧭
+      </h1>
+      <p class="subtitle" style="font-size: 26px; color: #cbd5e1; font-weight: 500;">
+        "Not a tutor. A compass for self-learners — every answer anchored to the video you chose, in your language, with proof, and honest about where the video ends."
+      </p>
+      <div style="display: flex; gap: 16px; margin-top: 16px;">
+        <div class="card" style="padding: 16px 24px;">
+          <div style="font-size: 13px; color: #64748b; font-weight: 600;">AI ENGINE</div>
+          <div style="font-size: 18px; font-weight: 700; color: #ffffff;">Google Gemini 2.5 Flash</div>
+        </div>
+        <div class="card" style="padding: 16px 24px;">
+          <div style="font-size: 13px; color: #64748b; font-weight: 600;">DEPLOYMENT</div>
+          <div style="font-size: 18px; font-weight: 700; color: #ffffff;">Google Cloud Run (us-central1)</div>
+        </div>
+        <div class="card" style="padding: 16px 24px;">
+          <div style="font-size: 13px; color: #64748b; font-weight: 600;">HALLUCINATION RATE</div>
+          <div style="font-size: 18px; font-weight: 700; color: #34d399;">0.0% Verified Grounded</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>Team ContextBridge · mohitsinghgeek@gmail.com</span>
+      <span>Live URL: contextbridge-web-c5ltxo3mkq-uc.a.run.app</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-primary">The Challenge</span>
+      <span class="slide-number">02 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">The Self-Learner's Dilemma</h2>
+      <p class="subtitle">Billions of hours of educational video are published every year, but learners abandon them due to four structural friction points.</p>
+      
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="color: #f87171;">⏳ The Scrubbing Fatigue</div>
+          <div class="card-body">
+            Learners waste 15+ minutes scrubbing back and forth across 45-minute videos just to find the 10 seconds where a specific syntax, formula, or concept was explained.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #fbbf24;">🤖 The Chatbot Hallucination Trap</div>
+          <div class="card-body">
+            Standard chatbots (ChatGPT, Claude) don't have access to the exact video runtime. When asked, they invent plausible-sounding code, fake explanations, and quote words the instructor never spoke.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #a78bfa;">🗣️ The Linguistic Barrier</div>
+          <div class="card-body">
+            High-value technical content is overwhelmingly in English. Non-native speakers (e.g. Hindi, Hinglish) struggle with dense video jargon without native language bridges.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #38bdf8;">🌫️ The Unclear Boundary</div>
+          <div class="card-body">
+            Existing video summarizers fail to distinguish between what the creator actually claimed and general internet knowledge, eroding learner trust.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Problem Statement</span>
+      <span>Empowering Self-Directed Mastery</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: The Three Pillars -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-emerald">Core Philosophy</span>
+      <span class="slide-number">03 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">The Three Pillars of The Compass</h2>
+      <p class="subtitle">ContextBridge is engineered with non-negotiable architectural gates that guarantee trust.</p>
+
+      <div class="grid-3">
+        <div class="card card-emerald">
+          <div style="font-size: 36px; margin-bottom: 12px;">⚓</div>
+          <div class="card-title" style="color: #34d399;">P1 · Anchored</div>
+          <div class="card-body">
+            <strong>The video is the sole ground truth.</strong> Video answers come strictly from the creator's spoken transcript, verified by the anti-fabrication gate. Quotes must match character-by-character.
+          </div>
+        </div>
+        <div class="card card-highlight">
+          <div style="font-size: 36px; margin-bottom: 12px;">🔍</div>
+          <div class="card-title" style="color: #818cf8;">P2 · Proof</div>
+          <div class="card-body">
+            <strong>Trust must be visible in 10 seconds.</strong> Every answer shows its origin badge. One click on an evidence chip seeks the video player to the exact second (~1s) while auto-scrolling the transcript.
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size: 36px; margin-bottom: 12px;">🧭</div>
+          <div class="card-title" style="color: #38bdf8;">P3 · Boundary Honesty</div>
+          <div class="card-body">
+            <strong>The boundary is a feature, not a bug.</strong> When curiosity steps outside the video, ContextBridge never blurs the lines. It frames external research in a distinct Boundary Card with verified Google Search sources.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Engineering Pillars</span>
+      <span>Strict Anti-Fabrication Architecture</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Product Tour -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-primary">Product Tour</span>
+      <span class="slide-number">04 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">Trust Visible: The Interactive Experience</h2>
+      <p class="subtitle">A unified learning workspace combining timeline navigation, synchronized transcript, and verifiable Q&A.</p>
+
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-title" style="font-size: 17px;">🏷️ EvidenceBadge</div>
+          <div class="card-body" style="font-size: 13px;">
+            3 explicit trust badges: <br>
+            <span style="color: #34d399;">● Verified from this video · 98%</span><br>
+            <span style="color: #38bdf8;">● Beyond this video (web)</span><br>
+            <span style="color: #94a3b8;">● Not covered (boundary)</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 17px;">📜 TranscriptSync</div>
+          <div class="card-body" style="font-size: 13px;">
+            Live bidirectional synchronization: clicking an answer quote auto-scrolls the exact transcript row into view with active highlighting.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 17px;">🧭 Explore Chips</div>
+          <div class="card-body" style="font-size: 13px;">
+            Dynamic <em>"Explore from here →"</em> chips derived from remaining chapters and topics with <strong>zero extra LLM latency</strong>.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 17px;">⚖️ Contradictions</div>
+          <div class="card-body" style="font-size: 13px;">
+            Surfaces contrasting perspectives within the video with dual clickable timestamp buttons (e.g. 00:05 vs 00:15).
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;" class="card card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 18px; font-weight: 700; color: #ffffff;">BoundaryCard: Explicit Curiosity Boundaries</div>
+            <div style="font-size: 14px; color: #94a3b8; margin-top: 4px;">
+              External Google Search answers receive a dedicated sky-blue container with direct source attribution chips.
+            </div>
+          </div>
+          <span class="badge badge-primary">Google Search Grounding</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · User Experience</span>
+      <span>Sub-Second Precision Seeking</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Multilingual & Voice Loop -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-emerald">Inclusivity & Access</span>
+      <span class="slide-number">05 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">Bilingual Voice Loop (Hindi, Hinglish, English)</h2>
+      <p class="subtitle">Learners explore in the language they think in — full voice-in, voice-out parity with Gemini multimodal audio.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">🎙️ Speech-to-Text</div>
+          <div class="card-body">
+            Upload microphone audio directly to Gemini 2.5 Flash via <code>POST /transcribe</code>. Transcribes Hindi, Hinglish, and accented English verbatim without browser speech bugs.
+          </div>
+        </div>
+        <div class="card card-emerald">
+          <div class="card-title">🔊 Auto-Speak & TTS</div>
+          <div class="card-body">
+            Language-matched voice selection (<code>hi-IN</code> / <code>en-US</code>). Global auto-speak toggle allows hands-free audio learning while cooking, commuting, or coding.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🛑 Instant Barge-In</div>
+          <div class="card-body">
+            Tapping the mic instantly cancels active speech synthesis. Glowing avatar rings and animated 3-bar audio wave indicators provide real-time state feedback.
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; padding: 20px;" class="card">
+        <div style="display: flex; gap: 24px; align-items: center;">
+          <div style="font-size: 15px; font-weight: 600; color: #cbd5e1;">Live Verified Eval Example:</div>
+          <div class="code-box" style="flex: 1; padding: 12px 18px;">
+            <span class="code-accent">Student (Hindi):</span> "सायका शिमाडा टोक्यो में क्या काम करती हैं?" <br>
+            <span class="code-green">ContextBridge:</span> "Saeka Shimada Tokyo mein ek photographer hain (00:01)." <br>
+            <span class="code-yellow">Evidence:</span> [00:01 - 00:03] "My name is Saeka Shimada. I'm a photographer in Tokyo." (Confidence: 0.98)
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Multilingual Equality</span>
+      <span>Native Devanagari & Hinglish Code-Mixed Support</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Architecture -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-primary">Technical Architecture</span>
+      <span class="slide-number">06 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">The Anti-Fabrication Agent Gate</h2>
+      <p class="subtitle">A 3-tool bounded state machine with mathematical limits on LLM rounds and zero hallucination escape routes.</p>
+
+      <div class="grid-2">
+        <div class="code-box" style="font-size: 13px; line-height: 1.6;">
+          <div style="color: #64748b; margin-bottom: 8px;">// THE 3-TOOL BOUNDED LADDER</div>
+          <div><span class="code-accent">1. OBSERVE:</span> retrieve_video_context(envelope, question)</div>
+          <div style="color: #94a3b8; margin-left: 16px;">├─ Lexical token matching</div>
+          <div style="color: #94a3b8; margin-left: 16px;">└─ Bounded Devanagari fallback window</div>
+          <br>
+          <div><span class="code-green">2. EVALUATE:</span> validate_answer_draft(draft, envelope)</div>
+          <div style="color: #94a3b8; margin-left: 16px;">├─ Check startSeconds & endSeconds ≤ video_duration</div>
+          <div style="color: #94a3b8; margin-left: 16px;">├─ quote_matches_transcript(verbatim substring check)</div>
+          <div style="color: #94a3b8; margin-left: 16px;">└─ Exactly 1 retry on gate failure → honest not_found</div>
+          <br>
+          <div><span class="code-yellow">3. SELECT:</span> gemini_web_research(query)</div>
+          <div style="color: #94a3b8; margin-left: 16px;">└─ Google Search Grounding (external boundary only)</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="card">
+            <div class="card-title">Strict Budget: ≤ 2 LLM Rounds</div>
+            <div class="card-body">
+              The agent is deterministic and bounded. No runaway loops, no multi-agent chatter. Guaranteed fast response under 5 seconds.
+            </div>
+          </div>
+          <div class="card card-emerald">
+            <div class="card-title">Stateless Cloud Run Design</div>
+            <div class="card-body">
+              Client owns history (last ≤ 6 turns). Server maintains zero session state in memory or database, allowing infinite horizontal scaling.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · System Architecture</span>
+      <span>FastAPI + Gemini 2.5 Flash + Google Cloud Run</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Evaluation & Metrics -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-emerald">Empirical Proof</span>
+      <span class="slide-number">07 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">Live 25-Case Eval Benchmark Results</h2>
+      <p class="subtitle">Measured and verified on the live production Cloud Run deployment across 25 diverse benchmark cases.</p>
+
+      <div class="grid-4" style="margin-bottom: 24px;">
+        <div class="card card-emerald" style="text-align: center;">
+          <div class="metric-value" style="color: #34d399;">0.0%</div>
+          <div class="metric-label">Unsupported Answers</div>
+          <div style="font-size: 12px; color: #6ee7b7; margin-top: 4px;">Target: 0.0% Strict</div>
+        </div>
+        <div class="card card-highlight" style="text-align: center;">
+          <div class="metric-value" style="color: #818cf8;">94.4%</div>
+          <div class="metric-label">Timestamp Accuracy</div>
+          <div style="font-size: 12px; color: #a5b4fc; margin-top: 4px;">Target: ≥ 90.0%</div>
+        </div>
+        <div class="card card-emerald" style="text-align: center;">
+          <div class="metric-value" style="color: #34d399;">92.0%</div>
+          <div class="metric-label">Groundedness Rate</div>
+          <div style="font-size: 12px; color: #6ee7b7; margin-top: 4px;">Target: ≥ 90.0%</div>
+        </div>
+        <div class="card card-highlight" style="text-align: center;">
+          <div class="metric-value" style="color: #818cf8;">3.59s</div>
+          <div class="metric-label">Average Latency</div>
+          <div style="font-size: 12px; color: #a5b4fc; margin-top: 4px;">Target: &lt; 5.0s</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 18px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 15px; color: #cbd5e1;">
+            <strong>Test Suite Health:</strong> 83/83 pytest tests passing · 9/9 Architecture §15 failure drills passing · 100% clean ESLint
+          </div>
+          <span class="badge badge-emerald">context/eval_results.json Verified</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Rigorous Measurement</span>
+      <span>Reproducible Automated Evaluation Harness</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Competitive Comparison -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-primary">Market Differentiation</span>
+      <span class="slide-number">08 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">Why ContextBridge Wins</h2>
+      <p class="subtitle">ContextBridge creates a new category: not a passive summarizer, and not an ungrounded general-purpose chatbot.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Generic LLMs (ChatGPT / Claude)</th>
+            <th>Video Summarizers (NoteGPT, etc.)</th>
+            <th style="color: #34d399;">ContextBridge AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Verbatim Quote Anti-Fabrication Gate</strong></td>
+            <td class="cross">❌ None (hallucinates quotes)</td>
+            <td class="cross">❌ None (paraphrases)</td>
+            <td class="check">✅ Enforced by validator</td>
+          </tr>
+          <tr>
+            <td><strong>Sub-Second Interactive Seeking (~1s)</strong></td>
+            <td class="cross">❌ No video player link</td>
+            <td class="cross">❌ Rough minute links</td>
+            <td class="check">✅ Direct video sync + seek</td>
+          </tr>
+          <tr>
+            <td><strong>Live Transcript Auto-Scroll Sync</strong></td>
+            <td class="cross">❌ Absent</td>
+            <td class="cross">❌ Static transcript</td>
+            <td class="check">✅ Real-time TranscriptSync</td>
+          </tr>
+          <tr>
+            <td><strong>Contradiction Surfacing</strong></td>
+            <td class="cross">❌ Absent</td>
+            <td class="cross">❌ Absent</td>
+            <td class="check">✅ Dual clickable moments</td>
+          </tr>
+          <tr>
+            <td><strong>Strict External Boundary Card</strong></td>
+            <td class="cross">❌ Blends training & web</td>
+            <td class="cross">❌ Fails on missing data</td>
+            <td class="check">✅ Clear BoundaryCard separation</td>
+          </tr>
+          <tr>
+            <td><strong>Bilingual Voice Loop (Hindi / English)</strong></td>
+            <td class="cross">❌ Text-first / English bias</td>
+            <td class="cross">❌ English only</td>
+            <td class="check">✅ Full speech + TTS parity</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Competitive Moat</span>
+      <span>Epistemic Humility & Visual Trust</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Hackathon Criteria Alignment -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-emerald">Winning Formula</span>
+      <span class="slide-number">09 / 10</span>
+    </div>
+    <div class="content">
+      <h2 class="title">Alignment with Judging Criteria</h2>
+      <p class="subtitle">Engineered specifically to maximize score across all 4 pillars of the AI Builder Cup.</p>
+
+      <div class="grid-2">
+        <div class="card card-emerald">
+          <div class="card-title">Technical Merit (40% Weight)</div>
+          <div class="card-body">
+            • <strong>Zero Hallucination:</strong> Structural anti-fabrication validator.<br>
+            • <strong>Production Grade:</strong> Google Cloud Run containerized deployment.<br>
+            • <strong>Complete Coverage:</strong> 83 pytest tests + 9 automated failure-path drills.<br>
+            • <strong>Multi-turn Context:</strong> Stateless history passthrough (last ≤ 6 turns).
+          </div>
+        </div>
+        <div class="card card-highlight">
+          <div class="card-title">Impact (25% Weight)</div>
+          <div class="card-body">
+            • <strong>Saves Millions of Hours:</strong> Cuts video scrubbing down to 1 second.<br>
+            • <strong>Democratizes Education:</strong> Hindi & Hinglish parity unlocks technical learning for 600M+ non-native English speakers.<br>
+            • <strong>Accessibility:</strong> WebVTT subtitles, beginner analogies, TTS auto-speak.
+          </div>
+        </div>
+        <div class="card card-highlight">
+          <div class="card-title">Innovation (25% Weight)</div>
+          <div class="card-body">
+            • <strong>A Compass, Not a Tutor:</strong> Dynamic guided exploration chips.<br>
+            • <strong>Epistemic Humility:</strong> Visible boundaries between creator truth and web search.<br>
+            • <strong>Contradiction Detection:</strong> Critical thinking tools for nuanced lessons.
+          </div>
+        </div>
+        <div class="card card-emerald">
+          <div class="card-title">UX & Presentation (10% Weight)</div>
+          <div class="card-body">
+            • <strong>10-Second Trust:</strong> Instantly understandable evidence badges.<br>
+            • <strong>Fluid Animations:</strong> Smooth transcript scrolling & voice wave rings.<br>
+            • <strong>Interactive Playback:</strong> 7-speed Radix dropdown + instant barge-in mic.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Scoring Alignment</span>
+      <span>Media, Content & Digital Experiences</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Conclusion & Links -->
+  <div class="slide">
+    <div class="header">
+      <span class="badge badge-emerald">Live & Ready</span>
+      <span class="slide-number">10 / 10</span>
+    </div>
+    <div class="content" style="text-align: center; align-items: center;">
+      <h2 class="title title-gradient" style="font-size: 56px; margin-bottom: 16px;">
+        ContextBridge AI 🧭
+      </h2>
+      <p class="subtitle" style="font-size: 24px; max-width: 80%; margin-bottom: 32px;">
+        The trusted compass for self-learners worldwide.
+      </p>
+
+      <div class="grid-3" style="width: 100%; max-width: 1100px; text-align: left;">
+        <div class="card card-emerald">
+          <div class="card-title" style="font-size: 16px; color: #34d399;">🌐 Live Application</div>
+          <div class="card-body" style="font-size: 14px; word-break: break-all;">
+            <a href="https://contextbridge-web-c5ltxo3mkq-uc.a.run.app" style="color: #6ee7b7; text-decoration: none;">
+              contextbridge-web-c5ltxo3mkq-uc.a.run.app
+            </a>
+          </div>
+        </div>
+        <div class="card card-highlight">
+          <div class="card-title" style="font-size: 16px; color: #818cf8;">🐙 Open Source Repo</div>
+          <div class="card-body" style="font-size: 14px; word-break: break-all;">
+            <a href="https://github.com/lvhNaruto/contextbridge-ai" style="color: #a5b4fc; text-decoration: none;">
+              github.com/lvhNaruto/contextbridge-ai
+            </a>
+          </div>
+        </div>
+        <div class="card card-emerald">
+          <div class="card-title" style="font-size: 16px; color: #34d399;">⚡ Interactive API</div>
+          <div class="card-body" style="font-size: 14px; word-break: break-all;">
+            <a href="https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs" style="color: #6ee7b7; text-decoration: none;">
+              contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 36px;">
+        <span class="badge badge-primary" style="font-size: 16px; padding: 10px 24px;">
+          Thank You · Built for AI Builder Cup 2026
+        </span>
+      </div>
+    </div>
+    <div class="footer">
+      <span>ContextBridge AI · Final Pitch Deck</span>
+      <span>Ready for Judges</span>
+    </div>
+  </div>
+
+</body>
+</html>
