@@ -164,6 +164,41 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
 - **P0-9d Live Upload Verification:** Real video upload (`scripts/smoke_upload.py`, 4.72 MB clip) to `POST /analyses` completed in **24.5s** (within honest progress expectation). Created 6 chapters with confidence (0.97–0.99), 14 transcript segments, and answered subsequent question citing newly extracted timestamp `00:12`.
 - **Status:** done — Phase 4 complete; Phase 5 (Testing & Evaluation Harness) unblocked.
 
+## D-18 · 2026-09-24 · Phase 5 complete — Testing, DoD Evaluation Harness & Failure-Path Drills (P0-8, SWEEP, FAIL, REG)
+
+- **P0-8 Evaluation Harness (`scripts/eval_harness.py`):** Executed 9-case evaluation benchmark against the live deployed Cloud Run API (`https://contextbridge-api-c5ltxo3mkq-uc.a.run.app`). Reported the 4 Definition of Done metrics:
+  - **Unsupported-answer rate:** `0.0%` (target ≤ 5%, zero hallucinated moments on unanswerable questions)
+  - **Timestamp retrieval accuracy:** `83.3%` (target ≥ 80% on in-video questions)
+  - **Groundedness:** `88.9%` (verified against transcript and citation invariants)
+  - **Average Q&A latency:** `2.53s` (well within the 25s agent budget)
+  Benchmark results persisted to `context/eval_results.json`.
+- **SWEEP Acceptance Sweep (`scripts/sweep_deployed.py`):** Executed end-to-end acceptance checks against live Cloud Run URLs (`contextbridge-web` and `contextbridge-api`), validating P0-1 through P0-9:
+  - P0-9: Frontend and backend endpoints responsive with 200 OK.
+  - P0-6: Deterministic startup fixture seeding of `demo-binary`.
+  - P0-2 & P0-3: 5 chapters with confidence metrics (0.97–0.99) and 7 transcript segments.
+  - P0-4: Surfaced genuine contradiction pair with dual clickable timestamps (210s & 615s).
+  - P0-1: Grounded Q&A with exact quote (`"Binary language uses only two digits: zero and one."`) and timestamp (173.0s).
+  - P0-7: Multi-turn conversation history follow-up with context continuity.
+  - P0-5: Accessible plain-language explanation and Hindi translation (`answerLanguage: "hi"`).
+  - P0-8: Metric evaluation artifact verified.
+- **FAIL Nine Failure-Path Drills (`scripts/test_failure_paths.py`):** Implemented and verified all 9 ARCHITECTURE §15 failure scenarios:
+  1. *Analysis LLM failure:* Status marked `failed`, isolated with 409 `analysis_failed`.
+  2. *Q&A unanswerable vs outage:* Unanswerable yields honest 200 `unknown` (`notInVideo: true`, confidence 0.0); total outage yields 502 `answer_failed`.
+  3. *Agent loop crash:* Caught by exception handler; returns structured 502 envelope.
+  4. *Web search failure:* Degrades to `declare_not_found`; zero sources or evidence invented.
+  5. *External API failure:* Seeded demo fixture serves without live API dependency.
+  6. *Database failure:* Catch-all falls back to in-memory seed; demo lesson remains 200 OK.
+  7. *Input validation:* 400 `missing_file`, 413 `file_too_large`, 422 `unsupported_video` / `invalid_question`, 404 `not_found`.
+  8. *Timeout & iteration bound:* Strict attempt budget (max 2 attempts per ladder); no indefinite loops.
+  9. *Partial execution isolation:* Incomplete analysis safely shielded (409 `analysis_incomplete`).
+- **REG Regression Guard (`tests/test_regression.py`):**
+  - Confirmed `_mock_answer` is completely absent from all serving code in `api/`.
+  - Confirmed `MediaAnalysis.from_dict` rejects malformed payloads, invalid timestamps, and non-numeric confidence.
+  - Confirmed Next.js mock mode toggle (`USE_MOCK = !API_BASE`) and mock data structures remain intact.
+- **Validation:** All 76 Python tests pass (`python -m pytest`); Next.js production build clean with 0 errors/warnings (`npm run build`).
+- **Status:** done — Phase 5 complete; Phase 7 (Submission & Dry Run) unblocked.
+
+
 
 
 

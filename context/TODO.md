@@ -90,9 +90,9 @@
 
 ## Definition of done — MVP (check all, then Phase 6 may start)
 
-- [ ] 1. Deployed URL: visitor picks fixture → timeline + transcript → question → timestamped grounded answer or honest "not found", no local setup
-- [ ] 2. Evidence click seeks video to the correct moment (~1 s)
-- [ ] 3. Contradictory pair surfaced, both timestamps clickable
-- [ ] 4. One accessible artifact generates from the stored index, timestamps preserved
-- [ ] 5. Eval script reports the four metrics; numbers in the deck
+- [x] 1. Deployed URL: visitor picks fixture → timeline + transcript → question → timestamped grounded answer or honest "not found", no local setup
+- [x] 2. Evidence click seeks video to the correct moment (~1 s)
+- [x] 3. Contradictory pair surfaced, both timestamps clickable
+- [x] 4. One accessible artifact generates from the stored index, timestamps preserved
+- [x] 5. Eval script reports the four metrics; numbers in the deck
 - [ ] 6. Four submission artifacts pass the P0-11 dry run
