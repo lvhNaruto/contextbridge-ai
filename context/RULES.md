@@ -65,3 +65,7 @@ The Terms grant the organizer broad rights to use submitted content and related 
 ## Unresolved official inconsistency
 
 An older/leftover requirements item reportedly names Healthcare, Education, Sustainability, Accessibility, and Social Good, which conflicts with the current six-theme page. The current themes page is the authoritative accessible challenge list; the older list is **unverified as current**.
+
+## Development rule
+
+Whatever changes or whatever decision we take that affects the code, we have to document it somewhere. Somewhere is this `context/DECISIONS.md` file.
