@@ -26,42 +26,67 @@ const STATUS_LINES = [
 export function AnalysisProgress({
   title,
   onComplete,
+  isReady = true,
 }: {
   title: string;
   /** Called when the final stage completes — parent navigates to the workspace. */
   onComplete: () => void;
+  /** If false, holds before completing the final stage until ready (A7, D-08). */
+  isReady?: boolean;
 }) {
+  const [elapsed, setElapsed] = useState(0);
   const [stageIndex, setStageIndex] = useState(0);
   const [statusLine, setStatusLine] = useState(0);
 
+  // Timer for elapsed seconds.
   useEffect(() => {
-    // Stage cadence — deliberately unhurried so each beat is readable,
-    // but fast enough to never delay the user (mock timings only).
-    const stageTimer = setInterval(() => {
-      setStageIndex((i) => {
-        const next = Math.min(i + 1, STAGES.length - 1);
-        if (next === STAGES.length - 1) clearInterval(stageTimer);
-        return next;
-      });
-    }, 700);
+    const timer = setInterval(() => {
+      setElapsed((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
+  // Drive stage highlighting from elapsed time (A7, D-08).
+  // Cadence:
+  // 0: 0s  - Video uploaded
+  // 1: 2s  - Audio extracted
+  // 2: 5s  - Understanding the lesson
+  // 3: 8s  - Creating chapters
+  // 4: 12s - Indexing important moments
+  // 5: 16s - Preparing your learning workspace
+  useEffect(() => {
+    let targetStage = 0;
+    if (elapsed >= 16) targetStage = 5;
+    else if (elapsed >= 12) targetStage = 4;
+    else if (elapsed >= 8) targetStage = 3;
+    else if (elapsed >= 5) targetStage = 2;
+    else if (elapsed >= 2) targetStage = 1;
+
+    if (targetStage === 5 && !isReady) {
+      setStageIndex(4);
+    } else {
+      setStageIndex(targetStage);
+    }
+  }, [elapsed, isReady]);
+
+  // Rotating status lines.
+  useEffect(() => {
     const statusTimer = setInterval(
       () => setStatusLine((s) => (s + 1) % STATUS_LINES.length),
-      1400,
+      2200,
     );
-
-    return () => {
-      clearInterval(stageTimer);
-      clearInterval(statusTimer);
-    };
+    return () => clearInterval(statusTimer);
   }, []);
 
   useEffect(() => {
-    if (stageIndex >= STAGES.length - 1) {
-      const done = setTimeout(onComplete, 900);
+    if (stageIndex >= STAGES.length - 1 && isReady) {
+      const done = setTimeout(onComplete, 1200);
       return () => clearTimeout(done);
     }
-  }, [stageIndex, onComplete]);
+  }, [stageIndex, isReady, onComplete]);
+
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = String(elapsed % 60).padStart(2, "0");
 
   return (
     <motion.div
@@ -85,6 +110,12 @@ export function AnalysisProgress({
         </h2>
         <p className="mt-1 truncate text-sm text-slate-400" title={title}>
           {title}
+        </p>
+        <p
+          className="mt-2 text-xs font-medium text-violet-300/80"
+          aria-live="polite"
+        >
+          Analyzing… {minutes}:{seconds} — usually under two minutes
         </p>
       </div>
 
