@@ -161,25 +161,70 @@ def retrieve_video_context(
     events = [event for _, _, event in sorted(scored_events)[: max(1, top_k // 2)]]
     segments = [segment for _, _, segment in sorted(scored_segments)[:top_k]]
 
-    # Devanagari fallback: when the question is in Hindi/Devanagari but the video transcript
-    # is in English (or vice versa), lexical token overlap yields 0 matches. Provide a bounded
-    # representative window of transcript segments across the timeline so the multilingual
-    # Gemini model can inspect video facts and quote verbatim without hallucinating.
+    all_segments = envelope.get("transcript", [])
+    all_events = envelope.get("events", [])
+    q_low = question.lower()
+
     has_devanagari = bool(re.search(r"[\u0900-\u097F]", question))
-    if not segments and has_devanagari:
-        all_segments = envelope.get("transcript", [])
+
+    # 1. Temporal / position intent: if user specifically asks about the start/intro or end
+    is_asking_start = any(
+        w in q_low
+        for w in (
+            "start", "starting", "beginning", "first", "intro", "overview",
+            "shuru", "shuruaat", "pehle", "शुरुआत", "शुरू", "पहले"
+        )
+    )
+    is_asking_end = any(
+        w in q_low
+        for w in (
+            "end", "ending", "conclusion", "last", "finally",
+            "aakhri", "khatam", "ant", "आखरी", "आखिरी", "अंत", "खत्म"
+        )
+    )
+
+    if is_asking_start:
+        if all_events and not any(e.get("id") == all_events[0].get("id") for e in events):
+            events = list(all_events[: max(1, top_k // 2)]) + events
+            events = events[: max(1, top_k // 2)]
+        if all_segments:
+            start_segs = list(all_segments[: min(len(all_segments), top_k)])
+            for s in start_segs:
+                if s not in segments:
+                    segments.append(s)
+            segments = segments[:top_k]
+    elif is_asking_end:
+        if all_events and not any(e.get("id") == all_events[-1].get("id") for e in events):
+            events = events + list(all_events[-max(1, top_k // 2):])
+            events = events[: max(1, top_k // 2)]
+        if all_segments:
+            end_segs = list(all_segments[-min(len(all_segments), top_k):])
+            for s in end_segs:
+                if s not in segments:
+                    segments.append(s)
+            segments = segments[:top_k]
+
+    # 2. Devanagari or video-referential query with 0 lexical overlap
+    is_video_ref = any(
+        m in q_low
+        for m in (
+            "video", "clip", "lecture", "screen", "speaker", "shown", "mentioned",
+            "how many", "summary", "explain", "about", "discuss",
+            "वीडियो", "स्क्रीन", "स्पीकर"
+        )
+    )
+    if not segments and (has_devanagari or is_video_ref):
         if len(all_segments) <= top_k:
             segments = list(all_segments)
         elif all_segments:
             step = len(all_segments) / float(top_k)
             segments = [all_segments[int(i * step)] for i in range(top_k)]
-        if not events:
-            events = list(envelope.get("events", [])[: max(1, top_k // 2)])
+        if not events and all_events:
+            events = list(all_events[: max(1, top_k // 2)])
 
-    # For silent / visual videos without spoken transcript, if keyword scoring produced 0 events,
-    # supply initial timeline chapters so the model can inspect visual facts.
-    if not envelope.get("transcript") and not events and envelope.get("events"):
-        events = list(envelope.get("events", [])[: max(1, top_k // 2)])
+    # 3. Silent / visual video fallback
+    if not all_segments and not events and all_events:
+        events = list(all_events[: max(1, top_k // 2)])
 
     # Chronological order beats rank order for prompt coherence.
     events.sort(key=lambda e: float(e.get("startSeconds") or 0))

@@ -591,3 +591,30 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run lint`: 0 errors, 0 warnings.
   - `npm run build`: Clean Next.js production build.
 - **Status:** Complete. Changed: `web/lib/utils.ts`, `web/components/upload/upload-dropzone.tsx`, `api/pipeline.py`, `api/main.py`, this entry.
+
+## D-41 · 2026-09-25 · Temporal Intent Retrieval & Video-Referential Guard
+
+- **Requirement:** Resolve false "external research" fallback and empty evidence slices on video-referential questions (e.g., "how many products in the starting of this video").
+- **Problem:**
+  1. Lexical keyword retrieval (`retrieve_video_context`) previously computed exact token overlap against transcript segments and chapter events. Queries asking about temporal positions ("how many products in the starting of this video", "what happens at the start/end", "overview of this video") produced 0 token overlap with the actual transcript words ("Calendar", "Drive", "Docs").
+  2. This starved Gemini of all slices (`{"events": [], "transcript": []}`), forcing the LLM to output `found: false`.
+  3. Consequently, if "Research missing context" was enabled, the agent erroneously triggered public Google Search. Google Search returned an ungrounded refusal ("I am unable to answer how many products are at the start of 'this video' because I do not have access to the video you are referring to.").
+  4. Speech-to-text (voice input) sometimes transcribed queries with slight phonetic variances (e.g., "in the starting of the speed you" instead of "this video").
+- **Fix:**
+  1. *Temporal Intent & Position Slices (`api/tools.py:retrieve_video_context`):*
+     - Added explicit detection for starting/overview intent (`start`, `starting`, `beginning`, `first`, `intro`, `overview`, `shuru`, `shuruaat`, etc.) and ending intent (`end`, `ending`, `last`, `conclusion`, `aakhri`, `khatam`, etc.).
+     - Guaranteed that the corresponding timeline segments and chapter events are prioritized and included in the retrieved context slices.
+     - Added video-referential universal fallback: if query refers to the video or has Devanagari and lexical matching yields 0 segments, representative segments across the timeline are provided so the LLM can inspect the actual video contents.
+  2. *Video-Referential Guard (`api/agent.py:_is_video_referential_query`):*
+     - Broadened regex markers to include `"this video"`, `"the video"`, `"of this video"`, `"from this video"`, `"in the starting"`, `"starting of"`, `"at the starting"`, `"start of"`, `"this clip"`, `"the lecture"`, etc.
+     - Any question asking about the video's contents is prevented from falling through to public Google Search, degrading cleanly to honest unknown (`declare_not_found`) if absent.
+- **Validation:**
+  - Tested on live analysis `an-b7fd947c2bfc` (Google Workspace micro-habits 26s video):
+    - "how many product we have in the starting of this video" -> answers correctly from video with `evidenceType: "video"`, quote, and timestamps.
+    - "how many Google product we have in the starting of this video" -> answers correctly in Hinglish with `evidenceType: "video"`.
+    - "how many Google Apps we have in the starting of the speed you" -> gracefully returns honest not-in-video message without triggering Google Search.
+  - `python -m pytest`: 86/86 passed.
+  - `npm run lint`: 0 errors.
+  - `npm run build`: Clean Next.js build.
+- **Status:** Complete. Changed: `api/tools.py`, `api/agent.py`, this entry.
+
