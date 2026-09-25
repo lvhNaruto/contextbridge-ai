@@ -517,3 +517,19 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean Next.js production build.
   - `python -m pytest`: 83/83 tests passing.
 - **Status:** Complete. Changed: `web/lib/utils.ts`, `web/components/upload/upload-dropzone.tsx`, this entry.
+
+## D-37 · 2026-09-25 · Fullscreen Video Dropdown Menu & Tooltip Portal Fix + Auto-Hindi TTS Voice Selection
+
+- **Requirement:** Resolve playback speed dropdown inaccessibility in fullscreen video mode and guarantee natural Hindi voice synthesis when responses contain Hindi/Devanagari script.
+- **Problem:**
+  1. *Fullscreen Dropdown Failure:* Radix UI `DropdownMenuPrimitive.Portal` and `TooltipPrimitive.Portal` default to rendering into `document.body`. When the video container is in HTML5 fullscreen mode (`requestFullscreen`), elements outside the fullscreen container are placed behind the fullscreen layer in the browser rendering stack. Consequently, clicking the speed button (`Gauge`) in fullscreen mode opened the menu behind the video, rendering it invisible and unresponsive.
+  2. *Auto-Hindi TTS Failure:* When `answerLanguage` was `"auto"` (default setting), the ternary check `answerLanguage === "hi" ? "hi-IN" : "en-US"` evaluated to `"en-US"`, causing the browser to attempt reading Devanagari Hindi text with an English voice, causing garbled speech or silence. Furthermore, `getVoices()` was not prioritized for high-quality natural voices.
+- **Fix:**
+  1. *Fullscreen Portal Support (`web/components/ui/dropdown-menu.tsx` & `web/components/ui/tooltip.tsx`):* Added optional `container?: HTMLElement | null` prop to `DropdownMenuContent` and `TooltipContent`, passing it down to `DropdownMenuPrimitive.Portal` and `TooltipPrimitive.Portal`.
+  2. *Video Player Fullscreen Sync (`web/components/video/video-player.tsx`):* Added `fullscreenchange` listener tracking `isFullscreen`. When fullscreen is active, `container={containerRef.current}` is supplied to `DropdownMenuContent` and `TooltipContent`, attaching portaled floating elements directly to the fullscreen container.
+  3. *Auto-Hindi Script Detection & Voice Priority (`web/components/chat/assistant-message.tsx`):* In `useSpeak`, added regex test for Devanagari Unicode `[\u0900-\u097F]`. If present, target language dynamically resolves to `"hi-IN"`. Added voice selection ladder prioritizing natural/online/Google Hindi and English voices (`Google`, `Natural`, `Online`). Added `voiceschanged` event listener for asynchronous voice loading.
+- **Validation:**
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean Next.js production build.
+  - `python -m pytest`: 83/83 tests passing.
+- **Status:** Complete. Changed: `web/components/ui/dropdown-menu.tsx`, `web/components/ui/tooltip.tsx`, `web/components/video/video-player.tsx`, `web/components/chat/assistant-message.tsx`, this entry.

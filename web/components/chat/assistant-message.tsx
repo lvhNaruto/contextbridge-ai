@@ -58,6 +58,18 @@ function formatEvidenceCard(
 function useSpeak() {
   const [speaking, setSpeaking] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const preload = () => {
+      window.speechSynthesis.getVoices();
+    };
+    preload();
+    window.speechSynthesis.addEventListener("voiceschanged", preload);
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", preload);
+    };
+  }, []);
+
   const speak = (text: string, lang: string) => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
@@ -78,16 +90,36 @@ function useSpeak() {
       .replace(/https?:\/\/\S+/g, "")
       .trim();
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = lang;
+    if (!cleanText) return;
 
-    // Language-matched voice selection (Task 3.1)
+    // Auto-detect Devanagari Hindi script (even if setting is "auto" or "en")
+    const hasDevanagari = /[\u0900-\u097F]/.test(cleanText);
+    const resolvedLang = hasDevanagari ? "hi-IN" : (lang || "en-US");
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = resolvedLang;
+
+    // Language-matched voice selection prioritizing Natural/Google voices
     const voices = window.speechSynthesis.getVoices();
     if (voices && voices.length > 0) {
-      const prefix = lang.toLowerCase().split("-")[0];
-      const match = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
-      if (match) {
-        utterance.voice = match;
+      const prefix = resolvedLang.toLowerCase().split("-")[0];
+      const matchingVoices = voices.filter((v) =>
+        v.lang.toLowerCase().startsWith(prefix),
+      );
+
+      // Prioritize Google, Natural, or Online high-quality TTS voices
+      const premiumVoice = matchingVoices.find((v) => {
+        const name = v.name.toLowerCase();
+        return (
+          name.includes("google") ||
+          name.includes("natural") ||
+          name.includes("online")
+        );
+      });
+
+      const chosenVoice = premiumVoice ?? matchingVoices[0];
+      if (chosenVoice) {
+        utterance.voice = chosenVoice;
       }
     }
 

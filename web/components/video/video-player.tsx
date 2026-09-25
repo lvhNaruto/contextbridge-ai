@@ -97,6 +97,17 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     const [captionsOn, setCaptionsOn] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
     const [vttUrl, setVttUrl] = useState<string | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+      const onFsChange = () => {
+        setIsFullscreen(Boolean(document.fullscreenElement));
+      };
+      document.addEventListener("fullscreenchange", onFsChange);
+      return () => {
+        document.removeEventListener("fullscreenchange", onFsChange);
+      };
+    }, []);
 
     // Initialise captions toggle from user's a11y preferences (A5).
     useEffect(() => {
@@ -393,7 +404,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                     <Captions className="size-5" aria-hidden="true" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Captions</TooltipContent>
+                <TooltipContent container={isFullscreen ? containerRef.current : undefined}>
+                  Captions
+                </TooltipContent>
               </Tooltip>
 
               <DropdownMenu>
@@ -408,7 +421,12 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="top" className="min-w-[7rem]">
+                <DropdownMenuContent
+                  align="end"
+                  side="top"
+                  className="min-w-[7rem]"
+                  container={isFullscreen ? containerRef.current : undefined}
+                >
                   <DropdownMenuLabel>Playback Speed</DropdownMenuLabel>
                   {PLAYBACK_RATES.map((r) => (
                     <DropdownMenuItem
