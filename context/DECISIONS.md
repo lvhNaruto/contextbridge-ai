@@ -504,5 +504,16 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean production build.
 - **Status:** Complete. Changed: `api/tools.py`, `web/components/chat/assistant-message.tsx`, this entry.
 
+## D-36 · 2026-09-25 · Upload Dropzone Max File Size (100 MB) Display & Client-Side Guard
 
-
+- **Requirement:** Make maximum allowable video upload size immediately visible to users and guard against oversized uploads on the client side.
+- **Problem:** Users could not determine the upload ceiling from the dropzone UI, which only listed format extensions ("MP4 · MOV · MPEG · WEBM · AVI"). Oversized files (>100 MB) resulted in a full upload attempt before failing with HTTP 413 from the backend.
+- **Fix:**
+  1. *Frontend Contract (`web/lib/utils.ts`):* Exported `MAX_UPLOAD_BYTES = 100 * 1024 * 1024` matching backend specification (`api/pipeline.py:31`).
+  2. *Frontend UI (`web/components/upload/upload-dropzone.tsx`):* Updated the format indicator line to "MP4 · MOV · MPEG · WEBM · AVI · UP TO 100 MB" and updated accessible button label.
+  3. *Client-side Validation (`web/components/upload/upload-dropzone.tsx`):* Added instant size check in `acceptFile` rejecting files > 100 MB with alert "File is too large. Videos are limited to 100 MB." before network request.
+- **Validation:**
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean Next.js production build.
+  - `python -m pytest`: 83/83 tests passing.
+- **Status:** Complete. Changed: `web/lib/utils.ts`, `web/components/upload/upload-dropzone.tsx`, this entry.

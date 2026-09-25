@@ -11,7 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatBytes, isSupportedVideo } from "@/lib/utils";
+import { formatBytes, isSupportedVideo, MAX_UPLOAD_BYTES } from "@/lib/utils";
 import { createAnalysis } from "@/lib/api";
 import type { Lesson } from "@/types";
 
@@ -42,6 +42,11 @@ export function UploadDropzone({
       setErrorMsg(
         "This video format isn't supported. Use MP4, MOV, MPEG, WEBM, or AVI.",
       );
+      return;
+    }
+    if (f.size > MAX_UPLOAD_BYTES) {
+      setState("invalid");
+      setErrorMsg("File is too large. Videos are limited to 100 MB.");
       return;
     }
     setFile(f);
@@ -113,7 +118,7 @@ export function UploadDropzone({
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.25 }}
             onClick={() => inputRef.current?.click()}
-            aria-label="Drop your lesson here, or browse from your computer"
+            aria-label="Drop your lesson here, or browse from your computer (up to 100 MB)"
             className={`group flex w-full flex-col items-center justify-center gap-4 rounded-3xl border-2 px-6 py-14 text-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070B14] sm:py-16 ${
               state === "dragging"
                 ? "border-violet-400 bg-violet-500/[0.08]"
@@ -146,7 +151,7 @@ export function UploadDropzone({
             </div>
 
             <p className="font-mono text-[11px] uppercase tracking-widest text-slate-500">
-              MP4 · MOV · MPEG · WEBM · AVI
+              MP4 · MOV · MPEG · WEBM · AVI · UP TO 100 MB
             </p>
 
             {state === "invalid" && (
