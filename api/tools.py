@@ -50,7 +50,10 @@ Rules:
   slices. Timestamps must be plain seconds within [0, durationSeconds].
 - confidence is between 0 and 1.
 - Write "text" at the requested explanation level and in the requested
-  language. Mention the moment (mm:ss) when helpful.
+  language. Do NOT include video seek timecodes (such as "00:01 par" or "(00:01)")
+  in "text", as the UI automatically displays dedicated interactive seek buttons.
+  However, retain any real-world factual times or durations (e.g. "10:00 PM", "30 minutes")
+  that the speaker discusses as part of the lecture topic.
 - Multilingual & Hinglish consistency:
   * If the question or requested language is Hindi, explain in fluent Hindi while quoting the transcript verbatim in English.
   * If the user asks in Hinglish (code-mixed Hindi and English, e.g. "Pixel phone mein night videography ke liye kaunsa feature use hota hai?"), reply in natural, fluent Hinglish using the same conversational code-mix, keeping technical terms in English.

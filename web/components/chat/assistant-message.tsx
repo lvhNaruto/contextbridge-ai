@@ -69,9 +69,11 @@ function useSpeak() {
 
     window.speechSynthesis.cancel();
 
-    // Clean symbols for speech clarity
+    // Clean symbols and video seek timecodes for speech clarity
     const cleanText = text
-      .replace(/\[\d{2}:\d{2}\]/g, "")
+      .replace(/\[\d{1,2}:\d{2}\]/g, "")
+      .replace(/\(\d{1,2}:\d{2}\)/g, "")
+      .replace(/\b\d{1,2}:\d{2}\s*पर\b/g, "")
       .replace(/[*_#`~]/g, "")
       .replace(/https?:\/\/\S+/g, "")
       .trim();

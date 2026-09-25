@@ -491,5 +491,18 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `python scripts/test_failure_paths.py`: All 9 failure-path drills passing.
 - **Status:** Complete. Changed: `api/agent.py`, `tests/test_agent.py`, `web/components/evidence/evidence-badge.tsx`, `web/components/chat/assistant-message.tsx`, this entry.
 
+## D-35 · 2026-09-25 · Video Seek Timecode Separation from Text & TTS Sanitization
+
+- **Requirement:** Refinement of answer text generation and text-to-speech rendering to prevent false clock-time interpretation.
+- **Problem:** When answering grounded questions, LLM prompt previously requested "Mention the moment (mm:ss) when helpful". This caused the model to write inline timecodes such as "(00:01)" or "00:01 पर", which TTS synthesizers mistakenly pronounced as clock times (e.g., "रात के 12:01 बजे" / 12:01 AM). Furthermore, the UI already displays a dedicated interactive `[Jump to MM:SS]` button and EvidenceBadge, making inline seek timecodes visually redundant.
+- **Fix:**
+  1. *Backend (`api/tools.py`):* Updated `_ANSWER_PROMPT` to explicitly instruct the model NOT to inject video seek timecodes into conversational `text` since the UI renders dedicated seek buttons separately, while explicitly retaining any real-world factual times/durations discussed by the speaker as part of the lecture topic.
+  2. *Frontend TTS (`web/components/chat/assistant-message.tsx`):* Expanded `cleanText` regex in `useSpeak` to strip any parenthesized or bare video timecodes (`[00:01]`, `(00:01)`, `00:01 पर`) before speech synthesis.
+- **Validation:**
+  - `python -m pytest`: 83/83 tests passing.
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean production build.
+- **Status:** Complete. Changed: `api/tools.py`, `web/components/chat/assistant-message.tsx`, this entry.
+
 
 
