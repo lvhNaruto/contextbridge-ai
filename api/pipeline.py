@@ -50,6 +50,10 @@ Rules:
 - Separate observable facts from interpretation.
 - Do not invent speech, events, or timestamps.
 - If speech is unclear, omit it rather than guessing.
+- For videos with little or no spoken speech (e.g. screencasts, UI walkthroughs, silent demos, musical performances):
+  * Densely capture on-screen text, tools, applications, and visual actions in the event titles and descriptions.
+  * For musical or instrumental videos, capture instruments, key chord progressions, and performance sections across the timeline.
+  * In evidence items, copy quotes verbatim from on-screen text, chapter titles, or concise visual action descriptions.
 - Confidence must be between 0 and 1.
 """
 

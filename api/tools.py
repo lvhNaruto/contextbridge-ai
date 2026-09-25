@@ -58,6 +58,9 @@ Rules:
 - Multilingual & Hinglish consistency:
   * If the question or requested language is Hindi, explain in fluent Hindi while quoting the transcript verbatim in English.
   * If the user asks in Hinglish (code-mixed Hindi and English, e.g. "Pixel phone mein night videography ke liye kaunsa feature use hota hai?"), reply in natural, fluent Hinglish using the same conversational code-mix, keeping technical terms in English.
+- Handling visual, musical, and relative time questions:
+  * If the video has no spoken speech (silent, UI screencast, music demo), answer using the visual events, on-screen text, tools shown, and musical chords/sections.
+  * For relative positions ("at the start", "in the middle", "towards the end", "shuruat me", "beech me", "aakhri me"), inspect the corresponding section of the timeline and answer with the sequence or progression observed.
 - Never invent speech, facts, sources, or timestamps.
 
 Question: {question}
@@ -183,6 +186,13 @@ def retrieve_video_context(
         )
     )
 
+    is_asking_mid = any(
+        w in q_low
+        for w in (
+            "middle", "mid", "halfway", "center", "beech", "बीच"
+        )
+    )
+
     if is_asking_start:
         if all_events and not any(e.get("id") == all_events[0].get("id") for e in events):
             events = list(all_events[: max(1, top_k // 2)]) + events
@@ -190,6 +200,18 @@ def retrieve_video_context(
         if all_segments:
             start_segs = list(all_segments[: min(len(all_segments), top_k)])
             for s in start_segs:
+                if s not in segments:
+                    segments.append(s)
+            segments = segments[:top_k]
+    elif is_asking_mid:
+        if all_events:
+            mid_ev = len(all_events) // 2
+            if not any(e.get("id") == all_events[mid_ev].get("id") for e in events):
+                events.append(all_events[mid_ev])
+        if all_segments:
+            mid_idx = len(all_segments) // 2
+            start_i = max(0, mid_idx - top_k // 2)
+            for s in all_segments[start_i : start_i + top_k]:
                 if s not in segments:
                     segments.append(s)
             segments = segments[:top_k]
@@ -204,13 +226,19 @@ def retrieve_video_context(
                     segments.append(s)
             segments = segments[:top_k]
 
+    # Short video safeguard: for short videos (<= 15 segments), include all segments
+    # if query has any video reference or overlap, so full timeline is transparent to Gemini.
+    if len(all_segments) <= 15 and (segments or is_asking_start or is_asking_mid or is_asking_end):
+        segments = list(all_segments)
+
     # 2. Devanagari or video-referential query with 0 lexical overlap
     is_video_ref = any(
         m in q_low
         for m in (
             "video", "clip", "lecture", "screen", "speaker", "shown", "mentioned",
-            "how many", "summary", "explain", "about", "discuss",
-            "वीडियो", "स्क्रीन", "स्पीकर"
+            "how many", "summary", "explain", "about", "discuss", "chord", "guitar",
+            "music", "song", "audio", "sound", "instrument",
+            "वीडियो", "स्क्रीन", "स्पीकर", "गाना", "म्यूजिक"
         )
     )
     if not segments and (has_devanagari or is_video_ref):

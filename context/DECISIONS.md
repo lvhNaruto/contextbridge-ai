@@ -618,3 +618,23 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean Next.js build.
 - **Status:** Complete. Changed: `api/tools.py`, `api/agent.py`, this entry.
 
+## D-42 · 2026-09-25 · Multi-Modal Dense Ingestion & Universal Relative Temporal Answering
+
+- **Requirement:** Support silent/screencast UI videos and musical/instrumental videos, and resolve non-exact relative time questions ("starting", "middle", "ending", chord progressions) without brittle keyword hardcoding.
+- **Problem:**
+  1. For videos without spoken speech (e.g. screencasts like Google micro-habits, UI walkthroughs, or guitar/instrumental demos), the speech transcript is empty or consists of background music.
+  2. If the user asks relative questions ("starting me konsa chord lagaya tha", "what is shown in the middle of the video"), a pure speech-to-text pipeline fails because the content lives in visual UI frames or audio pitch/chords.
+- **Fix:**
+  1. *Dense Ingestion Prompting (`api/pipeline.py:ANALYSIS_PROMPT`):* Added explicit multimodal guidelines to densely capture on-screen UI text, tools, applications, and visual actions in chapter event titles/descriptions, and for musical videos to capture instrument performance sections and chord progressions.
+  2. *Universal Temporal Window & Full-Timeline Context (`api/tools.py:retrieve_video_context`):*
+     - Added middle/center intent detection (`middle`, `mid`, `halfway`, `center`, `beech`, `बीच`) alongside start and end.
+     - For short videos (≤ 15 segments), full timeline segments are preserved by default so Gemini has complete visibility across all moments.
+     - Enriched `_ANSWER_PROMPT` to guide Gemini on answering silent UI demonstrations, chord progressions, and relative timeline sections with exact quotes from event titles/descriptions.
+  3. *Guarded Q&A Agent (`api/agent.py:_is_video_referential_query`):* Added middle/music markers (`middle of`, `in the middle`, `beech me`, `guitar`, `chord`, `music`, `instrument`) to prevent false web search fallbacks.
+- **Validation:**
+  - `python -m pytest`: 86/86 passed.
+  - `npm run lint`: 0 errors.
+  - `npm run build`: Clean Next.js build.
+- **Status:** Complete. Changed: `api/pipeline.py`, `api/tools.py`, `api/agent.py`, this entry.
+
+
