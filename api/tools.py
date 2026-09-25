@@ -61,9 +61,9 @@ Rules:
 - Handling visual, musical, and relative time questions:
   * If the video has no spoken speech (silent, UI screencast, music demo), answer using the visual events, on-screen text, tools shown, and musical chords/sections.
   * For relative positions ("at the start", "in the middle", "towards the end", "shuruat me", "beech me", "aakhri me"), inspect the corresponding section of the timeline and answer with the sequence or progression observed.
-- Handling questions about items, products, tools, counts, or elements at a position (e.g. "how many products/tools at the start/in the video", "what tools are shown", "what is at the beginning"):
-  * Synthesize what is shown or listed in the relevant event(s) and video summary. If an exact number is not explicitly stated on the title screen, describe what is shown (e.g., various Google app icons on the title screen) and list/count the specific tools or points featured in the video (e.g., Google Calendar, Google Drive, Gemini in Google Docs, Gemini in Gmail, and Gemini Notebook across the 4 micro-habits).
-  * Mark found=true and cite the relevant event (e.g. event at startSeconds 0) with a verbatim quote from that event's title or description. Do NOT reject or set found=false simply because the exact numerical count was phrased informally by the user!
+- Handling questions about items, products, tools, counts, or elements at a position (e.g. "how many products/tools at the start", "what tools are shown", "what is at the beginning"):
+  * Synthesize what is shown or listed in the relevant event(s) and video summary. If an exact numerical count is not explicitly written as a single digit in the visual frame or text, describe what is visually or audibly presented and enumerate the specific items, tools, or concepts covered in the video.
+  * Mark found=true and cite the relevant event with a verbatim quote from that event's title or description. Do NOT reject or set found=false simply because the user phrased their question with a counting inquiry (e.g. "how many").
 - Never invent speech, facts, sources, or timestamps.
 
 Question: {question}
@@ -145,6 +145,8 @@ def retrieve_video_context(
 
     all_events = envelope.get("events") or envelope.get("chapters") or []
     all_segments = envelope.get("transcript", [])
+    query = _tokens(question)
+    summary = str(envelope.get("summary") or "")
 
     scored_events: list[tuple[int, int, dict[str, Any]]] = []
     for index, event in enumerate(all_events):
@@ -169,93 +171,25 @@ def retrieve_video_context(
 
     events = [event for _, _, event in sorted(scored_events)[: max(1, top_k // 2)]]
     segments = [segment for _, _, segment in sorted(scored_segments)[:top_k]]
-    q_low = question.lower()
 
     has_devanagari = bool(re.search(r"[\u0900-\u097F]", question))
 
-    # 1. Temporal / position intent: if user specifically asks about the start/intro or end
-    is_asking_start = any(
-        w in q_low
-        for w in (
-            "start", "starting", "beginning", "first", "intro", "overview",
-            "shuru", "shuruaat", "pehle", "शुरुआत", "शुरू", "पहले"
-        )
-    )
-    is_asking_end = any(
-        w in q_low
-        for w in (
-            "end", "ending", "conclusion", "last", "finally",
-            "aakhri", "khatam", "ant", "आखरी", "आखिरी", "अंत", "खत्म"
-        )
-    )
+    # For silent/visual videos (no spoken transcript), chapter events are the only
+    # content available; provide them so Gemini has full visibility across the moments.
+    if not all_segments and all_events:
+        events = list(all_events)
 
-    is_asking_mid = any(
-        w in q_low
-        for w in (
-            "middle", "mid", "halfway", "center", "beech", "बीच"
-        )
-    )
-
-    if is_asking_start:
-        if all_events and not any(e.get("id") == all_events[0].get("id") for e in events):
-            events = list(all_events[: max(1, top_k // 2)]) + events
-            events = events[: max(1, top_k // 2)]
-        if all_segments:
-            start_segs = list(all_segments[: min(len(all_segments), top_k)])
-            for s in start_segs:
-                if s not in segments:
-                    segments.append(s)
-            segments = segments[:top_k]
-    elif is_asking_mid:
-        if all_events:
-            mid_ev = len(all_events) // 2
-            if not any(e.get("id") == all_events[mid_ev].get("id") for e in events):
-                events.append(all_events[mid_ev])
-        if all_segments:
-            mid_idx = len(all_segments) // 2
-            start_i = max(0, mid_idx - top_k // 2)
-            for s in all_segments[start_i : start_i + top_k]:
-                if s not in segments:
-                    segments.append(s)
-            segments = segments[:top_k]
-    elif is_asking_end:
-        if all_events and not any(e.get("id") == all_events[-1].get("id") for e in events):
-            events = events + list(all_events[-max(1, top_k // 2):])
-            events = events[: max(1, top_k // 2)]
-        if all_segments:
-            end_segs = list(all_segments[-min(len(all_segments), top_k):])
-            for s in end_segs:
-                if s not in segments:
-                    segments.append(s)
-            segments = segments[:top_k]
-
-    # Short video safeguard: for short videos (<= 15 segments), include all segments
-    # if query has any video reference or overlap, so full timeline is transparent to Gemini.
-    if len(all_segments) <= 15 and (segments or is_asking_start or is_asking_mid or is_asking_end):
-        segments = list(all_segments)
-
-    # 2. Devanagari or video-referential query with 0 lexical overlap
-    is_video_ref = any(
-        m in q_low
-        for m in (
-            "video", "clip", "lecture", "screen", "speaker", "shown", "mentioned",
-            "how many", "summary", "explain", "about", "discuss", "chord", "guitar",
-            "music", "song", "audio", "sound", "instrument",
-            "वीडियो", "स्क्रीन", "स्पीकर", "गाना", "म्यूजिक"
-        )
-    )
-    if not segments and (has_devanagari or is_video_ref):
-        if len(all_segments) <= top_k:
-            segments = list(all_segments)
-        elif all_segments:
+    # For Devanagari questions against foreign language videos, provide distributed slices
+    if has_devanagari:
+        if not segments and all_segments:
             step = len(all_segments) / float(top_k)
             segments = [all_segments[int(i * step)] for i in range(top_k)]
         if not events and all_events:
             events = list(all_events[: max(1, top_k // 2)])
 
-    # 3. Silent / visual video fallback
-    if not all_segments and not events and all_events:
-        events = list(all_events[: max(1, top_k // 2)])
+    # For short videos where lexical overlap exists, include all segments for full context
+    if 0 < len(all_segments) <= 15 and segments:
+        segments = list(all_segments)
 
     # Chronological order beats rank order for prompt coherence.
     events.sort(key=lambda e: float(e.get("startSeconds") or 0))
