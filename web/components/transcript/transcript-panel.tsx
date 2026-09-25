@@ -9,6 +9,7 @@ interface TranscriptPanelProps {
   transcript: TranscriptSegment[];
   onJump: (seconds: number) => void;
   activeSeconds?: number | null;
+  maxHeightClass?: string;
 }
 
 /**
@@ -20,6 +21,7 @@ export function TranscriptPanel({
   transcript,
   onJump,
   activeSeconds,
+  maxHeightClass,
 }: TranscriptPanelProps) {
   const [query, setQuery] = useState("");
   const segmentRefs = useRef(new Map<number, HTMLButtonElement>());
@@ -91,7 +93,12 @@ export function TranscriptPanel({
       )}
 
       {/* Segment list */}
-      <div className="max-h-[340px] space-y-1.5 overflow-y-auto pr-1">
+      <div
+        className={cn(
+          "space-y-1.5 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-track]:bg-transparent",
+          maxHeightClass || "max-h-[340px]"
+        )}
+      >
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-white/[0.04] bg-white/[0.01] p-4 text-center text-xs text-slate-500">
             No lines match &ldquo;{query}&rdquo;

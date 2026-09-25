@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ListVideo, ChevronDown, FileText } from "lucide-react";
+import { ListVideo, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/video-player";
-import { ChapterList } from "@/components/chapters/chapter-list";
+import { InThisVideoPanel } from "@/components/video/in-this-video-panel";
 import { ContradictionCard } from "@/components/contradictions/contradiction-card";
-import { TranscriptPanel } from "@/components/transcript/transcript-panel";
 import { Conversation } from "@/components/chat/conversation";
 import { QuestionInput } from "@/components/chat/question-input";
 import { LessonSettingsBar } from "@/components/settings/lesson-settings";
@@ -20,7 +19,7 @@ import {
   loadSettings,
   saveSettings,
 } from "@/lib/store";
-import { uid } from "@/lib/utils";
+import { cn, uid } from "@/lib/utils";
 import { DEMO_SUGGESTED_QUESTIONS } from "@/lib/mock-data";
 import type {
   Chapter,
@@ -50,7 +49,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   const [highlightSeconds, setHighlightSeconds] = useState<number | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [chaptersOpen, setChaptersOpen] = useState(false);
-  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const [desktopPanelOpen, setDesktopPanelOpen] = useState(true);
   const [asking, setAsking] = useState(false);
 
   const playerRef = useRef<VideoPlayerHandle>(null);
@@ -269,7 +268,14 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div
+        className={cn(
+          "grid gap-6 transition-[grid-template-columns] duration-300",
+          desktopPanelOpen
+            ? "lg:grid-cols-[minmax(0,1fr)_340px]"
+            : "lg:grid-cols-[minmax(0,1fr)_auto]",
+        )}
+      >
         {/* Left column: video + conversation */}
         <div className="flex min-w-0 flex-col gap-5">
           <motion.div
@@ -288,16 +294,20 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             />
           </motion.div>
 
-          {/* Mobile chapters drawer */}
+          {/* Mobile "In this video" drawer */}
           <div className="lg:hidden">
             <button
+              type="button"
               onClick={() => setChaptersOpen((o) => !o)}
               aria-expanded={chaptersOpen}
-              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
+              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
             >
               <span className="flex items-center gap-2">
-                <ListVideo className="size-4 text-violet-300" aria-hidden="true" />
-                Chapters
+                <ListVideo className="size-4 text-sky-400" aria-hidden="true" />
+                <span>In this video</span>
+                <span className="rounded bg-sky-500/15 border border-sky-500/20 px-1.5 py-0.5 text-[10px] font-mono text-sky-300">
+                  {chapters.length} chapters
+                </span>
               </span>
               <motion.span animate={{ rotate: chaptersOpen ? 180 : 0 }}>
                 <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
@@ -310,54 +320,17 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="overflow-hidden"
+                  className="overflow-hidden pt-3"
                 >
-                  <div className="pt-3">
-                    <ChapterList
-                      chapters={chapters}
-                      activeChapterId={activeChapterId}
-                      onSelect={handleChapterSelect}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Mobile transcript drawer (A2, P0-3) */}
-          <div className="lg:hidden">
-            <button
-              onClick={() => setTranscriptOpen((o) => !o)}
-              aria-expanded={transcriptOpen}
-              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
-            >
-              <span className="flex items-center gap-2">
-                <FileText className="size-4 text-violet-300" aria-hidden="true" />
-                Transcript ({lesson.transcript.length})
-              </span>
-              <motion.span animate={{ rotate: transcriptOpen ? 180 : 0 }}>
-                <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
-              </motion.span>
-            </button>
-            <AnimatePresence initial={false}>
-              {transcriptOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="pt-3">
-                    <TranscriptPanel
-                      transcript={lesson.transcript}
-                      onJump={(sec) => {
-                        handleJump(sec);
-                        setTranscriptOpen(false);
-                      }}
-                      activeSeconds={highlightSeconds}
-                    />
-                  </div>
+                  <InThisVideoPanel
+                    chapters={chapters}
+                    activeChapterId={activeChapterId}
+                    onSelectChapter={handleChapterSelect}
+                    transcript={lesson.transcript}
+                    onJump={handleJump}
+                    activeSeconds={highlightSeconds}
+                    className="h-[460px] max-h-[500px]"
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -424,37 +397,47 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
           </motion.section>
         </div>
 
-        {/* Right column: chapters (desktop) */}
-        <motion.aside
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.12, type: "spring", stiffness: 240, damping: 26 }}
-          aria-label="In this video"
-          className="hidden lg:block"
-        >
-          <div className="sticky top-20">
-            <h2 className="mb-3 px-1 text-sm font-semibold text-slate-100">
-              In this video
-            </h2>
-            <ChapterList
-              chapters={chapters}
-              activeChapterId={activeChapterId}
-              onSelect={handleChapterSelect}
-            />
-
-            {/* Searchable transcript panel (A2, P0-3) */}
-            <div className="mt-6 border-t border-white/[0.08] pt-5">
-              <h2 className="mb-3 px-1 text-sm font-semibold text-slate-100">
-                Transcript
-              </h2>
-              <TranscriptPanel
+        {/* Right column: In this video panel (desktop) */}
+        {desktopPanelOpen ? (
+          <motion.aside
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 16 }}
+            transition={{ delay: 0.12, type: "spring", stiffness: 240, damping: 26 }}
+            aria-label="In this video"
+            className="hidden lg:block w-[340px] shrink-0"
+          >
+            <div className="sticky top-20">
+              <InThisVideoPanel
+                chapters={chapters}
+                activeChapterId={activeChapterId}
+                onSelectChapter={handleChapterSelect}
                 transcript={lesson.transcript}
                 onJump={handleJump}
                 activeSeconds={highlightSeconds}
+                onClose={() => setDesktopPanelOpen(false)}
               />
             </div>
-          </div>
-        </motion.aside>
+          </motion.aside>
+        ) : (
+          <aside className="hidden lg:block shrink-0" aria-label="In this video collapsed">
+            <div className="sticky top-20">
+              <button
+                type="button"
+                onClick={() => setDesktopPanelOpen(true)}
+                aria-label="Open 'In this video' panel"
+                title="Open 'In this video' panel"
+                className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:border-white/[0.16] hover:bg-white/[0.06] hover:text-white transition-all shadow-md group"
+              >
+                <ListVideo className="size-4 text-sky-400 group-hover:scale-110 transition-transform" />
+                <span>In this video</span>
+                <span className="rounded bg-sky-500/15 border border-sky-500/20 px-1.5 py-0.5 text-[10px] font-mono text-sky-300">
+                  {chapters.length}
+                </span>
+              </button>
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );

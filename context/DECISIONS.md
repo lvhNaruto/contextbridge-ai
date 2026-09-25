@@ -551,3 +551,26 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run lint`: 0 errors, 0 warnings.
   - `npm run build`: Clean Next.js production build.
 - **Status:** Complete. Changed: `api/agent.py`, `api/tools.py`, `tests/test_agent.py`, `tests/test_tools.py`, this entry.
+
+## D-39 · 2026-09-25 · YouTube-Style Bounded Scrollable "In this video" Panel
+
+- **Requirement:** Redesign the right-side "In this video" section into a bounded, scrollable container with segmented pill tabs ("Chapters" and "Transcript"), blue timestamp pills, chapter thumbnails, and close/collapse toggle matching modern video learning UX (YouTube-style drawer).
+- **Problem:**
+  1. *Unbounded Page Stretched Downwards:* Previously, `ChapterList` and `TranscriptPanel` were rendered statically and stacked vertically without any height bounds or internal scrolling. In lessons with 10–20+ chapters or long transcripts (200+ segments), the right sidebar expanded to over 1500px+, severely distorting the two-column grid and forcing the user to scroll endlessly down past the chat and video controls.
+  2. *Redundant & Cluttered Layout:* Chapters and transcripts were shown simultaneously, crowding the sidebar.
+  3. *Missing Visual Anchors:* Chapter cards lacked the clear visual polish shown in YouTube's chapter drawer (such as dedicated aspect-ratio thumbnail previews, vibrant blue seek pills, and contextual chapter actions like copy timestamp link).
+- **Fix:**
+  1. *Bounded Scroll Container (`web/components/video/in-this-video-panel.tsx`):* Created a unified, bounded sidebar card (`max-h-[calc(100vh-140px)] min-h-[480px]`) featuring custom slim scrollbars (`scrollbar-thin`). Long chapter lists and transcripts now scroll cleanly inside the container without spilling into the page layout.
+  2. *Header with Close / Collapse Toggle:* Added a top bar with "In this video" title, item counts, and an `X` (close/minimize) button. When collapsed, a compact floating/inline button allows instant re-expansion.
+  3. *Pill-Style Segmented Navigation:* Added `[ Chapters (N) ]` and `[ Transcript (N) ]` pill tabs with active indicator animation (`framer-motion`), letting users toggle between timeline chapters and the searchable verbatim transcript.
+  4. *YouTube-Grade Chapter Cards (`web/components/chapters/chapter-list.tsx`):*
+     - Thumbnail preview container with duration/play badge and pulsing "Now" indicator for active playback.
+     - Bold/semibold title with 2-line clamp.
+     - Blue pill timestamp badge (`bg-sky-500/15 text-sky-400 border border-sky-500/30 hover:bg-sky-500/25`) allowing single-click seek.
+     - Hover quick action to copy timestamped URL or jump to the moment.
+  5. *Integrated Searchable Transcript:* Search filter with auto-scroll to the currently playing segment.
+- **Validation:**
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean Next.js production build.
+  - `python -m pytest`: 86/86 tests passing.
+- **Status:** Complete. Changed: `web/components/video/in-this-video-panel.tsx`, `web/components/chapters/chapter-list.tsx`, `web/components/workspace/workspace-client.tsx`, this entry.
