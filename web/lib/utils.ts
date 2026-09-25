@@ -38,7 +38,7 @@ export const ACCEPTED_VIDEO_TYPES = [
 
 export const ACCEPTED_EXTENSIONS = ["mp4", "mov", "mpeg", "webm", "avi"] as const;
 
-export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB (ARCHITECTURE §4.2)
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20 MB (D-40)
 
 export function isSupportedVideo(file: File): boolean {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";

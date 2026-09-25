@@ -28,7 +28,7 @@ from contextbridge_store import update_analysis
 
 logger = logging.getLogger(__name__)
 
-MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # CONTRACT: ≤ 100 MB (ARCHITECTURE §4.2)
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # CONTRACT: ≤ 20 MB (D-40)
 ALLOWED_EXTENSIONS = {".mp4", ".mov", ".mpeg", ".mpg", ".webm", ".avi"}
 
 # Preserved verbatim from app.py, plus durationSeconds (read before validation;

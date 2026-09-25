@@ -316,7 +316,7 @@ async def create_analysis_endpoint(
     if not data:
         raise ApiError(400, "missing_file", "The uploaded file is empty.")
     if len(data) > pipeline.MAX_UPLOAD_BYTES:
-        raise ApiError(413, "file_too_large", "Videos are limited to 100 MB.")
+        raise ApiError(413, "file_too_large", "Videos are limited to 20 MB.")
     mime_type = pipeline.sniff_video_mime(data[:16], video.filename)
     if mime_type is None:
         raise ApiError(

@@ -574,3 +574,20 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean Next.js production build.
   - `python -m pytest`: 86/86 tests passing.
 - **Status:** Complete. Changed: `web/components/video/in-this-video-panel.tsx`, `web/components/chapters/chapter-list.tsx`, `web/components/workspace/workspace-client.tsx`, this entry.
+
+## D-40 · 2026-09-25 · Upload Video Limit Alignment to 20 MB
+
+- **Requirement:** Align video upload limit to 20 MB across the frontend and backend, accurately reflecting Cloud Run and Gemini inline payload boundaries without false failures.
+- **Problem:**
+  1. The UI and documentation previously advertised an upload limit of 100 MB (`MAX_UPLOAD_BYTES = 100 * 1024 * 1024`).
+  2. Direct synchronous uploads above 32 MB sent over HTTP/1.1 are intercepted and rejected with `413 Payload Too Large / Connection Reset` by the Cloud Run Google Frontend (GFE) proxy, and Gemini inline multimodal base64 payload has a strict 20 MB limit.
+  3. Consequently, uploading a 59.7 MB file produced a generic upload failure without clear guidance on supported file size.
+- **Fix:**
+  1. *Frontend Guard (`web/lib/utils.ts`, `web/components/upload/upload-dropzone.tsx`):* Updated `MAX_UPLOAD_BYTES` to `20 * 1024 * 1024` (20 MB). Updated dropzone aria-labels, helper caption (`MP4 · MOV · MPEG · WEBM · AVI · UP TO 20 MB`), and client-side validation error message (*"File is too large. Videos are limited to 20 MB."*).
+  2. *Backend Contract (`api/pipeline.py`, `api/main.py`):* Updated `MAX_UPLOAD_BYTES` to `20 * 1024 * 1024` and 413 error message to *"Videos are limited to 20 MB."*.
+  3. *Reverted Unused Infrastructure Changes:* Fully reverted temporary GCS bucket and kept Cloud Run service configuration aligned with standard production parameters.
+- **Validation:**
+  - `python -m pytest`: 86/86 tests passing.
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean Next.js production build.
+- **Status:** Complete. Changed: `web/lib/utils.ts`, `web/components/upload/upload-dropzone.tsx`, `api/pipeline.py`, `api/main.py`, this entry.
