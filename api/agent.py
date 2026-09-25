@@ -340,6 +340,23 @@ def answer_question(
             }
             return _chat_message(web_answer, is_voice=is_voice, suggestions=suggestions)
 
+    # If the query was video-referential and Gemini provided a grounded, informative explanation
+    # (e.g. explaining what the video mentions or does not state), preserve Gemini's grounded explanation
+    # instead of discarding it for a canned generic string.
+    raw_text = str(draft.get("text") or "").strip()
+    if is_video_ref and raw_text and len(raw_text) > 15:
+        _log_run(question, "video_not_found_reasoned", False, retries, t0, 0.00010, is_voice)
+        return _chat_message(
+            {
+                "text": raw_text,
+                "evidenceType": "unknown",
+                "confidence": 0.0,
+                "notInVideo": True,
+            },
+            is_voice=is_voice,
+            suggestions=suggestions,
+        )
+
     _log_run(question, "not_found", False, retries, t0, 0.00008, is_voice)
     return _chat_message(
         tools.declare_not_found(active_qa_settings, is_video_referential=is_video_ref),

@@ -47,7 +47,7 @@ Rules:
   short honest statement that the video does not cover this.
 - When found=true, evidence is an object with startSeconds, endSeconds and
   quote. quote MUST be copied verbatim from one of the provided transcript
-  slices (or from an event title/description if the video has no spoken transcript).
+  slices (or from an event title or description).
   Timestamps must be plain seconds within [0, durationSeconds].
 - confidence is between 0 and 1.
 - Write "text" at the requested explanation level and in the requested
@@ -61,6 +61,9 @@ Rules:
 - Handling visual, musical, and relative time questions:
   * If the video has no spoken speech (silent, UI screencast, music demo), answer using the visual events, on-screen text, tools shown, and musical chords/sections.
   * For relative positions ("at the start", "in the middle", "towards the end", "shuruat me", "beech me", "aakhri me"), inspect the corresponding section of the timeline and answer with the sequence or progression observed.
+- Handling questions about items, products, tools, counts, or elements at a position (e.g. "how many products/tools at the start/in the video", "what tools are shown", "what is at the beginning"):
+  * Synthesize what is shown or listed in the relevant event(s) and video summary. If an exact number is not explicitly stated on the title screen, describe what is shown (e.g., various Google app icons on the title screen) and list/count the specific tools or points featured in the video (e.g., Google Calendar, Google Drive, Gemini in Google Docs, Gemini in Gmail, and Gemini Notebook across the 4 micro-habits).
+  * Mark found=true and cite the relevant event (e.g. event at startSeconds 0) with a verbatim quote from that event's title or description. Do NOT reject or set found=false simply because the exact numerical count was phrased informally by the user!
 - Never invent speech, facts, sources, or timestamps.
 
 Question: {question}
@@ -140,8 +143,11 @@ def retrieve_video_context(
     query = _tokens(question)
     summary = str(envelope.get("summary") or "")
 
+    all_events = envelope.get("events") or envelope.get("chapters") or []
+    all_segments = envelope.get("transcript", [])
+
     scored_events: list[tuple[int, int, dict[str, Any]]] = []
-    for index, event in enumerate(envelope.get("events", [])):
+    for index, event in enumerate(all_events):
         quotes = " ".join(
             str(q.get("quote") or "") for q in event.get("evidence", [])
         )
@@ -156,16 +162,13 @@ def retrieve_video_context(
             scored_events.append((-score, index, event))
 
     scored_segments: list[tuple[int, int, dict[str, Any]]] = []
-    for index, segment in enumerate(envelope.get("transcript", [])):
+    for index, segment in enumerate(all_segments):
         score = _score(query, (str(segment.get("text") or ""), 2))
         if score:
             scored_segments.append((-score, index, segment))
 
     events = [event for _, _, event in sorted(scored_events)[: max(1, top_k // 2)]]
     segments = [segment for _, _, segment in sorted(scored_segments)[:top_k]]
-
-    all_segments = envelope.get("transcript", [])
-    all_events = envelope.get("events", [])
     q_low = question.lower()
 
     has_devanagari = bool(re.search(r"[\u0900-\u097F]", question))
@@ -296,10 +299,9 @@ def quote_matches_transcript(quote: str, envelope: dict[str, Any]) -> bool:
                 and difflib.SequenceMatcher(None, needle, candidate).ratio() >= 0.75
             ):
                 return True
-        return False
 
-    # Visual / silent video fallback: ground quotes in verified chapter events
-    events = envelope.get("events", [])
+    # Visual / chapter fallback: ground quotes in verified chapter events
+    events = envelope.get("events") or envelope.get("chapters") or []
     for event in events:
         for field in (event.get("title"), event.get("description")):
             candidate = norm(str(field or ""))

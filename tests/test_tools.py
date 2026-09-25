@@ -411,3 +411,41 @@ def test_accessible_answer_preserves_source_timestamps(envelope: dict):
     assert validated["evidence"]["endSeconds"] == 21.0
     assert "Night Sight" in validated["evidence"]["quote"]
 
+
+def test_retrieve_video_context_supports_chapters_key():
+    lesson = {
+        "summary": "Demonstration of productivity tools",
+        "chapters": [
+            {
+                "id": "ch-1",
+                "startSeconds": 0,
+                "endSeconds": 2,
+                "title": "Title Screen with Google App Icons",
+                "description": "Introduction showing various product icons",
+            }
+        ],
+        "transcript": [],
+    }
+    slices = tools.retrieve_video_context(lesson, "how many product in the starting of the video")
+    assert len(slices["events"]) >= 1
+    assert slices["events"][0]["id"] == "ch-1"
+
+
+def test_quote_matches_transcript_falls_back_to_chapter_events():
+    envelope = {
+        "transcript": [{"startSeconds": 5, "endSeconds": 10, "text": "Spoken audio later in the clip"}],
+        "chapters": [
+            {
+                "id": "ch-1",
+                "startSeconds": 0,
+                "endSeconds": 2,
+                "title": "Title screen introducing small micro-habits",
+                "description": "Accompanied by various Google app icons",
+            }
+        ],
+    }
+    assert tools.quote_matches_transcript(
+        "Title screen introducing small micro-habits", envelope
+    ) is True
+
+

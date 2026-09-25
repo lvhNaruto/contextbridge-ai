@@ -454,3 +454,22 @@ def test_video_referential_query_blocks_web_research(monkeypatch, envelope: dict
     assert msg["answer"]["notInVideo"] is True
     assert "in the analyzed moments of this video" in msg["text"]
 
+
+def test_video_referential_query_preserves_reasoned_explanation(monkeypatch, envelope: dict):
+    reasoned_draft = {
+        "text": "The video does not explicitly state the number of products at the start, but shows app icons on the title screen.",
+        "found": False,
+        "confidence": 0.0,
+    }
+    monkeypatch.setattr(tools, "gemini_answer", lambda *a, **kw: reasoned_draft)
+    msg = agent.answer_question(
+        "how many product we have in the start of the video",
+        envelope,
+        QA_OFF,
+        object(),
+    )
+    assert msg["answer"]["evidenceType"] == "unknown"
+    assert msg["answer"]["notInVideo"] is True
+    assert "The video does not explicitly state the number of products" in msg["text"]
+
+

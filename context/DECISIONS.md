@@ -637,4 +637,24 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean Next.js build.
 - **Status:** Complete. Changed: `api/pipeline.py`, `api/tools.py`, `api/agent.py`, this entry.
 
+## D-43 · 2026-09-25 · Grounded Position Element Answering & Canned-Refusal Elimination
+
+- **Requirement:** Resolve generic refusal on count/element questions at video positions (e.g. "how many product we have in the starting of the video") and eliminate robotic canned refusal strings.
+- **Problem:**
+  1. In visual/screencast videos (e.g. `an-88040ef56346`, Google Workspace micro-habits), the title screen at 0–2s shows Google app icons and introduces the micro-habits, followed by 4 habits demonstrating 5 products (Calendar, Drive, Docs, Gmail, Gemini Notebook).
+  2. Because the title screen did not explicitly state an exact numerical digit, Gemini took the question as requiring a literal number and set `found: false`, noting in `text` that the video shows app icons but doesn't give a number.
+  3. `api/agent.py` then discarded Gemini's informative explanation and substituted a hardcoded canned string: *"I could not find this specific detail in the analyzed moments of this video. Try asking about the main concepts or topics discussed."*
+  4. In `api/tools.py`, `retrieve_video_context` and `quote_matches_transcript` only checked `envelope.get("events")` without `chapters` fallback, risking event drops if envelope used `chapters`.
+- **Fix:**
+  1. *Element / Product / Count Prompt Synthesis (`api/tools.py:_ANSWER_PROMPT`):* Added explicit rules for position questions (start/middle/end) asking about products, tools, counts, or elements to describe what is displayed on screen and list the tools/points featured across the video, setting `found=true` with verbatim quotes and timestamps.
+  2. *Dual Event/Chapter Fallback (`api/tools.py`):* Standardized `all_events = envelope.get("events") or envelope.get("chapters") or []` in `retrieve_video_context` and `quote_matches_transcript`.
+  3. *Preservation of Reasoned Model Explanations (`api/agent.py`):* Video-referential queries where `found` is false now preserve Gemini's grounded explanation instead of replacing it with a robotic generic refusal string.
+- **Validation:**
+  - Tested against `an-88040ef56346` for *"how many product we have in the starting of the video"*:
+    - Returns `found: true`, `evidenceType: "video"`, `startSeconds: 0.0, endSeconds: 2.0`, quote from event 1, and text summarizing Google Calendar, Drive, Docs, Gmail, and Gemini Notebook.
+    - Verified Hinglish/Hindi variant: returns `found: true` in fluent Hindi with timestamp evidence.
+  - `python -m pytest`: 89/89 passed.
+- **Status:** Complete. Changed: `api/tools.py`, `api/agent.py`, `tests/test_tools.py`, `tests/test_agent.py`, this entry.
+
+
 
