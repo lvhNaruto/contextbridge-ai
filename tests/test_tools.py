@@ -76,6 +76,53 @@ def test_quote_matches_transcript(envelope: dict):
     assert not tools.quote_matches_transcript("", envelope)
 
 
+def test_silent_video_event_quote_matching():
+    silent_envelope = {
+        "summary": "Silent short tutorial",
+        "transcript": [],
+        "events": [
+            {
+                "id": "ev-1",
+                "title": "Unboxing Desk Setup Accessories",
+                "description": "Showing three minimalist desk organizer trays on table.",
+                "startSeconds": 0.0,
+                "endSeconds": 5.0,
+            }
+        ],
+    }
+    # Verbatim match from event description
+    assert tools.quote_matches_transcript(
+        "Showing three minimalist desk organizer trays on table.", silent_envelope
+    )
+    # Verbatim match from event title
+    assert tools.quote_matches_transcript(
+        "Unboxing Desk Setup Accessories", silent_envelope
+    )
+    # Fabricated quote should still be rejected
+    assert not tools.quote_matches_transcript(
+        "The speaker talks about rocket science.", silent_envelope
+    )
+
+
+def test_retrieve_video_context_silent_video_baseline_events():
+    silent_envelope = {
+        "summary": "Silent short tutorial",
+        "transcript": [],
+        "events": [
+            {
+                "id": "ev-1",
+                "title": "Opening the box",
+                "description": "Unboxing scene",
+                "startSeconds": 0.0,
+                "endSeconds": 5.0,
+            }
+        ],
+    }
+    slices = tools.retrieve_video_context(silent_envelope, "what items are shown?")
+    assert len(slices["events"]) > 0
+    assert slices["events"][0]["id"] == "ev-1"
+
+
 # --- validate_answer_draft (the Evaluate gate) ------------------------------
 
 

@@ -47,7 +47,8 @@ Rules:
   short honest statement that the video does not cover this.
 - When found=true, evidence is an object with startSeconds, endSeconds and
   quote. quote MUST be copied verbatim from one of the provided transcript
-  slices. Timestamps must be plain seconds within [0, durationSeconds].
+  slices (or from an event title/description if the video has no spoken transcript).
+  Timestamps must be plain seconds within [0, durationSeconds].
 - confidence is between 0 and 1.
 - Write "text" at the requested explanation level and in the requested
   language. Do NOT include video seek timecodes (such as "00:01 par" or "(00:01)")
@@ -175,6 +176,11 @@ def retrieve_video_context(
         if not events:
             events = list(envelope.get("events", [])[: max(1, top_k // 2)])
 
+    # For silent / visual videos without spoken transcript, if keyword scoring produced 0 events,
+    # supply initial timeline chapters so the model can inspect visual facts.
+    if not envelope.get("transcript") and not events and envelope.get("events"):
+        events = list(envelope.get("events", [])[: max(1, top_k // 2)])
+
     # Chronological order beats rank order for prompt coherence.
     events.sort(key=lambda e: float(e.get("startSeconds") or 0))
     segments.sort(key=lambda s: float(s.get("startSeconds") or 0))
@@ -197,21 +203,39 @@ def quote_matches_transcript(quote: str, envelope: dict[str, Any]) -> bool:
 
     The UI renders the quote next to a jump button, so a quote the stored
     transcript does not contain is a fabrication — rejected, never rendered.
+    When the video has no spoken transcript (silent/visual video), quotes from
+    verified chapter event titles and descriptions are accepted.
     """
     norm = lambda s: " ".join(s.lower().split())  # noqa: E731
-    haystack = norm(_transcript_text(envelope))
     needle = norm(quote)
     if not needle:
         return False
-    if needle in haystack:
-        return True
-    for segment in envelope.get("transcript", []):
-        candidate = norm(str(segment.get("text") or ""))
-        if (
-            candidate
-            and difflib.SequenceMatcher(None, needle, candidate).ratio() >= 0.75
-        ):
+
+    transcript = envelope.get("transcript", [])
+    if transcript:
+        haystack = norm(_transcript_text(envelope))
+        if needle in haystack:
             return True
+        for segment in transcript:
+            candidate = norm(str(segment.get("text") or ""))
+            if (
+                candidate
+                and difflib.SequenceMatcher(None, needle, candidate).ratio() >= 0.75
+            ):
+                return True
+        return False
+
+    # Visual / silent video fallback: ground quotes in verified chapter events
+    events = envelope.get("events", [])
+    for event in events:
+        for field in (event.get("title"), event.get("description")):
+            candidate = norm(str(field or ""))
+            if not candidate:
+                continue
+            if needle in candidate or candidate in needle:
+                return True
+            if difflib.SequenceMatcher(None, needle, candidate).ratio() >= 0.75:
+                return True
     return False
 
 
@@ -514,12 +538,30 @@ _NOT_FOUND_WEB_FAILED_TEXT = {
     ),
 }
 
+_NOT_FOUND_VIDEO_REF_TEXT = {
+    "en": (
+        "I could not find this specific detail in the analyzed moments of this video. "
+        "Try asking about the main concepts or topics discussed."
+    ),
+    "hi": (
+        "इस वीडियो के विश्लेषण किए गए हिस्सों में यह विवरण नहीं मिला। "
+        "कृपया वीडियो के मुख्य विषयों या बिंदुओं के बारे में पूछें।"
+    ),
+}
 
-def declare_not_found(qa_settings: dict[str, Any]) -> dict[str, Any]:
+
+def declare_not_found(
+    qa_settings: dict[str, Any], is_video_referential: bool = False
+) -> dict[str, Any]:
     """The honest unknown (API.md §2 invariant 3). Never an invention."""
     language = qa_settings.get("answerLanguage", "auto")
     research_enabled = qa_settings.get("researchMissingContext", False)
-    table = _NOT_FOUND_WEB_FAILED_TEXT if research_enabled else _NOT_FOUND_TEXT
+    if is_video_referential:
+        table = _NOT_FOUND_VIDEO_REF_TEXT
+    elif research_enabled:
+        table = _NOT_FOUND_WEB_FAILED_TEXT
+    else:
+        table = _NOT_FOUND_TEXT
     text = table["hi" if language == "hi" else "en"]
     return {
         "text": text,

@@ -8,6 +8,7 @@ Observe → Reason → Select → Act → Evaluate over exactly three tools
   * found=false + research off→ evidenceType "unknown" (declare_not_found)
   * draft failed the gate on the
     ladder's single retry     → declare_not_found (§6.3 Fallback)
+  * video-referential query   → declare_not_found (blocks irrelevant web search)
   * web research failed       → declare_not_found (§6.5 branch fallback)
   * infra failure (credentials,
     quota, SDK — never a draft)→ PipelineError → endpoint maps to 502 (§6.5)
@@ -82,6 +83,63 @@ def _wants_simplification(text: str) -> bool:
         "confused", "explain simply", "simple terms", "eli5", "easy words",
         "saral bhasha", "kuch samajh nahi"
     ))
+
+
+def _is_video_referential_query(query: str) -> bool:
+    """Detect if query specifically asks about internal video contents, speaker, or timeline."""
+    q = query.lower()
+    markers = (
+        "in the video",
+        "in this video",
+        "start of the video",
+        "end of the video",
+        "beginning of the video",
+        "in the start",
+        "at the start",
+        "at the beginning",
+        "at the end",
+        "on screen",
+        "on-screen",
+        "in the clip",
+        "in this clip",
+        "in the short",
+        "in this short",
+        "in the lecture",
+        "in this lecture",
+        "did the speaker",
+        "does the speaker",
+        "speaker say",
+        "speaker mention",
+        "what is shown",
+        "what does it show",
+        "video me",
+        "video mein",
+        "video k",
+        "video ke",
+        "video pr",
+        "video par",
+        "video pe",
+        "screen par",
+        "screen pr",
+        "screen pe",
+        "shuru me",
+        "shuru mein",
+        "shuruaat me",
+        "video ke shuru",
+        "video ke start",
+        "video ke end",
+        "speaker ne",
+        "speaker kya",
+        "वीडियो में",
+        "वीडियो के",
+        "वीडियो पर",
+        "स्क्रीन पर",
+        "शुरुआत में",
+        "शुरू में",
+        "स्पीकर ने",
+        "दिखाया गया",
+    )
+    return any(m in q for m in markers)
 
 
 def derive_suggestions(envelope: dict[str, Any], current_question: str) -> list[str]:
@@ -198,6 +256,7 @@ def answer_question(
 
     # Observe — top-k evidence slices, no LLM (§8 retrieve_video_context).
     slices = tools.retrieve_video_context(envelope, question)
+    is_video_ref = _is_video_referential_query(question)
 
     # Act on the video branch; the draft gate inside gemini_answer is Evaluate.
     try:
@@ -211,7 +270,7 @@ def answer_question(
         retries = 1
         _log_run(question, "not_found", False, retries, t0, 0.00025, is_voice)
         return _chat_message(
-            tools.declare_not_found(active_qa_settings),
+            tools.declare_not_found(active_qa_settings, is_video_referential=is_video_ref),
             is_voice=is_voice,
             suggestions=suggestions,
         )
@@ -229,7 +288,10 @@ def answer_question(
         return _chat_message(video_answer, is_voice=is_voice, suggestions=suggestions)
 
     # Reason: the video does not answer it. Select per researchMissingContext.
-    if active_qa_settings.get("researchMissingContext", False):
+    # Video-referential queries (e.g. "what's at the start of this video") must NOT
+    # trigger public Google search, because public search does not have access to
+    # the user's private/uploaded video and returns confusing external disclaimers.
+    if active_qa_settings.get("researchMissingContext", False) and not is_video_ref:
         try:
             logger.info("Triggering gemini_web_research for: %s", question)
             research = tools.gemini_web_research(question, active_qa_settings, settings)
@@ -249,7 +311,7 @@ def answer_question(
 
     _log_run(question, "not_found", False, retries, t0, 0.00008, is_voice)
     return _chat_message(
-        tools.declare_not_found(active_qa_settings),
+        tools.declare_not_found(active_qa_settings, is_video_referential=is_video_ref),
         is_voice=is_voice,
         suggestions=suggestions,
     )

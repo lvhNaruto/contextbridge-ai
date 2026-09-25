@@ -435,3 +435,22 @@ def test_wants_simplification_detection():
     assert agent._wants_simplification("I don't understand how Video Boost works")
     assert not agent._wants_simplification("What is the duration of this video?")
 
+
+def test_video_referential_query_blocks_web_research(monkeypatch, envelope: dict):
+    # Even if researchMissingContext is True, asking about the video's start or content
+    # must NOT trigger web research.
+    web_called = []
+    monkeypatch.setattr(tools, "gemini_answer", lambda *a, **kw: NOT_FOUND_DRAFT)
+    monkeypatch.setattr(tools, "gemini_web_research", lambda *a, **kw: web_called.append(True) or WEB_DRAFT)
+
+    msg = agent.answer_question(
+        "how many product we have in the start of the video",
+        envelope,
+        QA_ON,
+        object(),
+    )
+    assert not web_called, "gemini_web_research should have been bypassed for video-referential query"
+    assert msg["answer"]["evidenceType"] == "unknown"
+    assert msg["answer"]["notInVideo"] is True
+    assert "in the analyzed moments of this video" in msg["text"]
+

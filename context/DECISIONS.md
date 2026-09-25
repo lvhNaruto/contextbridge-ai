@@ -533,3 +533,21 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `npm run build`: Clean Next.js production build.
   - `python -m pytest`: 83/83 tests passing.
 - **Status:** Complete. Changed: `web/components/ui/dropdown-menu.tsx`, `web/components/ui/tooltip.tsx`, `web/components/video/video-player.tsx`, `web/components/chat/assistant-message.tsx`, this entry.
+
+## D-38 · 2026-09-25 · Video-Referential Web Search Guard & Visual Chapter Evidence Gate
+
+- **Requirement:** Prevent illogical web searches on private/uploaded video queries and enable visual chapter evidence grounding for silent/visual videos.
+- **Problem:**
+  1. *Dumb Web Search Routing:* When queries asking about internal video contents (e.g. "how many product we have in the start of the video") were not answered by the transcript, the agent fell through to `gemini_web_research` because `researchMissingContext` was enabled. Public Google Search does not have access to the user's uploaded video, resulting in embarrassing and unhelpful answers ("I cannot answer because I do not have access to your personal video").
+  2. *Visual Video Blindspot:* For silent videos, screen tutorials, or visual YouTube Shorts without spoken dialogue (`transcript: []`), `quote_matches_transcript` strictly required matching the transcript. Consequently, valid visual moments documented in chapter event titles/descriptions could never produce verified video answers (`found=true`), leaving the agent blind to visual evidence.
+- **Fix:**
+  1. *Video-Referential Query Guard (`api/agent.py`):* Added `_is_video_referential_query` identifying questions that ask about internal video contents (`"in the video"`, `"start of the video"`, `"on screen"`, `"speaker"`, `"वीडियो में"`, etc.). Web research is strictly blocked for video-referential queries, falling back to an honest video boundary.
+  2. *Video-Referential Not-Found Message (`api/tools.py`):* Added `_NOT_FOUND_VIDEO_REF_TEXT` in `declare_not_found` providing clear, accurate video boundary feedback (*"This specific detail is not explicitly covered or explained in this video lesson."*) rather than confusing web research disclaimers.
+  3. *Visual Chapter Evidence Gate (`api/tools.py`):* Updated `quote_matches_transcript` so that when a video has no spoken transcript, quotes from verified chapter event titles and descriptions are accepted, preserving the anti-fabrication gate while allowing visual lessons to anchor timestamp jump buttons.
+  4. *Fallback Event Retrieval (`api/tools.py`):* Updated `retrieve_video_context` so that when keyword scoring produces 0 event matches, initial timeline chapters are supplied as baseline context so the model can inspect visual chapter facts.
+  5. *Answer Prompt Clarity (`api/tools.py`):* Updated `_ANSWER_PROMPT` explaining that when a video has no spoken transcript, evidence quotes can be drawn from the provided event title/description.
+- **Validation:**
+  - `python -m pytest`: 86/86 tests passing.
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Clean Next.js production build.
+- **Status:** Complete. Changed: `api/agent.py`, `api/tools.py`, `tests/test_agent.py`, `tests/test_tools.py`, this entry.
