@@ -17,8 +17,8 @@ export function WebSourceCard({ source }: { source: WebSource }) {
         {source.domain.split(".")[0].slice(0, 2)}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-slate-200 group-hover:text-white">
+        <span className="flex min-w-0 items-start gap-1.5">
+          <span className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-slate-100 group-hover:text-white">
             {source.title}
           </span>
           <ExternalLink

@@ -2,8 +2,8 @@
 
 /**
  * Client-side persistence for saved lessons, per-lesson conversations,
- * and learner settings. Pure localStorage — replaced by the real
- * GET /analyses/:id/conversation endpoints later.
+ * and learner settings. Conversations live in localStorage on purpose:
+ * the API does not store chat history.
  */
 
 import type {

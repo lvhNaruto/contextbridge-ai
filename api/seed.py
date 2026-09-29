@@ -16,7 +16,12 @@ from typing import Any
 
 from api.config import Settings
 from contextbridge_schema import MediaAnalysis
-from contextbridge_store import create_analysis, get_analysis, initialize, update_analysis
+from contextbridge_store import (
+    create_analysis,
+    get_analysis,
+    initialize,
+    update_analysis,
+)
 
 DEMO_ANALYSIS_ID = "demo-binary"
 FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "demo_binary.json"
@@ -78,7 +83,10 @@ def seed_fixtures(settings: Settings) -> bool:
             storage_uri=storage_uri,
         )
         row = get_analysis(DEMO_ANALYSIS_ID)
-        _demo_row = {key: row[key] for key in row.keys()} if row else None
+        # sqlite3.Row iterates values, so .keys() is required for column names.
+        _demo_row = (
+            {key: row[key] for key in row.keys()} if row else None  # noqa: SIM118
+        )
     except Exception:
         # DB unreachable — the in-memory seed keeps the demo truthful (§15).
         _demo_row = {

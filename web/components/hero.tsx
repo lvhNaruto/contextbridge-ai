@@ -1,128 +1,109 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowDown, ArrowRight, BookOpenCheck, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { HeroVisual } from "@/components/hero-visual";
+import { DEMO_LESSON } from "@/lib/mock-data";
 
-/**
- * Landing hero. GSAP drives the cinematic entrance only —
- * everything else in the product uses Motion.
- */
+/** The landing hero follows the Design Arena visual direction without showing
+ * fabricated lesson content. Its actions lead into the real upload and demo flows. */
 export function Hero() {
-  const root = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const previewRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduceMotion || !root.current) return;
-
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.fromTo(
-        "[data-hero-badge]",
-        { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-      )
-        .fromTo(
-          "[data-hero-line]",
-          { y: 28, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.7, stagger: 0.12 },
-          "-=0.2",
-        )
-        .fromTo(
-          "[data-hero-cta] > *",
-          { y: 14, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.45, stagger: 0.08 },
-          "-=0.35",
-        )
-        .fromTo(
-          "[data-hero-visual]",
-          { y: 24, opacity: 0, scale: 0.98 },
-          { y: 0, opacity: 1, scale: 1, duration: 0.8 },
-          "-=0.4",
-        );
-    }, root);
-    return () => ctx.revert();
-  }, []);
+    const video = previewRef.current;
+    if (!video) return;
+    const start = () => {
+      if (video.currentTime < 1) video.currentTime = 8;
+      if (reduce) {
+        video.pause();
+        return;
+      }
+      void video.play().catch(() => {});
+    };
+    if (video.readyState >= 1) start();
+    else video.addEventListener("loadedmetadata", start, { once: true });
+    return () => video.removeEventListener("loadedmetadata", start);
+  }, [reduce]);
 
   return (
-    <section
-      ref={root}
-      className="relative mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-6 sm:pt-20"
-    >
-      {/* Subtle ambient depth — one restrained radial, no particles */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-[420px] max-w-3xl rounded-full bg-violet-600/[0.13] blur-[120px]"
-      />
-
-      <div className="relative flex flex-col items-center text-center">
-        <span
-          data-hero-badge
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/10 px-3.5 py-1.5 text-xs font-medium text-violet-300"
-        >
-          <span className="size-1.5 rounded-full bg-violet-400" aria-hidden="true" />
-          The Compass for Self-Learners
-        </span>
-
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-[3.4rem] md:leading-[1.1]">
-          <span data-hero-line className="block">
-            Not a tutor.
-          </span>
-          <span data-hero-line className="block">
-            A{" "}
-            <span className="bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text text-transparent">
-              compass
-            </span>{" "}
-            for self-learners.
-          </span>
+    <section className="arena-hero relative mx-auto max-w-7xl px-4 pb-14 pt-24 text-center sm:px-6 sm:pt-32 lg:pt-36">
+      <div className="relative z-10 mx-auto max-w-5xl">
+        <p className="arena-eyebrow mx-auto mb-7 w-fit">
+          <span className="arena-pulse" aria-hidden="true" />
+          The compass for self-learners
+        </p>
+        <h1 className="arena-title mb-5 text-[clamp(3.6rem,11vw,8.5rem)]">
+          <span className="arena-gradient">ContextBridge</span>
         </h1>
-
-        <p
-          data-hero-line
-          className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-slate-300 sm:text-lg"
-        >
-          Every answer anchored to the video you chose, in your language, with proof, and honest about where the video ends.
+        <p className="arena-serif mx-auto max-w-4xl text-[clamp(1.8rem,4.2vw,3rem)] leading-[1.08] text-white/90">
+          Turn any educational video into a <span className="arena-violet">conversation.</span>
         </p>
-
-        {/* 3 Pillars badges */}
-        <div data-hero-line className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
-            <span>⚓</span> Anchored to Video
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 font-medium text-violet-300">
-            <span>🔍</span> Clickable Proof
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 font-medium text-sky-300">
-            <span>🛡️</span> Boundary Honesty
-          </span>
-        </div>
-
-        <div data-hero-cta className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/lesson/demo-binary"
-            className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-violet-600 px-7 text-base font-medium text-white shadow-[0_8px_24px_-8px_rgba(139,92,246,0.6)] outline-none transition-all hover:bg-violet-500 focus-visible:ring-2 focus-visible:ring-violet-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070B14]"
-          >
-            Explore Tokyo Night Demo →
-          </Link>
-          <a
-            href="#upload"
-            className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.06] px-7 text-base font-medium text-slate-100 outline-none transition-all hover:bg-white/[0.1] hover:border-white/20 focus-visible:ring-2 focus-visible:ring-violet-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070B14]"
-          >
-            Upload your video
+        <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+          Ask the video directly, by text or voice. Get answers grounded in what it says, with a timestamp you can jump to and verify.
+        </p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row" data-hero-cta>
+          <a href="#upload" className="arena-button-primary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold">
+            <Sparkles className="size-4" aria-hidden="true" /> Upload a video
           </a>
+          <Link href="/lesson/demo-binary" className="arena-button-ghost inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-medium">
+            Try the demo lesson <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </div>
-
-        <p data-hero-line className="mt-4 text-xs text-slate-500">
-          Ask questions, seek to the exact moment with proof, or step beyond with verified web research.
-        </p>
+        <p className="mt-4 text-xs text-slate-500">Video answers with proof · clearly labeled web research · English and Hindi</p>
       </div>
 
-      <div data-hero-visual className="relative mt-14 sm:mt-16">
-        <HeroVisual />
-      </div>
+      <motion.div
+        className="arena-preview mx-auto mt-14 max-w-5xl text-left sm:mt-16"
+        initial={reduce ? false : { opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="arena-preview-bar">
+          <span className="flex gap-1.5" aria-hidden="true"><i className="arena-dot" /><i className="arena-dot" /><i className="arena-dot" /></span>
+          <span className="arena-live-label text-[11px] tracking-wide text-slate-400">YOUR VIDEO · YOUR QUESTIONS · YOUR PACE</span>
+          <BookOpenCheck className="size-4 text-emerald-300" aria-hidden="true" />
+        </div>
+        <div className="grid divide-y divide-white/[0.07] md:grid-cols-[1.1fr_0.9fr] md:divide-x md:divide-y-0">
+          <motion.div
+            className="arena-preview-media flex min-h-52 flex-col justify-between p-5 sm:min-h-64 sm:p-7"
+            initial={reduce ? false : { opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55, delay: 0.15 }}
+          >
+            <video
+              ref={previewRef}
+              className="arena-preview-video"
+              src={DEMO_LESSON.videoUrl}
+              muted
+              playsInline
+              loop
+              preload="auto"
+              aria-hidden="true"
+            />
+            <div className="arena-preview-scrim" aria-hidden="true" />
+            <span className="w-fit rounded-lg border border-violet-300/20 bg-violet-400/10 px-2.5 py-1 text-[11px] font-medium text-violet-200">Your lesson map</span>
+            <div>
+              <div className="mb-3 text-xs text-slate-200">Chapters and transcript stay connected to playback.</div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="arena-progress-fill h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" /></div>
+              <div className="mt-2 flex justify-between font-mono text-[10px] text-slate-500"><span>00:00</span><span>Jump to cited moments</span></div>
+            </div>
+          </motion.div>
+          <motion.div
+            className="flex min-h-52 flex-col gap-3 p-5 sm:min-h-64 sm:p-7"
+            initial={reduce ? false : { opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55, delay: 0.22 }}
+          >
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500"><Sparkles className="size-3.5 text-violet-300" aria-hidden="true" /> Grounded answers</div>
+            <div className="arena-preview-card arena-float-a ml-auto max-w-[90%] rounded-xl p-3 text-xs leading-relaxed text-slate-200">Ask a question about the video in your own words.</div>
+            <div className="arena-preview-card arena-float-b max-w-[95%] rounded-xl p-3 text-xs leading-relaxed text-slate-300"><p>Answers point back to the lesson, so you can check the moment for yourself.</p><span className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-violet-300/20 bg-violet-400/10 px-2 py-1 text-[10px] font-medium text-violet-200"><ShieldCheck className="size-3" aria-hidden="true" /> Evidence from video</span></div>
+            <div className="mt-auto flex items-center justify-between border-t border-white/[0.07] pt-3 text-[11px] text-slate-500"><span>Text or voice</span><ArrowDown className="size-3.5" aria-hidden="true" /></div>
+          </motion.div>
+        </div>
+      </motion.div>
     </section>
   );
 }

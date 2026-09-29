@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowUp, Mic, Square, AudioLines, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { transcribeAudio } from "@/lib/api";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import { cn } from "@/lib/utils";
 
 type VoiceState = "idle" | "listening" | "transcribing";
@@ -23,11 +24,12 @@ interface SpeechRecognitionLike {
   start(): void;
   stop(): void;
   onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
   onend: (() => void) | null;
 }
 
 export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionInputProps) {
+  const copy = lessonCopy(lessonUiLanguage(language));
   const [value, setValue] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [liveTranscript, setLiveTranscript] = useState<string>("");
@@ -35,6 +37,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
   const chunksRef = useRef<Blob[]>([]);
   const transcriptRef = useRef<string>("");
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const discardRecordingRef = useRef(false);
 
   const submitTyped = () => {
     const q = value.trim();
@@ -60,7 +63,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
       if (!transcript) {
         setVoiceState("idle");
         setLiveTranscript("");
-        toast.info("No speech detected. Please speak closer to your microphone or type your question below.");
+        toast.info(copy.noSpeech);
         return;
       }
 
@@ -68,7 +71,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
       setVoiceState("idle");
       setLiveTranscript("");
     },
-    [onAsk, language],
+    [onAsk, language, copy.noSpeech],
   );
 
   const startListening = useCallback(async () => {
@@ -88,6 +91,12 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
       };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (discardRecordingRef.current) {
+          discardRecordingRef.current = false;
+          setVoiceState("idle");
+          setLiveTranscript("");
+          return;
+        }
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         if (blob.size < 500 && !transcriptRef.current.trim()) {
           setVoiceState("idle");
@@ -102,7 +111,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
     } catch {
       setVoiceState("idle");
       setLiveTranscript("");
-      toast.error("Microphone access is needed for voice questions.");
+      toast.error(copy.micNeeded);
       return;
     }
 
@@ -132,12 +141,31 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
             setLiveTranscript(full.trim());
           }
         };
-        recognition.onerror = () => {};
+        recognition.onerror = (event) => {
+          const code = event.error ?? "";
+          // no-speech / aborted / network still leave the recording for transcription.
+          const fatal =
+            code === "not-allowed" ||
+            code === "service-not-allowed" ||
+            code === "audio-capture";
+          if (!fatal) return;
+          discardRecordingRef.current = true;
+          setVoiceState("idle");
+          setLiveTranscript("");
+          toast.error(copy.voiceFailed);
+          try {
+            recognition.stop();
+          } catch {
+            /* already stopped */
+          }
+          const recorder = mediaRecorderRef.current;
+          if (recorder && recorder.state === "recording") recorder.stop();
+        };
         recognition.start();
         recognitionRef.current = recognition;
       } catch {}
     }
-  }, [finalizeVoice, language]);
+  }, [finalizeVoice, language, copy.micNeeded, copy.voiceFailed]);
 
   const stopListening = useCallback(() => {
     try {
@@ -192,14 +220,14 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
             aria-hidden="true"
           />
           <label htmlFor="question-input" className="sr-only">
-            Ask anything about this lesson
+            {copy.askLabel}
           </label>
           <input
             id="question-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             disabled={disabled || listening || transcribing}
-            placeholder="Ask anything about this lesson…"
+            placeholder={copy.placeholder}
             autoComplete="off"
             className="h-12 min-w-0 flex-1 bg-transparent text-[15px] text-slate-900 placeholder:text-slate-400 outline-none disabled:opacity-60"
           />
@@ -209,11 +237,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
             type="button"
             onClick={() => (listening ? stopListening() : startListening())}
             disabled={disabled || transcribing}
-            aria-label={
-              listening
-                ? "Stop recording and submit your question"
-                : "Record a voice question"
-            }
+            aria-label={listening ? copy.stopRecord : copy.record}
             aria-pressed={listening}
             className={cn(
               "relative flex size-9 shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-500",
@@ -249,7 +273,7 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
           <button
             type="submit"
             disabled={disabled || !value.trim() || listening}
-            aria-label="Send question"
+            aria-label={copy.send}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white outline-none transition-all hover:bg-violet-500 focus-visible:ring-2 focus-visible:ring-violet-500 disabled:opacity-30"
           >
             <ArrowUp className="size-4.5" aria-hidden="true" />
@@ -275,13 +299,13 @@ export function QuestionInput({ disabled, onAsk, language = "auto" }: QuestionIn
               ) : (
                 <>
                   <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-red-400 align-middle" />
-                  Listening… speak your question, then tap the mic to submit.
+                  {copy.listening}
                 </>
               )
             ) : (
               <span className="inline-flex items-center gap-1.5 text-violet-300">
                 <Sparkles className="size-3 animate-spin" />
-                Transcribing and understanding your question…
+                {copy.transcribing}
               </span>
             )}
           </motion.p>

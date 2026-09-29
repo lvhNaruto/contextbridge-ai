@@ -27,7 +27,13 @@ logger = logging.getLogger(__name__)
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -93,13 +99,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Honor WEB_ORIGIN. A wildcard cannot be paired with credentialed requests:
+# browsers reject Access-Control-Allow-Origin: * together with Allow-Credentials.
+cors_origins = [
+    origin.strip() for origin in settings.web_origin.split(",") if origin.strip()
+] or ["http://localhost:3000"]
+allow_credentials = True
+if "*" in cors_origins:
+    cors_origins = ["*"]
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        origin.strip() for origin in settings.web_origin.split(",") if origin.strip()
-    ],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=cors_origins,
+    allow_credentials=allow_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -139,7 +154,8 @@ def _load_row(analysis_id: str) -> dict[str, Any]:
     try:
         row = get_analysis(analysis_id)
         if row is not None:
-            return {key: row[key] for key in row.keys()}
+            # sqlite3.Row iterates values, so .keys() is required for column names.
+            return {key: row[key] for key in row.keys()}  # noqa: SIM118
     except Exception:
         pass  # DB down — demo-binary must survive (ARCHITECTURE §15)
     if analysis_id == seed.DEMO_ANALYSIS_ID:
@@ -246,7 +262,10 @@ def _completed_lesson(analysis_id: str, base_url: str) -> dict[str, Any]:
     try:
         return _lesson_from_row(row, base_url)
     except (ValueError, json.JSONDecodeError) as exc:
-        raise ApiError(409, "analysis_failed", f"Stored analysis is invalid: {exc}")
+        logger.exception("Stored analysis could not be read")
+        raise ApiError(
+            409, "analysis_failed", "Stored analysis is invalid."
+        ) from exc
 
 
 def _completed_envelope(analysis_id: str) -> dict[str, Any]:
@@ -255,7 +274,10 @@ def _completed_envelope(analysis_id: str) -> dict[str, Any]:
     try:
         envelope = json.loads(row["result_json"])
     except json.JSONDecodeError as exc:
-        raise ApiError(409, "analysis_failed", f"Stored analysis is invalid: {exc}")
+        logger.exception("Stored analysis JSON could not be read")
+        raise ApiError(
+            409, "analysis_failed", "Stored analysis is invalid."
+        ) from exc
     if not isinstance(envelope, dict):
         raise ApiError(409, "analysis_failed", "Stored analysis is invalid.")
     return envelope
@@ -339,10 +361,10 @@ async def create_analysis_endpoint(
             mime_type,
             settings,
         )
-    except pipeline.PipelineError:
+    except pipeline.PipelineError as exc:
         raise ApiError(
             502, "analysis_failed", "The video could not be analysed. Please retry."
-        )
+        ) from exc
     return {"id": analysis_id}
 
 
@@ -417,16 +439,16 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
         )
         _record_question_metric(msg.get("answer"))
         return msg
-    except pipeline.PipelineError:
+    except pipeline.PipelineError as exc:
         # §6.5 last resort — total LLM failure, honestly reported (API.md §3.4).
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
-        )
+        ) from exc
     except Exception as exc:
-        logger.exception("Unexpected error in agent loop: %s", exc)
+        logger.exception("Unexpected error in agent loop")
         raise ApiError(
-            502, "answer_failed", f"Agent error: {exc}"
-        )
+            502, "answer_failed", "The model could not answer right now. Please retry."
+        ) from exc
 
 
 @app.post("/transcribe")
@@ -438,7 +460,10 @@ def transcribe_audio_endpoint(
     try:
         audio_bytes = audio.file.read()
     except Exception as exc:
-        raise ApiError(400, "invalid_audio", f"Could not read audio file: {exc}")
+        logger.exception("Could not read uploaded audio")
+        raise ApiError(
+            400, "invalid_audio", "Could not read the audio file."
+        ) from exc
     if not audio_bytes:
         raise ApiError(422, "empty_audio", "The uploaded audio file is empty.")
     mime_type = audio.content_type or "audio/webm"
@@ -503,15 +528,15 @@ def ask_voice_question(
         msg["transcribedQuestion"] = text
         _record_question_metric(msg.get("answer"))
         return msg
-    except pipeline.PipelineError:
+    except pipeline.PipelineError as exc:
         raise ApiError(
             502, "answer_failed", "The model could not answer right now. Please retry."
-        )
+        ) from exc
     except Exception as exc:
-        logger.exception("Unexpected error in voice agent loop: %s", exc)
+        logger.exception("Unexpected error in voice agent loop")
         raise ApiError(
-            502, "answer_failed", f"Agent error: {exc}"
-        )
+            502, "answer_failed", "The model could not answer right now. Please retry."
+        ) from exc
 
 
 
@@ -605,10 +630,33 @@ def get_video(analysis_id: str, request: Request):
         except ApiError:
             raise
         except Exception as exc:
-            raise ApiError(404, "not_found", f"Video object unavailable: {exc}")
+            logger.exception("Video object could not be read")
+            raise ApiError(
+                404, "not_found", "Video object is unavailable."
+            ) from exc
     if uri.startswith(("http://", "https://")):
         return RedirectResponse(uri, status_code=302)
     path = Path(uri)
     if path.exists():
         return _serve_local_file(path, range_header, mime_type)
     raise ApiError(404, "not_found", "Video file is unavailable.")
+
+
+# ---------------------------------------------------------------------------
+# Static frontend serving (serves docs/index.html as root)
+# ---------------------------------------------------------------------------
+DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+
+
+@app.get("/")
+@app.get("/index.html")
+def serve_index():
+    index_path = DOCS_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    return JSONResponse({"status": "ok", "service": "ContextBridge"})
+
+
+if DOCS_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(DOCS_DIR)), name="static_docs")
+

@@ -95,6 +95,8 @@ export interface ChatMessage {
   processing?: ProcessingStage;
   /** Optional next-explore suggestions derived from video content (D-25). */
   suggestions?: string[];
+  /** Real agent steps for this answer: retrieve, verify, cite, and so on. */
+  trace?: { step: string }[];
 }
 
 export interface Lesson {

@@ -331,11 +331,11 @@ def query_question(
 
 
 def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
-    print(f"\n========================================================")
-    print(f"ContextBridge P0-8 Evaluation Harness")
+    print("\n========================================================")
+    print("ContextBridge P0-8 Evaluation Harness")
     print(f"Target API: {api_base}")
     print(f"Lesson ID:  {lesson_id}")
-    print(f"========================================================\n")
+    print("========================================================\n")
 
     results: list[EvalResult] = []
 
@@ -388,10 +388,15 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
         if should_find:
             exp_start = case.get("expected_start")
             exp_end = case.get("expected_end")
-            if start_sec is not None and exp_start is not None and exp_end is not None:
-                # Overlaps or within 5 seconds
-                if (start_sec >= exp_start - 5.0 and start_sec <= exp_end + 5.0):
-                    timestamp_correct = True
+            # Overlaps the expected window, or falls within 5 seconds of it.
+            if (
+                start_sec is not None
+                and exp_start is not None
+                and exp_end is not None
+                and start_sec >= exp_start - 5.0
+                and start_sec <= exp_end + 5.0
+            ):
+                timestamp_correct = True
         else:
             # For unanswerable or clarify, not providing an in-video timestamp is correct
             timestamp_correct = (evidence_type != "video")
@@ -401,9 +406,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
         if should_find:
             if evidence_type == "video" and quote and start_sec is not None and end_sec is not None:
                 exp_sub = case.get("expected_quote_sub", "").lower()
-                if exp_sub and exp_sub in quote.lower():
-                    grounded = True
-                elif not exp_sub and len(quote.strip()) > 0:
+                if exp_sub and exp_sub in quote.lower() or not exp_sub and len(quote.strip()) > 0:
                     grounded = True
                 else:
                     grounded = False
@@ -411,9 +414,7 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
             # For unanswerable, clarify, or web-grounded questions:
             # - web answers with sources are grounded
             # - honest declaration of unknown is considered grounded (not fabricated)
-            if evidence_type == "web" and ans_obj.get("sources"):
-                grounded = True
-            elif evidence_type == "unknown":
+            if evidence_type == "web" and ans_obj.get("sources") or evidence_type == "unknown":
                 grounded = True
 
         # 3. Unsupported answer: fabricated video timestamp/evidence for out-of-video question
@@ -486,7 +487,9 @@ def run_eval(api_base: str, lesson_id: str = DEMO_ID) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ContextBridge P0-8 Evaluation Harness")
+    parser = argparse.ArgumentParser(
+        description="ContextBridge pre-deploy evaluation gate. Run this against the API you are about to ship. It is not part of GitHub CI, because each run calls Gemini."
+    )
     parser.add_argument("--api", default=DEFAULT_API, help="Base API URL to evaluate against")
     parser.add_argument("--lesson-id", default=DEMO_ID, help="Lesson ID to query")
     args = parser.parse_args()
@@ -496,7 +499,10 @@ if __name__ == "__main__":
     if report["metrics"]["unsupported_answer_rate_pct"] > 0.0:
         print("FAIL: Unsupported answer detected!")
         sys.exit(1)
-    if report["metrics"]["timestamp_retrieval_accuracy_pct"] < 80.0:
-        print("FAIL: Timestamp retrieval accuracy below threshold!")
+    if report["metrics"]["timestamp_retrieval_accuracy_pct"] < 90.0:
+        print("FAIL: Timestamp retrieval accuracy below 90%!")
+        sys.exit(1)
+    if report["metrics"]["groundedness_pct"] < 95.0:
+        print("FAIL: Groundedness below 95%. Do not deploy this revision.")
         sys.exit(1)
     print("P0-8 HARNESS: ALL THRESHOLDS PASSED!")

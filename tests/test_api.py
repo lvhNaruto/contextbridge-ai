@@ -45,6 +45,24 @@ def test_healthz_reports_seeded_demo(client: TestClient):
     assert "questions_by_branch" in body["metrics"]
 
 
+def test_cors_uses_configured_origins():
+    from starlette.middleware.cors import CORSMiddleware
+
+    cors = next(layer for layer in app.user_middleware if layer.cls is CORSMiddleware)
+    origins = cors.kwargs["allow_origins"]
+    assert "*" not in origins
+    assert cors.kwargs["allow_credentials"] is True
+    assert origins
+
+
+def test_root_is_api_status_not_the_web_app(client: TestClient):
+    """The product UI is the Next app. The API root is a JSON status check."""
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok", "service": "ContextBridge"}
+
+
+
 # --- the seeded demo lesson (P0-6 + P0-2c + P0-4a) ------------------------
 
 

@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import { ConfidenceBadge } from "@/components/evidence/evidence-badge";
 import { TranscriptPanel } from "@/components/transcript/transcript-panel";
 import type { Chapter, TranscriptSegment } from "@/types";
@@ -25,6 +26,7 @@ interface InThisVideoPanelProps {
   activeSeconds?: number | null;
   onClose?: () => void;
   className?: string;
+  language?: string;
 }
 
 export function InThisVideoPanel({
@@ -36,7 +38,9 @@ export function InThisVideoPanel({
   activeSeconds,
   onClose,
   className,
+  language,
 }: InThisVideoPanelProps) {
+  const copy = lessonCopy(lessonUiLanguage(language));
   const [activeTab, setActiveTab] = useState<"chapters" | "transcript">(
     chapters.length > 0 ? "chapters" : "transcript",
   );
@@ -56,21 +60,21 @@ export function InThisVideoPanel({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl border border-white/[0.08] bg-[#121620]/95 backdrop-blur-md shadow-2xl overflow-hidden",
-        "h-[620px] max-h-[calc(100vh-140px)] min-h-[460px]",
+        "flex flex-col rounded-2xl border border-white/[0.09] bg-[#11132a]/95 backdrop-blur-xl shadow-2xl shadow-violet-950/15 overflow-hidden",
+        "h-[min(70dvh,620px)] max-h-[calc(100dvh-8rem)] min-h-0",
         className,
       )}
-      aria-label="In this video"
+      aria-label={copy.inThisVideo}
     >
       {/* Top Header matching YouTube */}
       <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 shrink-0">
         <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-          In this video
+          {copy.inThisVideo}
         </h2>
         {onClose && (
           <button
             onClick={onClose}
-            aria-label="Close 'In this video' panel"
+            aria-label={copy.closePanel}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-white/[0.08] hover:text-white transition-colors"
           >
             <X className="size-4" aria-hidden="true" />
@@ -84,14 +88,14 @@ export function InThisVideoPanel({
           type="button"
           onClick={() => setActiveTab("chapters")}
           className={cn(
-            "relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
+            "relative min-h-11 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
             activeTab === "chapters"
               ? "bg-white text-slate-900 shadow-sm"
               : "bg-white/[0.06] text-slate-300 hover:bg-white/[0.1] hover:text-white",
           )}
         >
           <ListVideo className="size-3.5" />
-          <span>Chapters</span>
+          <span>{copy.chapters}</span>
           {chapters.length > 0 && (
             <span
               className={cn(
@@ -110,14 +114,14 @@ export function InThisVideoPanel({
           type="button"
           onClick={() => setActiveTab("transcript")}
           className={cn(
-            "relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
+            "relative min-h-11 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
             activeTab === "transcript"
               ? "bg-white text-slate-900 shadow-sm"
               : "bg-white/[0.06] text-slate-300 hover:bg-white/[0.1] hover:text-white",
           )}
         >
           <FileText className="size-3.5" />
-          <span>Transcript</span>
+          <span>{copy.transcript}</span>
           {transcript.length > 0 && (
             <span
               className={cn(
@@ -139,10 +143,10 @@ export function InThisVideoPanel({
           chapters.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 rounded-xl border border-white/[0.04] bg-white/[0.01] p-6 text-center text-xs text-slate-400">
               <ListVideo className="size-8 text-slate-600 mb-2" />
-              <p>No chapters identified for this video.</p>
+              <p>{copy.noChapters}</p>
             </div>
           ) : (
-            <ol className="flex flex-col gap-2" aria-label="Chapters in this video">
+            <ol className="flex flex-col gap-2" aria-label={copy.chapters}>
               {chapters.map((chapter, index) => {
                 const active = chapter.id === activeChapterId;
                 const isCopied = copiedId === chapter.id;
@@ -153,115 +157,113 @@ export function InThisVideoPanel({
                       type="button"
                       onClick={() => onSelectChapter(chapter)}
                       aria-current={active ? "true" : undefined}
-                      aria-label={`Jump to ${chapter.title}, starts at ${formatTime(chapter.startSeconds)}`}
+                      aria-label={`${copy.jumpTo} ${chapter.title}, ${formatTime(chapter.startSeconds)}`}
                       className={cn(
-                        "group relative flex w-full items-start gap-3 rounded-xl border p-2.5 text-left outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sky-400/70",
+                        "group relative flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-400/70",
                         active
-                          ? "border-sky-500/40 bg-sky-500/[0.1] shadow-inner"
+                          ? "border-violet-400/40 bg-violet-500/[0.12] shadow-[inset_0_0_24px_rgba(139,92,246,.08)]"
                           : "border-white/[0.05] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.05]",
                       )}
                     >
-                      {/* Thumbnail frame on left */}
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "relative flex aspect-video w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border transition-colors",
+                          "relative flex aspect-video w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border transition-colors",
                           active
-                            ? "border-sky-400/50 bg-gradient-to-br from-sky-500/30 to-blue-600/10"
+                            ? "border-violet-400/50 bg-gradient-to-br from-violet-500/30 to-fuchsia-600/10"
                             : "border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.01] group-hover:border-white/[0.16]",
                         )}
                       >
                         <Play
                           className={cn(
-                            "size-4 transition-transform group-hover:scale-110",
+                            "size-3.5 transition-transform group-hover:scale-110",
                             active
-                              ? "text-sky-300 opacity-100"
+                              ? "text-violet-300 opacity-100"
                               : "text-slate-400 opacity-70 group-hover:text-white group-hover:opacity-100",
                           )}
                         />
-                        <span className="absolute top-1 left-1.5 font-mono text-[9px] font-bold text-white/50">
+                        <span className="absolute top-0.5 left-1 font-mono text-[9px] font-bold text-white/70">
                           #{index + 1}
                         </span>
                         {active && (
                           <motion.span
                             layoutId="chapter-playing"
-                            className="absolute bottom-1 right-1 flex items-center gap-1 rounded bg-sky-500 px-1 py-0.5 text-[8px] font-semibold text-white uppercase tracking-wider"
+                            className="absolute bottom-0.5 right-0.5 flex items-center gap-1 rounded bg-violet-600 px-1 py-0.5 text-[8px] font-semibold text-white uppercase tracking-wider"
                           >
                             <span className="size-1 animate-pulse rounded-full bg-white" />
-                            Now
+                            {copy.now}
                           </motion.span>
                         )}
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center gap-0.5 bg-black/55 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => handleCopyLink(e, chapter)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                handleCopyLink(e as unknown as React.MouseEvent, chapter);
+                              }
+                            }}
+                            aria-label={copy.copyLink}
+                            title={copy.copyLink}
+                            className="rounded-md p-1 text-white hover:bg-white/15"
+                          >
+                            {isCopied ? (
+                              <Check className="size-3 text-emerald-300" />
+                            ) : (
+                              <Share2 className="size-3" />
+                            )}
+                          </span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectChapter(chapter);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                onSelectChapter(chapter);
+                              }
+                            }}
+                            aria-label={copy.replay}
+                            title={copy.replay}
+                            className="rounded-md p-1 text-white hover:bg-white/15"
+                          >
+                            <RotateCcw className="size-3" />
+                          </span>
+                        </span>
                       </span>
 
-                      {/* Middle text content */}
-                      <span className="min-w-0 flex-1 flex flex-col justify-between self-stretch gap-1.5">
+                      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                         <span
                           className={cn(
-                            "text-xs font-semibold leading-snug line-clamp-2 transition-colors",
-                            active ? "text-white" : "text-slate-200 group-hover:text-white",
+                            "block break-words text-[13px] font-semibold leading-snug transition-colors",
+                            active ? "text-white" : "text-slate-100 group-hover:text-white",
                           )}
                         >
                           {chapter.title}
                         </span>
 
-                        <span className="flex items-center gap-2 flex-wrap">
-                          {/* Blue pill timestamp badge matching screenshot */}
+                        <span className="flex flex-wrap items-center gap-1.5">
                           <span
                             className={cn(
                               "inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums transition-colors",
                               active
-                                ? "bg-sky-500/30 text-sky-200 border border-sky-400/40"
-                                : "bg-sky-500/15 text-sky-400 border border-sky-500/25 group-hover:bg-sky-500/25",
+                                ? "border border-violet-400/40 bg-violet-500/30 text-violet-100"
+                                : "border border-violet-500/25 bg-violet-500/15 text-violet-200 group-hover:bg-violet-500/25",
                             )}
                           >
                             {formatTime(chapter.startSeconds)}
                           </span>
 
                           {chapter.confidence != null && (
-                            <ConfidenceBadge confidence={chapter.confidence} />
+                            <ConfidenceBadge
+                              confidence={chapter.confidence}
+                              language={language}
+                            />
                           )}
-                        </span>
-                      </span>
-
-                      {/* Hover action icons on right matching screenshot */}
-                      <span className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => handleCopyLink(e, chapter)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              handleCopyLink(e as unknown as React.MouseEvent, chapter);
-                            }
-                          }}
-                          aria-label="Copy timestamp link"
-                          title="Copy link at this timestamp"
-                          className="rounded-md p-1.5 text-slate-400 hover:bg-white/[0.1] hover:text-white transition-colors"
-                        >
-                          {isCopied ? (
-                            <Check className="size-3.5 text-emerald-400" />
-                          ) : (
-                            <Share2 className="size-3.5" />
-                          )}
-                        </span>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectChapter(chapter);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                              onSelectChapter(chapter);
-                            }
-                          }}
-                          aria-label="Replay chapter"
-                          title="Play chapter from start"
-                          className="rounded-md p-1.5 text-slate-400 hover:bg-white/[0.1] hover:text-white transition-colors"
-                        >
-                          <RotateCcw className="size-3.5" />
                         </span>
                       </span>
 
@@ -269,7 +271,7 @@ export function InThisVideoPanel({
                       {active && (
                         <motion.span
                           layoutId="chapter-edge"
-                          className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-sky-400"
+                          className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-violet-400"
                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
                         />
                       )}

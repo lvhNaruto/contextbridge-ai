@@ -1,0 +1,6 @@
+#!include:.gitignore
+.git
+.pytest_cache
+.ruff_cache
+web/.next
+web/node_modules

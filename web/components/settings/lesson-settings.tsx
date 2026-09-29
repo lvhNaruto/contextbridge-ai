@@ -8,19 +8,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import type { AnswerLanguage, ExplanationLevel, LessonSettings } from "@/types";
 
-const LANGUAGES: { value: AnswerLanguage; label: string }[] = [
-  { value: "auto", label: "Same as question" },
-  { value: "en", label: "English" },
-  { value: "hi", label: "Hindi" },
-];
-
-const LEVELS: { value: ExplanationLevel; label: string }[] = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "expert", label: "Expert" },
-];
+const LANGUAGE_VALUES: AnswerLanguage[] = ["auto", "en", "hi"];
+const LEVEL_VALUES: ExplanationLevel[] = ["beginner", "intermediate", "expert"];
 
 /** Compact learning controls that sit directly above the conversation. */
 export function LessonSettingsBar({
@@ -30,33 +22,42 @@ export function LessonSettingsBar({
   settings: LessonSettings;
   onChange: (next: LessonSettings) => void;
 }) {
-  const langLabel =
-    LANGUAGES.find((l) => l.value === settings.answerLanguage)?.label ?? "";
-  const levelLabel =
-    LEVELS.find((l) => l.value === settings.explanationLevel)?.label ?? "";
+  const copy = lessonCopy(lessonUiLanguage(settings.answerLanguage));
+  const languageLabel: Record<AnswerLanguage, string> = {
+    auto: copy.sameAsQuestion,
+    en: copy.english,
+    hi: copy.hindi,
+  };
+  const levelLabel: Record<ExplanationLevel, string> = {
+    beginner: copy.beginner,
+    intermediate: copy.intermediate,
+    expert: copy.expert,
+  };
+  const langLabel = languageLabel[settings.answerLanguage];
+  const levelText = levelLabel[settings.explanationLevel];
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {/* Language selector */}
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label={`Answer language: ${langLabel}`}
+          aria-label={`${copy.answerLanguage}: ${langLabel}`}
           className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
         >
           <Languages className="size-3.5 text-violet-300" aria-hidden="true" />
           <span>{langLabel}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Answer Language</DropdownMenuLabel>
-          {LANGUAGES.map((l) => (
+          <DropdownMenuLabel>{copy.answerLanguage}</DropdownMenuLabel>
+          {LANGUAGE_VALUES.map((value) => (
             <DropdownMenuItem
-              key={l.value}
-              selected={settings.answerLanguage === l.value}
+              key={value}
+              selected={settings.answerLanguage === value}
               onSelect={() =>
-                onChange({ ...settings, answerLanguage: l.value })
+                onChange({ ...settings, answerLanguage: value })
               }
             >
-              {l.label}
+              {languageLabel[value]}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -65,23 +66,23 @@ export function LessonSettingsBar({
       {/* Explanation level selector */}
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label={`Explanation level: ${levelLabel}`}
+          aria-label={`${copy.explanationLevel}: ${levelText}`}
           className="flex h-8 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-slate-300 outline-none transition-colors hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-violet-400/70 data-[state=open]:border-violet-400/40"
         >
           <SignalHigh className="size-3.5 text-violet-300" aria-hidden="true" />
-          <span>{levelLabel}</span>
+          <span>{levelText}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Explanation Level</DropdownMenuLabel>
-          {LEVELS.map((l) => (
+          <DropdownMenuLabel>{copy.explanationLevel}</DropdownMenuLabel>
+          {LEVEL_VALUES.map((value) => (
             <DropdownMenuItem
-              key={l.value}
-              selected={settings.explanationLevel === l.value}
+              key={value}
+              selected={settings.explanationLevel === value}
               onSelect={() =>
-                onChange({ ...settings, explanationLevel: l.value })
+                onChange({ ...settings, explanationLevel: value })
               }
             >
-              {l.label}
+              {levelLabel[value]}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -92,7 +93,7 @@ export function LessonSettingsBar({
         type="button"
         role="switch"
         aria-checked={settings.researchMissingContext}
-        title="Search the web only when the video doesn't answer"
+        title={copy.webResearchTitle}
         onClick={() =>
           onChange({
             ...settings,
@@ -111,7 +112,7 @@ export function LessonSettingsBar({
           }`}
           aria-hidden="true"
         />
-        <span>Web research</span>
+        <span>{copy.webResearch}</span>
         <span
           aria-hidden="true"
           className={`inline-flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors ${
@@ -130,7 +131,7 @@ export function LessonSettingsBar({
         type="button"
         role="switch"
         aria-checked={Boolean(settings.autoSpeak)}
-        title="Automatically read answers aloud in matched language"
+        title={copy.autoSpeakTitle}
         onClick={() =>
           onChange({
             ...settings,
@@ -149,7 +150,7 @@ export function LessonSettingsBar({
           }`}
           aria-hidden="true"
         />
-        <span>Auto-speak</span>
+        <span>{copy.autoSpeak}</span>
       </button>
     </div>
   );

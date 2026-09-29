@@ -32,13 +32,19 @@ class Settings:
         return bool(self.google_project_id)
 
 
+def _resolved_db_path() -> str:
+    from contextbridge_store import resolve_db_path
+
+    return str(resolve_db_path())
+
+
 @functools.lru_cache(maxsize=1)  # parse env once; tests set env before first call
 def get_settings() -> Settings:
     return Settings(
         google_project_id=os.getenv("GOOGLE_PROJECT_ID") or None,
         google_region=os.getenv("GOOGLE_REGION", "us-central1"),
         vertex_model_id=os.getenv("VERTEX_MODEL_ID", "gemini-2.5-flash"),
-        db_path=os.getenv("CONTEXTBRIDGE_DB_PATH", "contextbridge.db"),
+        db_path=str(_resolved_db_path()),
         bucket=os.getenv("CONTEXTBRIDGE_BUCKET") or None,
         web_origin=os.getenv("WEB_ORIGIN")
         or os.getenv("ALLOWED_ORIGINS", "http://localhost:3000"),

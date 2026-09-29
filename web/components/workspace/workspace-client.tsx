@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ListVideo, ChevronDown } from "lucide-react";
+import { ListVideo, ChevronDown, MonitorPlay } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/video-player";
 import { InThisVideoPanel } from "@/components/video/in-this-video-panel";
@@ -19,6 +19,7 @@ import {
   loadSettings,
   saveSettings,
 } from "@/lib/store";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import { cn, uid } from "@/lib/utils";
 import { DEMO_SUGGESTED_QUESTIONS } from "@/lib/mock-data";
 import type {
@@ -53,6 +54,55 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   const [asking, setAsking] = useState(false);
 
   const playerRef = useRef<VideoPlayerHandle>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [isTheater, setIsTheater] = useState(false);
+
+  const toggleTheater = useCallback(async () => {
+    const root = workspaceRef.current;
+    if (!root) return;
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await root.requestFullscreen();
+    } catch {
+      toast.error("Theater mode isn't available in this browser.");
+    }
+  }, []);
+
+  useEffect(() => {
+    const syncTheaterState = () => setIsTheater(document.fullscreenElement === workspaceRef.current);
+    document.addEventListener("fullscreenchange", syncTheaterState);
+    return () => document.removeEventListener("fullscreenchange", syncTheaterState);
+  }, []);
+
+  useEffect(() => {
+    const onGlobalKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+      if (event.code === "Space") {
+        if (target?.closest('button, a, [role="button"]')) return;
+        event.preventDefault();
+        playerRef.current?.togglePlay();
+      } else if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        if (target?.closest('button, a, [role="button"], [role="slider"]')) return;
+        event.preventDefault();
+        playerRef.current?.seekBy(event.key === "ArrowRight" ? 10 : -10);
+      } else if (event.key.toLowerCase() === "t") {
+        event.preventDefault();
+        void toggleTheater();
+      } else if (event.key === "/") {
+        const input = document.getElementById("question-input");
+        if (input instanceof HTMLInputElement) {
+          event.preventDefault();
+          input.scrollIntoView({ behavior: "smooth", block: "center" });
+          input.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onGlobalKeyDown);
+    return () => document.removeEventListener("keydown", onGlobalKeyDown);
+  }, [toggleTheater]);
 
   // Hydrate lesson + persisted conversation + settings.
   useEffect(() => {
@@ -250,7 +300,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
 
   if (!lesson) {
     return (
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mx-auto grid max-w-[1600px] gap-4 px-4 py-8 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-6">
           <Skeleton className="aspect-video w-full rounded-2xl" />
           <Skeleton className="h-24 rounded-2xl" />
@@ -266,22 +316,47 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
     );
   }
 
+  const uiCopy = lessonCopy(lessonUiLanguage(settings.answerLanguage));
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div ref={workspaceRef} className="lesson-workspace mx-auto max-w-[1600px] px-3 py-5 sm:px-5 lg:px-6">
+      <header className="mb-4 flex flex-wrap items-end justify-between gap-3 px-1">
+        <div className="min-w-0">
+          <p className="arena-section-label">Video workspace</p>
+          <h1 className="mt-2 truncate text-lg font-semibold tracking-tight text-white sm:text-xl" title={lesson.title}>
+            {lesson.title}
+          </h1>
+        </div>
+        <p className="pb-1 text-xs text-slate-500">
+          {chapters.length} chapters <span aria-hidden="true">·</span> Ask the lesson and follow its evidence
+        </p>
+        <button
+          type="button"
+          onClick={() => void toggleTheater()}
+          aria-pressed={isTheater}
+          className="arena-button-ghost inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium"
+        >
+          <MonitorPlay className="size-4 text-violet-300" aria-hidden="true" />
+          {isTheater ? "Exit theater" : "Theater mode"}
+          <kbd className="hidden rounded border border-white/10 bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-slate-400 sm:inline">T</kbd>
+        </button>
+      </header>
       <div
         className={cn(
-          "grid gap-6 transition-[grid-template-columns] duration-300",
+          "workspace-grid grid gap-4 transition-[grid-template-columns] duration-300",
           desktopPanelOpen
-            ? "lg:grid-cols-[minmax(0,1fr)_340px]"
-            : "lg:grid-cols-[minmax(0,1fr)_auto]",
+            ? "lg:grid-cols-[280px_minmax(0,1fr)_minmax(330px,380px)]"
+            : "lg:grid-cols-[auto_minmax(0,1fr)_minmax(330px,380px)]",
         )}
       >
-        {/* Left column: video + conversation */}
-        <div className="flex min-w-0 flex-col gap-5">
+        {/* Keep the real player, navigator, and backend-connected conversation
+            mounted in the Design Arena three-column workspace. */}
+        <div className="flex min-w-0 flex-col gap-5 lg:contents">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 240, damping: 26 }}
+            className="lg:col-start-2 lg:row-start-1"
           >
             <VideoPlayer
               ref={playerRef}
@@ -300,12 +375,12 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
               type="button"
               onClick={() => setChaptersOpen((o) => !o)}
               aria-expanded={chaptersOpen}
-              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
+              className="flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
             >
               <span className="flex items-center gap-2">
-                <ListVideo className="size-4 text-sky-400" aria-hidden="true" />
-                <span>In this video</span>
-                <span className="rounded bg-sky-500/15 border border-sky-500/20 px-1.5 py-0.5 text-[10px] font-mono text-sky-300">
+                <ListVideo className="size-4 text-violet-300" aria-hidden="true" />
+                <span>{uiCopy.inThisVideo}</span>
+                <span className="rounded border border-violet-500/20 bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-mono text-violet-300">
                   {chapters.length} chapters
                 </span>
               </span>
@@ -329,7 +404,8 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                     transcript={lesson.transcript}
                     onJump={handleJump}
                     activeSeconds={highlightSeconds}
-                    className="h-[460px] max-h-[500px]"
+                    language={settings.answerLanguage}
+                    className="h-[min(65dvh,480px)] max-h-[70dvh] min-h-[220px]"
                   />
                 </motion.div>
               )}
@@ -338,10 +414,12 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
 
           {/* Contradiction findings card (A1, P0-4 UI) */}
           {lesson.contradictions && lesson.contradictions.length > 0 && (
-            <ContradictionCard
-              contradictions={lesson.contradictions}
-              onJump={handleJump}
-            />
+            <div className="lg:col-start-2 lg:row-start-2">
+              <ContradictionCard
+                contradictions={lesson.contradictions}
+                onJump={handleJump}
+              />
+            </div>
           )}
 
           {/* Conversation */}
@@ -350,11 +428,11 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08, type: "spring", stiffness: 240, damping: 26 }}
             aria-label="Ask the video"
-            className="rounded-2xl border border-white/[0.08] bg-[#0D1322] p-4 sm:p-5"
+            className="rounded-2xl border border-white/[0.1] bg-gradient-to-b from-[#171a36]/95 to-[#080a18]/95 p-4 shadow-xl shadow-violet-950/10 backdrop-blur-xl sm:p-5 lg:sticky lg:top-[5.5rem] lg:col-start-3 lg:row-start-1 lg:row-span-2"
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-slate-100">
-                Ask your teacher
+                {uiCopy.askTeacher}
               </h2>
               <LessonSettingsBar settings={settings} onChange={setSettings} />
             </div>
@@ -405,7 +483,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             exit={{ opacity: 0, x: 16 }}
             transition={{ delay: 0.12, type: "spring", stiffness: 240, damping: 26 }}
             aria-label="In this video"
-            className="hidden lg:block w-[340px] shrink-0"
+            className="hidden w-[280px] shrink-0 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:block"
           >
             <div className="sticky top-20">
               <InThisVideoPanel
@@ -415,12 +493,13 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                 transcript={lesson.transcript}
                 onJump={handleJump}
                 activeSeconds={highlightSeconds}
+                language={settings.answerLanguage}
                 onClose={() => setDesktopPanelOpen(false)}
               />
             </div>
           </motion.aside>
         ) : (
-          <aside className="hidden lg:block shrink-0" aria-label="In this video collapsed">
+          <aside className="hidden shrink-0 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:block" aria-label="In this video collapsed">
             <div className="sticky top-20">
               <button
                 type="button"
@@ -429,9 +508,9 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                 title="Open 'In this video' panel"
                 className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:border-white/[0.16] hover:bg-white/[0.06] hover:text-white transition-all shadow-md group"
               >
-                <ListVideo className="size-4 text-sky-400 group-hover:scale-110 transition-transform" />
-                <span>In this video</span>
-                <span className="rounded bg-sky-500/15 border border-sky-500/20 px-1.5 py-0.5 text-[10px] font-mono text-sky-300">
+                <ListVideo className="size-4 text-violet-300 group-hover:scale-110 transition-transform" />
+                <span>{uiCopy.inThisVideo}</span>
+                <span className="rounded border border-violet-500/20 bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-mono text-violet-300">
                   {chapters.length}
                 </span>
               </button>

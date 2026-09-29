@@ -38,6 +38,9 @@ export function UploadDropzone({
   const acceptFile = useCallback((f: File | undefined) => {
     if (!f) return;
     if (!isSupportedVideo(f)) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setFile(null);
+      setPreviewUrl(null);
       setState("invalid");
       setErrorMsg(
         "This video format isn't supported. Use MP4, MOV, MPEG, WEBM, or AVI.",
@@ -45,14 +48,19 @@ export function UploadDropzone({
       return;
     }
     if (f.size > MAX_UPLOAD_BYTES) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setFile(null);
+      setPreviewUrl(null);
       setState("invalid");
       setErrorMsg("File is too large. Videos are limited to 20 MB.");
       return;
     }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(f);
     setPreviewUrl(URL.createObjectURL(f));
+    setErrorMsg("");
     setState("selected");
-  }, []);
+  }, [previewUrl]);
 
   const reset = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -60,6 +68,7 @@ export function UploadDropzone({
     setPreviewUrl(null);
     setErrorMsg("");
     setState("idle");
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const startAnalysis = async () => {
@@ -69,10 +78,12 @@ export function UploadDropzone({
     try {
       const lesson = await createAnalysis(file);
       onAnalyzed(lesson);
-    } catch {
+    } catch (error) {
       setState("error");
       setErrorMsg(
-        "Something went wrong while uploading. Your file is safe — try again.",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while uploading. Your file is safe — try again.",
       );
     }
   };
@@ -119,10 +130,10 @@ export function UploadDropzone({
             transition={{ duration: 0.25 }}
             onClick={() => inputRef.current?.click()}
             aria-label="Drop your lesson here, or browse from your computer (up to 20 MB)"
-            className={`group flex w-full flex-col items-center justify-center gap-4 rounded-3xl border-2 px-6 py-14 text-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070B14] sm:py-16 ${
+              className={`group flex w-full flex-col items-center justify-center gap-4 rounded-3xl border-2 px-6 py-14 text-center outline-none backdrop-blur-xl transition-all focus-visible:ring-2 focus-visible:ring-violet-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#05070F] sm:py-16 ${
               state === "dragging"
-                ? "border-violet-400 bg-violet-500/[0.08]"
-                : "border-dashed border-white/[0.14] bg-white/[0.02] hover:border-violet-400/50 hover:bg-violet-500/[0.04]"
+                ? "border-violet-400 bg-violet-500/[0.12] shadow-[0_0_70px_-12px_rgba(139,92,246,.55)]"
+                : "border-dashed border-violet-400/30 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,.07),transparent_70%)] hover:border-violet-400/55 hover:bg-violet-500/[0.045]"
             }`}
           >
             <motion.div
@@ -178,7 +189,7 @@ export function UploadDropzone({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ type: "spring", stiffness: 260, damping: 26 }}
-              className="flex flex-col gap-5 rounded-3xl border border-white/[0.08] bg-[#0D1322] p-5 sm:flex-row sm:items-center"
+              className="flex flex-col gap-5 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-[#171a36]/90 to-[#080a18]/95 p-5 shadow-2xl shadow-violet-950/20 backdrop-blur-xl sm:flex-row sm:items-center"
             >
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-white/[0.07] bg-black sm:w-56">
                 {previewUrl && (
@@ -248,4 +259,3 @@ export function UploadDropzone({
     </div>
   );
 }
-

@@ -1,5 +1,7 @@
-# ContextBridge CI — P0-10d stub.
-# Phase 5 extends this with the P0-8 evaluation harness as a required check.
+# ContextBridge CI — lint and build only.
+# The model eval is a pre-deploy gate: python scripts/eval_harness.py
+# It calls Gemini and fails the deploy if groundedness is under 95%.
+# Keep it out of this workflow so every push does not spend quota.
 name: ci
 
 on:

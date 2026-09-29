@@ -47,6 +47,7 @@ def _chat_message(
     *,
     is_voice: bool,
     suggestions: list[str] | None = None,
+    trace: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Wrap a verified AssistantAnswer in the ChatMessage envelope (API §2)."""
     msg: dict[str, Any] = {
@@ -59,7 +60,13 @@ def _chat_message(
     }
     if suggestions:
         msg["suggestions"] = suggestions
+    if trace:
+        msg["trace"] = trace
     return msg
+
+
+def _trace(*steps: str) -> list[dict[str, str]]:
+    return [{"step": step} for step in steps]
 
 
 _AMBIGUOUS_KEYWORDS = frozenset({
@@ -71,9 +78,9 @@ _AMBIGUOUS_KEYWORDS = frozenset({
 
 def _is_ambiguous_query(text: str) -> bool:
     cleaned = text.strip().lower().strip("?!.,।")
-    if not cleaned or (len(cleaned.split()) <= 1 and cleaned in _AMBIGUOUS_KEYWORDS):
-        return True
-    return False
+    return not cleaned or (
+        len(cleaned.split()) <= 1 and cleaned in _AMBIGUOUS_KEYWORDS
+    )
 
 
 def _wants_simplification(text: str) -> bool:
@@ -86,7 +93,12 @@ def _wants_simplification(text: str) -> bool:
 
 
 def _is_video_referential_query(query: str) -> bool:
-    """Detect if query specifically asks about internal video contents, speaker, or timeline."""
+    """Detect if query specifically asks about internal video contents, speaker, or timeline.
+
+    Words like guitar, chord, music, and instrument are not markers on their own.
+    "Who invented the guitar" is a general question and may use web research.
+    "What chord is played in this video" still matches because of the video marker.
+    """
     q = query.lower()
     markers = (
         "in the video",
@@ -153,10 +165,6 @@ def _is_video_referential_query(query: str) -> bool:
         "beech me",
         "beech mein",
         "बीच में",
-        "guitar",
-        "chord",
-        "music",
-        "instrument",
         "speaker ne",
         "speaker kya",
         "वीडियो में",
@@ -278,6 +286,7 @@ def answer_question(
             },
             is_voice=is_voice,
             suggestions=suggestions,
+            trace=_trace("clarify"),
         )
 
     # Move: Simplify if the student expressed confusion or asked for beginner level
@@ -288,6 +297,15 @@ def answer_question(
     # Observe — top-k evidence slices, no LLM (§8 retrieve_video_context).
     slices = tools.retrieve_video_context(envelope, question)
     is_video_ref = _is_video_referential_query(question)
+    # A real chapter overlap is about this video. Do not send it to public search.
+    matched_chapter = tools.best_chapter_match(envelope, question)
+    if matched_chapter is not None:
+        is_video_ref = True
+
+    def _chapter_answer() -> dict[str, Any] | None:
+        if matched_chapter is None:
+            return None
+        return tools.answer_from_chapter(matched_chapter, envelope)
 
     # Act on the video branch; the draft gate inside gemini_answer is Evaluate.
     try:
@@ -299,24 +317,67 @@ def answer_question(
         # even with its one retry — honest refusal, never an unverified jump
         # button. The §6.4 round budget is spent, so no web round is taken.
         retries = 1
+        recovered = _chapter_answer()
+        if recovered is not None:
+            _log_run(question, "video", True, retries, t0, 0.00015, is_voice)
+            return _chat_message(
+                {
+                    "text": recovered["text"],
+                    "evidenceType": "video",
+                    "evidence": recovered["evidence"],
+                    "confidence": recovered["confidence"],
+                },
+                is_voice=is_voice,
+                suggestions=suggestions,
+                trace=_trace("retrieve", "chapter", "verify", "cite"),
+            )
         _log_run(question, "not_found", False, retries, t0, 0.00025, is_voice)
         return _chat_message(
             tools.declare_not_found(active_qa_settings, is_video_referential=is_video_ref),
             is_voice=is_voice,
             suggestions=suggestions,
+            trace=_trace("retrieve", "stop"),
         )
     except pipeline.PipelineError:
         raise  # infra failure → the endpoint's honest 502 (§6.5 last resort)
 
     if draft["found"]:
+        before_quote = (draft.get("evidence") or {}).get("quote")
+        draft = tools.prefer_contrast_quote(question, draft, envelope)
+        contrast = bool(draft.pop("contrastQuote", False))
+        if before_quote != (draft.get("evidence") or {}).get("quote"):
+            contrast = True
         _log_run(question, "video", True, retries, t0, 0.00015, is_voice)
+        steps = ["retrieve", "verify", "cite"]
+        if contrast:
+            steps = ["retrieve", "contrast", "verify", "cite"]
         video_answer: dict[str, Any] = {
             "text": draft["text"],
             "evidenceType": "video",
             "evidence": draft["evidence"],
             "confidence": draft["confidence"],
         }
-        return _chat_message(video_answer, is_voice=is_voice, suggestions=suggestions)
+        return _chat_message(
+            video_answer,
+            is_voice=is_voice,
+            suggestions=suggestions,
+            trace=_trace(*steps),
+        )
+
+    recovered = _chapter_answer()
+    if recovered is not None:
+        _log_run(question, "video", True, retries, t0, 0.00015, is_voice)
+        return _chat_message(
+            {
+                "text": recovered["text"],
+                "evidenceType": "video",
+                "evidence": recovered["evidence"],
+                "confidence": recovered["confidence"],
+            },
+            is_voice=is_voice,
+            suggestions=suggestions,
+            trace=_trace("retrieve", "chapter", "verify", "cite"),
+        )
 
     # Reason: the video does not answer it. Select per researchMissingContext.
     # Video-referential queries (e.g. "what's at the start of this video") must NOT
@@ -328,7 +389,7 @@ def answer_question(
             research = tools.gemini_web_research(question, active_qa_settings, settings)
         except pipeline.PipelineError as exc:
             logger.warning("gemini_web_research failed in agent: %s", exc)
-            pass  # §6.5 — a failed web search degrades to honest not-found
+            # §6.5 — a failed web search degrades to honest not-found
         else:
             _log_run(question, "web", True, retries, t0, 0.00035, is_voice)
             web_answer = {
@@ -338,7 +399,12 @@ def answer_question(
                 "sources": research["sources"],
                 "notInVideo": True,  # API §2 inv. 2 — video and web never blend
             }
-            return _chat_message(web_answer, is_voice=is_voice, suggestions=suggestions)
+            return _chat_message(
+                web_answer,
+                is_voice=is_voice,
+                suggestions=suggestions,
+                trace=_trace("retrieve", "web"),
+            )
 
     # If the query was video-referential and Gemini provided a grounded, informative explanation
     # (e.g. explaining what the video mentions or does not state), preserve Gemini's grounded explanation
@@ -355,6 +421,7 @@ def answer_question(
             },
             is_voice=is_voice,
             suggestions=suggestions,
+            trace=_trace("retrieve", "stop"),
         )
 
     _log_run(question, "not_found", False, retries, t0, 0.00008, is_voice)
@@ -362,5 +429,6 @@ def answer_question(
         tools.declare_not_found(active_qa_settings, is_video_referential=is_video_ref),
         is_voice=is_voice,
         suggestions=suggestions,
+        trace=_trace("retrieve", "stop"),
     )
-
+

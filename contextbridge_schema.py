@@ -25,7 +25,7 @@ class EvidenceReference:
     quote: str = ""
 
     @classmethod
-    def from_dict(cls, value: Any) -> "EvidenceReference":
+    def from_dict(cls, value: Any) -> EvidenceReference:
         if not isinstance(value, dict):
             raise ValueError("evidence must be an object")
         start = _number(value.get("startSeconds"), "evidence.startSeconds")
@@ -49,7 +49,7 @@ class MediaEvent:
     evidence: tuple[EvidenceReference, ...] = field(default_factory=tuple)
 
     @classmethod
-    def from_dict(cls, value: Any, index: int) -> "MediaEvent":
+    def from_dict(cls, value: Any, index: int) -> MediaEvent:
         if not isinstance(value, dict):
             raise ValueError(f"events[{index}] must be an object")
         start = _number(value.get("startSeconds"), f"events[{index}].startSeconds")
@@ -111,7 +111,7 @@ class MediaAnalysis:
         }
 
     @classmethod
-    def from_dict(cls, value: Any) -> "MediaAnalysis":
+    def from_dict(cls, value: Any) -> MediaAnalysis:
         if not isinstance(value, dict):
             raise ValueError("Gemini response must be a JSON object")
         raw_events = value.get("events", [])

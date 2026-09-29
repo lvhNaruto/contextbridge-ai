@@ -21,35 +21,52 @@ import { BoundaryCard } from "@/components/evidence/boundary-card";
 import { ExploreSuggestions } from "@/components/chat/explore-suggestions";
 import type { ChatMessage } from "@/types";
 import { cn, formatTime } from "@/lib/utils";
+import {
+  lessonCopy,
+  lessonUiLanguage,
+  localizeResearchLead,
+  traceStepLabel,
+  type LessonCopy,
+} from "@/lib/lesson-copy";
 
-const STAGE_COPY: Record<string, string> = {
-  "checking-video": "Checking whether the video answers your question…",
-  "finding-moment": "Finding the relevant moment…",
-  researching: "Researching additional context…",
-  "preparing-answer": "Preparing your teacher's answer…",
-  speaking: "Preparing your teacher's voice answer…",
-};
+function stageLabel(stage: string, copy: LessonCopy): string {
+  switch (stage) {
+    case "checking-video":
+      return copy.stageChecking;
+    case "finding-moment":
+      return copy.stageFinding;
+    case "researching":
+      return copy.stageResearching;
+    case "preparing-answer":
+      return copy.stagePreparing;
+    case "speaking":
+      return copy.stageSpeaking;
+    default:
+      return copy.stageThinking;
+  }
+}
 
 function formatEvidenceCard(
   text: string,
+  copy: LessonCopy,
   answer?: ChatMessage["answer"],
   lessonTitle?: string,
 ): string {
   const parts: string[] = [text];
 
   if (answer?.evidence?.quote) {
-    parts.push(`Evidence: "${answer.evidence.quote}"`);
+    parts.push(`${copy.evidence}: "${answer.evidence.quote}"`);
   }
 
   if (
     answer?.evidence?.startSeconds !== undefined &&
     answer.evidence.startSeconds !== null
   ) {
-    parts.push(`Timestamp: ${formatTime(answer.evidence.startSeconds)}`);
+    parts.push(`${copy.timestamp}: ${formatTime(answer.evidence.startSeconds)}`);
   }
 
   if (lessonTitle) {
-    parts.push(`Source: ${lessonTitle}`);
+    parts.push(`${copy.source}: ${lessonTitle}`);
   }
 
   return parts.join("\n\n");
@@ -156,21 +173,29 @@ export function AssistantMessage({
   const [copied, setCopied] = useState(false);
   const { speaking, speak } = useSpeak();
   const spokenRef = useRef(false);
+  const ui = lessonUiLanguage(answerLanguage, message.text);
+  const copyText = lessonCopy(ui);
+  const spokenText = localizeResearchLead(message.text, ui);
 
   useEffect(() => {
-    if (autoSpeak && isLatest && !message.processing && message.text && !spokenRef.current) {
+    if (autoSpeak && isLatest && !message.processing && spokenText && !spokenRef.current) {
       spokenRef.current = true;
-      speak(message.text, answerLanguage === "hi" ? "hi-IN" : "en-US");
+      speak(spokenText, ui === "hi" ? "hi-IN" : "en-US");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSpeak, isLatest, message.processing, message.text, answerLanguage]);
+  }, [autoSpeak, isLatest, message.processing, spokenText, ui]);
 
   const copy = async () => {
     try {
-      const payload = formatEvidenceCard(message.text, message.answer, lessonTitle);
+      const payload = formatEvidenceCard(
+        localizeResearchLead(message.text, ui),
+        copyText,
+        message.answer,
+        lessonTitle,
+      );
       await navigator.clipboard.writeText(payload);
       setCopied(true);
-      toast.success("Evidence card copied");
+      toast.success(copyText.evidenceCopied);
       setTimeout(() => setCopied(false), 1600);
     } catch {
       /* clipboard unavailable */
@@ -201,7 +226,7 @@ export function AssistantMessage({
             transition={{ repeat: Infinity, duration: 1.6 }}
             className="text-sm text-slate-300"
           >
-            {STAGE_COPY[message.processing] ?? "Thinking…"}
+            {stageLabel(message.processing, copyText)}
           </motion.span>
           <span className="flex gap-1" aria-hidden="true">
             {[0, 1, 2].map((i) => (
@@ -219,6 +244,10 @@ export function AssistantMessage({
   }
 
   const answer = message.answer;
+  const shownText =
+    answer?.evidenceType === "web"
+      ? localizeResearchLead(message.text, ui)
+      : message.text;
 
   return (
     <motion.div
@@ -261,15 +290,15 @@ export function AssistantMessage({
         )}
       >
         {answer?.evidenceType === "web" ? (
-          <BoundaryCard sources={answer.sources}>
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-100">
-              {message.text}
+          <BoundaryCard sources={answer.sources} language={ui}>
+            <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-100">
+              {shownText}
             </p>
           </BoundaryCard>
         ) : (
           <>
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-100">
-              {message.text}
+            <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-100">
+              {shownText}
             </p>
 
             {answer?.evidence?.quote && (
@@ -289,9 +318,10 @@ export function AssistantMessage({
             <EvidenceBadge
               type={answer.evidenceType}
               confidence={answer.confidence}
+              language={ui}
             />
             {answer.evidenceType !== "video" && answer.confidence > 0 && (
-              <ConfidenceBadge confidence={answer.confidence} />
+              <ConfidenceBadge confidence={answer.confidence} language={ui} />
             )}
 
             {answer.evidenceType === "video" && answer.evidence && (
@@ -300,10 +330,24 @@ export function AssistantMessage({
                   seconds={answer.evidence.startSeconds}
                   onJump={onJump}
                   size="sm"
+                  language={ui}
                 />
               </span>
             )}
           </div>
+        )}
+
+        {message.trace && message.trace.length > 0 && (
+          <details className="mt-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+            <summary className="cursor-pointer text-[11px] font-semibold text-slate-100">
+              {copyText.howAnswered}
+            </summary>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-relaxed text-slate-200">
+              {message.trace.map((step, index) => (
+                <li key={`${step.step}-${index}`}>{traceStepLabel(step.step, ui)}</li>
+              ))}
+            </ol>
+          </details>
         )}
 
         {/* Explore from here suggestions (A9, D-25) */}
@@ -311,6 +355,7 @@ export function AssistantMessage({
           <ExploreSuggestions
             suggestions={message.suggestions}
             onSelect={onSelectSuggestion}
+            language={ui}
           />
         )}
 
@@ -320,7 +365,7 @@ export function AssistantMessage({
             variant="ghost"
             size="icon-sm"
             onClick={copy}
-            aria-label={copied ? "Evidence card copied" : "Copy evidence card"}
+            aria-label={copied ? copyText.evidenceCopied : copyText.copyEvidence}
           >
             {copied ? (
               <Check className="size-3.5 text-emerald-400" aria-hidden="true" />
@@ -332,11 +377,9 @@ export function AssistantMessage({
             variant="ghost"
             size="icon-sm"
             onClick={() =>
-              speak(message.text, answerLanguage === "hi" ? "hi-IN" : "en-US")
+              speak(spokenText, ui === "hi" ? "hi-IN" : "en-US")
             }
-            aria-label={
-              speaking ? "Stop reading answer aloud" : "Read answer aloud"
-            }
+            aria-label={speaking ? copyText.stopReading : copyText.readAloud}
             className={cn(speaking && "text-emerald-400 hover:text-emerald-300")}
           >
             {speaking ? (
@@ -357,12 +400,12 @@ export function AssistantMessage({
                   />
                 ))}
               </span>
-              Speaking aloud…
+              {copyText.speaking}
             </span>
           )}
           {message.isVoice && !speaking && (
             <span className="ml-1 text-[11px] text-slate-500">
-              Voice answer
+              {copyText.voiceAnswer}
             </span>
           )}
         </div>

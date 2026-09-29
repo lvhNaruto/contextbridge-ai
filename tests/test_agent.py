@@ -7,6 +7,7 @@ stays real against small envelopes.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -436,6 +437,13 @@ def test_wants_simplification_detection():
     assert not agent._wants_simplification("What is the duration of this video?")
 
 
+def test_music_words_are_not_video_markers_on_their_own():
+    assert not agent._is_video_referential_query("who invented the guitar")
+    assert not agent._is_video_referential_query("what is a musical instrument")
+    assert agent._is_video_referential_query("what chord is played in this video")
+    assert agent._is_video_referential_query("how many products are at the start of the video")
+
+
 def test_video_referential_query_blocks_web_research(monkeypatch, envelope: dict):
     # Even if researchMissingContext is True, asking about the video's start or content
     # must NOT trigger web research.
@@ -471,5 +479,112 @@ def test_video_referential_query_preserves_reasoned_explanation(monkeypatch, env
     assert msg["answer"]["evidenceType"] == "unknown"
     assert msg["answer"]["notInVideo"] is True
     assert "The video does not explicitly state the number of products" in msg["text"]
+
+
+def _demo_envelope() -> dict:
+    path = Path(__file__).resolve().parents[1] / "api" / "fixtures" / "demo_binary.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_puddle_question_uses_chapter_instead_of_web(monkeypatch):
+    """q05: the spoken line is only 'Oh, I like this.' A chapter match still answers."""
+    calls = _stub(monkeypatch, answer=NOT_FOUND_DRAFT, web=WEB_DRAFT)
+    msg = agent.answer_question(
+        "What does Saeka notice and film on the street puddle?",
+        _demo_envelope(),
+        QA_ON,
+        object(),
+    )
+    assert calls["web"] == 0
+    answer = msg["answer"]
+    assert answer["evidenceType"] == "video"
+    assert "like this" in answer["evidence"]["quote"].lower()
+    assert answer["evidence"]["startSeconds"] == 28
+    assert "puddle" in msg["text"].lower()
+    assert [step["step"] for step in msg["trace"]] == ["retrieve", "chapter", "verify", "cite"]
+
+
+def test_unrelated_question_still_uses_web_research(monkeypatch):
+    calls = _stub(monkeypatch, answer=NOT_FOUND_DRAFT, web=WEB_DRAFT)
+    msg = agent.answer_question(
+        "What is ITR in Indian income tax filing?",
+        _demo_envelope(),
+        QA_ON,
+        object(),
+    )
+    assert calls["web"] == 1
+    assert msg["answer"]["evidenceType"] == "web"
+    assert [step["step"] for step in msg["trace"]] == ["retrieve", "web"]
+
+
+def test_contradiction_cites_the_contrast_statement(monkeypatch):
+    """q11: the model quoted Night Sight; the contrast line is the one with 'different'."""
+    night_sight = {
+        "text": "Night Sight enhances low light.",
+        "found": True,
+        "confidence": 0.9,
+        "evidence": {
+            "startSeconds": 15.0,
+            "endSeconds": 21.0,
+            "quote": "In low light, it activates 'Night Sight' to make the quality even better.",
+        },
+    }
+    _stub(monkeypatch, answer=night_sight)
+    msg = agent.answer_question(
+        "Does night videography capture natural dark city streets or does computational Night Sight enhance it?",
+        _demo_envelope(),
+        QA_ON,
+        object(),
+    )
+    quote = msg["answer"]["evidence"]["quote"]
+    assert "different" in quote.lower()
+    assert msg["answer"]["evidence"]["startSeconds"] == 5
+    assert "Night Sight" in msg["text"]
+    assert "contrast" in [step["step"] for step in msg["trace"]]
+
+
+def test_contrast_quote_leaves_unrelated_or_question_alone(monkeypatch):
+    draft = {
+        "text": "Tokyo has many faces.",
+        "found": True,
+        "confidence": 1.0,
+        "evidence": {
+            "startSeconds": 5.0,
+            "endSeconds": 9.0,
+            "quote": "Tokyo has many faces. The city at night is totally different from what you see during the day.",
+        },
+    }
+    _stub(monkeypatch, answer=draft)
+    msg = agent.answer_question(
+        "Does the video describe Tokyo as completely identical day and night, or having different faces?",
+        _demo_envelope(),
+        QA_ON,
+        object(),
+    )
+    assert msg["answer"]["evidence"]["startSeconds"] == 5
+    assert "contrast" not in [step["step"] for step in msg["trace"]]
+
+
+def test_hinglish_feature_question_keeps_its_own_quote(monkeypatch):
+    draft = {
+        "text": "Video Boost is the night feature.",
+        "found": True,
+        "confidence": 0.99,
+        "evidence": {
+            "startSeconds": 13.0,
+            "endSeconds": 15.0,
+            "quote": "The new Pixel has a feature called 'Video Boost.'",
+        },
+    }
+    _stub(monkeypatch, answer=draft)
+    msg = agent.answer_question(
+        "Pixel phone mein night videography ke liye kaunsa feature use hota hai?",
+        _demo_envelope(),
+        QA_ON,
+        object(),
+    )
+    assert "Video Boost" in msg["answer"]["evidence"]["quote"]
+    assert msg["answer"]["evidence"]["startSeconds"] == 13
+    assert "contrast" not in [step["step"] for step in msg["trace"]]
 
 

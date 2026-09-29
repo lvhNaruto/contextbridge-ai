@@ -18,6 +18,7 @@ import {
   Captions,
   Gauge,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +37,8 @@ import type { Chapter, TranscriptSegment } from "@/types";
 
 export interface VideoPlayerHandle {
   seek: (seconds: number) => void;
+  seekBy: (seconds: number) => void;
+  togglePlay: () => void;
 }
 
 interface VideoPlayerProps {
@@ -146,11 +149,14 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     const seek = useCallback((seconds: number) => {
       const video = videoRef.current;
       if (!video) return;
-      video.currentTime = seconds;
-      setCurrentTime(seconds);
+      const target = Math.max(0, Math.min(seconds, Number.isFinite(video.duration) ? video.duration : seconds));
+      video.currentTime = target;
+      setCurrentTime(target);
     }, []);
 
-    useImperativeHandle(ref, () => ({ seek }), [seek]);
+    const seekBy = useCallback((delta: number) => {
+      seek((videoRef.current?.currentTime ?? 0) + delta);
+    }, [seek]);
 
     const togglePlay = useCallback(() => {
       const video = videoRef.current;
@@ -158,6 +164,8 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       if (video.paused) void video.play();
       else video.pause();
     }, []);
+
+    useImperativeHandle(ref, () => ({ seek, seekBy, togglePlay }), [seek, seekBy, togglePlay]);
 
     // Auto-hide controls while playing.
     const wakeControls = useCallback(() => {
@@ -177,14 +185,16 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       };
     }, [playing, wakeControls]);
 
-    // Notify parent about the active chapter.
+    // Notify parent about the active chapter once per whole second of playback.
+    const playbackSecond = Math.floor(currentTime);
     useEffect(() => {
       if (!onActiveChapterChange) return;
+      const t = videoRef.current?.currentTime ?? playbackSecond;
       const active = chapters.find(
-        (c) => currentTime >= c.startSeconds && currentTime < c.endSeconds,
+        (c) => t >= c.startSeconds && t < c.endSeconds,
       );
       onActiveChapterChange(active?.id ?? null);
-    }, [currentTime, chapters, onActiveChapterChange]);
+    }, [playbackSecond, chapters, onActiveChapterChange]);
 
     // Keyboard controls.
     const onKeyDown = (e: React.KeyboardEvent) => {
@@ -192,17 +202,29 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         e.preventDefault();
         togglePlay();
       } else if (e.key === "ArrowRight") {
-        seek(Math.min((videoRef.current?.currentTime ?? 0) + 5, duration));
+        e.preventDefault();
+        seekBy(10);
       } else if (e.key === "ArrowLeft") {
-        seek(Math.max((videoRef.current?.currentTime ?? 0) - 5, 0));
+        e.preventDefault();
+        seekBy(-10);
       }
     };
 
-    const toggleFullscreen = () => {
+    const toggleFullscreen = async () => {
       const el = containerRef.current;
       if (!el) return;
-      if (document.fullscreenElement) void document.exitFullscreen();
-      else void el.requestFullscreen();
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        } else if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else {
+          toast.error("Full screen is not supported by this browser.");
+        }
+      } catch (error) {
+        console.error("Could not toggle video fullscreen.", error);
+        toast.error("Could not open the video in full screen.");
+      }
     };
 
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -220,7 +242,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
         role="region"
         aria-label={ariaLabel ?? "Video player — space to play or pause, arrow keys to seek"}
         className={cn(
-          "group relative aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-black outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70",
+          "video-player group relative aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-black outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70",
         )}
       >
         <video
@@ -228,7 +250,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
           src={src}
           playsInline
           preload="metadata"
-          className="h-full w-full"
+          className="h-full w-full object-contain"
           onClick={togglePlay}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
@@ -289,8 +311,10 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             aria-valuetext={formatTime(currentTime)}
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === "ArrowRight") seek(currentTime + 5);
-              if (e.key === "ArrowLeft") seek(currentTime - 5);
+              if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              e.preventDefault();
+              e.stopPropagation();
+              seek(e.key === "ArrowRight" ? currentTime + 5 : currentTime - 5);
             }}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
@@ -445,7 +469,8 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
 
               <button
                 onClick={toggleFullscreen}
-                aria-label="Toggle fullscreen"
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                 className="flex size-9 items-center justify-center rounded-full text-white outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-violet-400/70"
               >
                 <Maximize className="size-5" aria-hidden="true" />
@@ -457,4 +482,3 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     );
   },
 );
-

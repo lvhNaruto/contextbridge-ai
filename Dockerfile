@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Backend package + the reused in-window modules (provenance: context/PROVENANCE.md).
 COPY api/ ./api/
+COPY docs/ ./docs/
 COPY contextbridge_schema.py contextbridge_store.py ./
 
 # Cloud Run injects PORT (default 8080). Fixtures seed at startup (P0-6, Phase 1).

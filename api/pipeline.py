@@ -264,7 +264,7 @@ def _call_with_ladder(settings: Settings, base_parts: list, validate):
                 parts = list(base_parts) + [types.Part.from_text(text=feedback)]
                 if attempt == 0:
                     time.sleep(2)  # §6.5: retry once with backoff
-    raise PipelineError(f"Gemini pipeline failed: {last_error}")
+    raise PipelineError("Gemini pipeline failed.") from last_error
 
 
 def analyze_video(
@@ -282,9 +282,12 @@ def analyze_video(
         duration = parsed.get("durationSeconds")
         analysis = MediaAnalysis.from_dict(parsed)  # the single validation gate
         envelope = analysis.to_dict()
-        if isinstance(duration, (int, float)) and not isinstance(duration, bool):
-            if duration > 0:
-                envelope["durationSeconds"] = float(duration)
+        if (
+            isinstance(duration, (int, float))
+            and not isinstance(duration, bool)
+            and duration > 0
+        ):
+            envelope["durationSeconds"] = float(duration)
         return envelope
 
     return _call_with_ladder(settings, base_parts, validate)
@@ -425,10 +428,11 @@ def run_analysis(
         )
         return envelope
     except Exception as exc:
-        update_analysis(analysis_id, status="failed", error=str(exc)[:500])
+        logger.exception("Analysis failed for %s", analysis_id)
+        update_analysis(analysis_id, status="failed", error="This analysis failed.")
         if isinstance(exc, PipelineError):
             raise
-        raise PipelineError(str(exc)) from exc
+        raise PipelineError("Analysis failed.") from exc
 
 
 def transcribe_audio(

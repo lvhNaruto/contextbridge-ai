@@ -8,24 +8,48 @@ import { cn } from "@/lib/utils";
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
+/** Fullscreen (theater or video) hides anything portaled to document.body.
+ *  Menus must render inside the fullscreen element or their options never appear. */
+function useFullscreenPortalTarget() {
+  const [target, setTarget] = React.useState<HTMLElement | undefined>(undefined);
+
+  React.useEffect(() => {
+    const sync = () => {
+      const fs = document.fullscreenElement;
+      setTarget(fs instanceof HTMLElement ? fs : undefined);
+    };
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+
+  return target;
+}
+
 const DropdownMenuContent = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & {
     container?: HTMLElement | null;
   }
->(({ className, sideOffset = 8, container, ...props }, ref) => (
-  <DropdownMenuPrimitive.Portal container={container}>
-    <DropdownMenuPrimitive.Content
-      ref={ref}
-      sideOffset={sideOffset}
-      className={cn(
-        "z-50 min-w-[10rem] overflow-hidden rounded-xl border border-white/10 bg-[#111A2E] p-1.5 text-slate-200 shadow-2xl shadow-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-        className,
-      )}
-      {...props}
-    />
-  </DropdownMenuPrimitive.Portal>
-));
+>(({ className, sideOffset = 8, container, collisionPadding = 12, ...props }, ref) => {
+  const fullscreenTarget = useFullscreenPortalTarget();
+  const portal = container ?? fullscreenTarget;
+
+  return (
+    <DropdownMenuPrimitive.Portal container={portal}>
+      <DropdownMenuPrimitive.Content
+        ref={ref}
+        sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
+        className={cn(
+          "z-[200] min-w-[12rem] overflow-hidden rounded-xl border border-white/10 bg-[#111A2E] p-1.5 text-slate-200 shadow-2xl shadow-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          className,
+        )}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  );
+});
 DropdownMenuContent.displayName = "DropdownMenuContent";
 
 const DropdownMenuItem = React.forwardRef<

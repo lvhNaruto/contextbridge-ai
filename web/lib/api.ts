@@ -7,7 +7,9 @@
  *   askQuestion         → POST   /analyses/:id/questions
  *   askVoiceQuestion    → POST   /analyses/:id/voice-question
  *   getChapters         → GET    /analyses/:id/chapters
- *   getConversation     → GET    /analyses/:id/conversation
+ *
+ * Conversations are not a backend resource. getConversation reads the
+ * browser's local storage for that lesson. The API stays stateless.
  *
  * When NEXT_PUBLIC_API_BASE_URL is set, real requests are made.
  * Until then, a mock service resolves against the demo lesson so the
@@ -39,7 +41,17 @@ const uploadedLessons = new Map<string, UploadRecord>();
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, init);
   if (!res.ok) {
-    throw new Error(`Request failed (${res.status})`);
+    let message = `Request failed (${res.status})`;
+    try {
+      const body = (await res.json()) as {
+        error?: { message?: string };
+        detail?: string;
+      };
+      message = body.error?.message ?? body.detail ?? message;
+    } catch {
+      // Some proxy and gateway errors are not returned as JSON.
+    }
+    throw new Error(message);
   }
   return (await res.json()) as T;
 }
@@ -127,9 +139,9 @@ export async function getChapters(lessonId: string): Promise<Chapter[]> {
   return lesson.chapters;
 }
 
-/** GET /analyses/:id/conversation */
+/** Conversation history kept in the browser for this lesson. There is no
+ *  GET /analyses/:id/conversation endpoint. */
 export function getConversation(lessonId: string): ChatMessage[] {
-  // Real mode would fetch; the mock keeps history client-side per lesson.
   return loadConversation(lessonId);
 }
 
@@ -173,6 +185,12 @@ export async function askQuestion(
     createdAt: Date.now(),
     answer,
     suggestions,
+    trace:
+      answer.evidenceType === "video"
+        ? [{ step: "retrieve" }, { step: "verify" }, { step: "cite" }]
+        : answer.evidenceType === "web"
+          ? [{ step: "retrieve" }, { step: "web" }]
+          : [{ step: "retrieve" }, { step: "stop" }],
   };
 }
 
@@ -226,4 +244,3 @@ export async function askVoiceQuestion(
   }
   return askQuestion(lessonId, transcript, settings, true, history);
 }
-

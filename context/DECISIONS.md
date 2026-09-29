@@ -656,5 +656,11 @@ The six P2 items in `FRONTEND_GAP_ANALYSIS.md` §5 (summary/topics header, `plai
   - `python -m pytest`: 89/89 passed.
 - **Status:** Complete. Changed: `api/tools.py`, `api/agent.py`, `tests/test_tools.py`, `tests/test_agent.py`, this entry.
 
+## D-44 · 2026-09-29 · Visual chapter answers and contrast quotes
+
+- **Requirement:** The live eval missed two in-video cases. q05 asked what Saeka films on a street puddle and fell through to web search. q11 quoted Night Sight instead of the contrast line that contains "different."
+- **Fix:** A chapter whose title and description overlap the question (score at least 5) is answered from that chapter, with the spoken line kept as the quote, and web search is not used. When a stored contradiction claim overlaps the question by two words, the evidence quote is statement A, the contrast side. The pre-deploy harness exits non-zero if groundedness is under 95%. That harness stays out of GitHub CI.
+- **Status:** Complete. Changed: `api/tools.py`, `api/agent.py`, `scripts/eval_harness.py`, `tests/test_agent.py`, this entry.
+
 
 

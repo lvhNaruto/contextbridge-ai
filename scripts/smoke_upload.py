@@ -2,8 +2,8 @@
 
 import json
 import time
-from pathlib import Path
 import urllib.request
+from pathlib import Path
 
 API = "https://contextbridge-api-c5ltxo3mkq-uc.a.run.app"
 SAMPLE_PATH = Path("uploaded_videos/an-702dbd15a78e/cb-sample.mp4")
@@ -51,7 +51,7 @@ def test_live_upload():
         print(f"   -> Transcript items: {len(lesson.get('transcript', []))}")
         print(f"   -> Contradictions: {len(lesson.get('contradictions', []))}")
 
-    print(f"4. Asking a question to the newly analyzed video on Cloud Run...")
+    print("4. Asking a question to the newly analyzed video on Cloud Run...")
     q_data = json.dumps({"question": "What is covered in this video?"}).encode()
     req = urllib.request.Request(
         f"{API}/analyses/{analysis_id}/questions",

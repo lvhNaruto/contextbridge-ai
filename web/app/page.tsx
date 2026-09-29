@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Sparkles, ShieldCheck, Clock3 } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, ShieldCheck, Clock3, MessageCircleQuestion, Target, UploadCloud, Captions, Globe2, AudioLines, ScanSearch, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { TopNav } from "@/components/top-nav";
 import { Hero } from "@/components/hero";
@@ -78,12 +79,45 @@ export default function LearnPage() {
           >
             <Hero />
 
+            <section id="how" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-20">
+              <div className="mb-10 text-center">
+                <p className="arena-section-label mx-auto">The learning flow</p>
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  From passive watch to <span className="arena-violet">active dialogue</span>
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
+                  Explore a lesson, ask what you want to know, then check the answer against its source.
+                </p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {[
+                  { icon: UploadCloud, number: "01", title: "Bring your video", body: "Upload a supported lesson and get a searchable transcript with a chapter map." },
+                  { icon: MessageCircleQuestion, number: "02", title: "Ask in your own words", body: "Type or speak. Choose an explanation level and answer language as you learn." },
+                  { icon: Target, number: "03", title: "Verify the moment", body: "Jump from cited evidence to the exact part of the video. Web research stays clearly labeled." },
+                ].map(({ icon: Icon, number, title, body }) => (
+                  <article key={number} className="arena-feature-card rounded-2xl p-6 sm:p-7">
+                    <div className="mb-6 flex items-center justify-between">
+                      <span className="flex size-11 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-500/10 text-violet-200"><Icon className="size-5" aria-hidden="true" /></span>
+                      <span className="font-mono text-4xl font-semibold text-white/[0.08]">{number}</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">{title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
             {/* Upload + demo */}
             <section
               id="upload"
-              className="mx-auto max-w-2xl scroll-mt-24 px-4 pb-8 sm:px-6"
+              className="mx-auto max-w-5xl scroll-mt-24 px-4 pb-12 sm:px-6 sm:pb-16"
               aria-label="Upload a video"
             >
+              <div className="mb-8 text-center">
+                <p className="arena-section-label mx-auto">Step one · Start learning</p>
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">Upload your video</h2>
+                <p className="mt-3 text-sm text-slate-400 sm:text-base">Drop a lesson here or choose the demo to explore the workspace.</p>
+              </div>
               <UploadDropzone onAnalyzed={handleAnalyzed} />
 
               <div className="mt-5 flex flex-col items-center gap-3">
@@ -102,8 +136,7 @@ export default function LearnPage() {
                       Try the demo lesson
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-slate-400">
-                      Understanding binary &amp; computer language — 5 chapters,
-                      ready to question
+                      Tokyo Night Videography — ready to explore and ask questions
                     </span>
                   </span>
                 </button>
@@ -120,7 +153,7 @@ export default function LearnPage() {
             {/* Trust strip */}
             <section
               aria-label="Why ContextBridge"
-              className="mx-auto grid max-w-3xl gap-3 px-4 pb-16 sm:grid-cols-2 sm:px-6"
+              className="mx-auto grid max-w-5xl gap-3 px-4 pb-20 sm:grid-cols-2 sm:px-6"
             >
               {[
                 {
@@ -150,10 +183,41 @@ export default function LearnPage() {
                 </div>
               ))}
             </section>
+
+            <section id="features" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-20 sm:px-6">
+              <div className="mb-10 text-center">
+                <p className="arena-section-label mx-auto">Built for real learning</p>
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  Keep the whole lesson <span className="arena-violet">in context.</span>
+                </h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { icon: Captions, title: "Transcript in sync", body: "Follow the words and jump between the transcript and video." },
+                  { icon: AudioLines, title: "Speak naturally", body: "Ask by voice or text, with English and Hindi support." },
+                  { icon: ScanSearch, title: "Check the evidence", body: "Video answers carry timestamps and supporting quotes." },
+                  { icon: Globe2, title: "Clear boundaries", body: "When the lesson falls short, web research is labeled and sourced separately." },
+                ].map(({ icon: Icon, title, body }) => (
+                  <article key={title} className="arena-feature-card rounded-2xl p-5">
+                    <span className="mb-5 flex size-10 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-500/10 text-violet-200"><Icon className="size-4.5" aria-hidden="true" /></span>
+                    <h3 className="text-sm font-semibold text-white">{title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-400">{body}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="mt-10 flex flex-col items-center justify-between gap-5 rounded-3xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[0.12] via-white/[0.025] to-fuchsia-500/[0.08] p-6 text-center sm:flex-row sm:p-8 sm:text-left">
+                <div>
+                  <h3 className="text-xl font-semibold text-white sm:text-2xl">Ready to explore a lesson?</h3>
+                  <p className="mt-1 text-sm text-slate-400">Start with the live demo or bring a video of your own.</p>
+                </div>
+                <Link href="/lesson/demo-binary" className="arena-button-primary inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-5 text-sm font-semibold">
+                  Open the demo <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </div>
+            </section>
           </motion.main>
         )}
       </AnimatePresence>
     </div>
   );
 }
-

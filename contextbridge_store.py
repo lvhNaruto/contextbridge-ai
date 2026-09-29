@@ -10,10 +10,19 @@ from pathlib import Path
 from typing import Any
 
 
-def _db_path() -> Path:
+def resolve_db_path() -> Path:
+    """Single resolution of CONTEXTBRIDGE_DB_PATH.
+
+    Relative paths sit next to this module, not the process working directory,
+    so the sqlite file and the upload folder stay together.
+    """
     configured = os.getenv("CONTEXTBRIDGE_DB_PATH", "contextbridge.db")
     path = Path(configured)
     return path if path.is_absolute() else Path(__file__).resolve().parent / path
+
+
+def _db_path() -> Path:
+    return resolve_db_path()
 
 
 def _connect() -> sqlite3.Connection:

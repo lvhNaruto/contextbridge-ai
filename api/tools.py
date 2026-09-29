@@ -30,10 +30,7 @@ from api.config import Settings
 logger = logging.getLogger(__name__)
 
 STOPWORDS = frozenset(
-    "a an and are as at be by did do does for from had has have how i in is it "
-    "of on or so that the their them they this to was we what when where which "
-    "who why will with you your me my can could would should about into than "
-    "then there here its it's not no yes".split()
+    ["a", "an", "and", "are", "as", "at", "be", "by", "did", "do", "does", "for", "from", "had", "has", "have", "how", "i", "in", "is", "it", "of", "on", "or", "so", "that", "the", "their", "them", "they", "this", "to", "was", "we", "what", "when", "where", "which", "who", "why", "will", "with", "you", "your", "me", "my", "can", "could", "would", "should", "about", "into", "than", "then", "there", "here", "its", "it's", "not", "no", "yes"]
 )
 
 _ANSWER_PROMPT = """
@@ -60,7 +57,12 @@ Rules:
   * If the user asks in Hinglish (code-mixed Hindi and English, e.g. "Pixel phone mein night videography ke liye kaunsa feature use hota hai?"), reply in natural, fluent Hinglish using the same conversational code-mix, keeping technical terms in English.
 - Handling visual, musical, and relative time questions:
   * If the video has no spoken speech (silent, UI screencast, music demo), answer using the visual events, on-screen text, tools shown, and musical chords/sections.
+  * If an event title or description answers what is shown, filmed, or noticed, set found=true even when the spoken line is only a short reaction such as "Oh, I like this."
+  * Explain that moment from the event description in "text". Set evidence.quote to the verbatim spoken quote stored on that event, and use that event's timestamps. Do not paraphrase the description into the quote.
   * For relative positions ("at the start", "in the middle", "towards the end", "shuruat me", "beech me", "aakhri me"), inspect the corresponding section of the timeline and answer with the sequence or progression observed.
+- Contradiction questions:
+  * When the stored contradiction pass matches the question, mention both statements in "text" and do not pick a winner.
+  * Set evidence.quote to the verbatim quote of the statement that states the contrast (statement A). Copy it exactly. Mention statement B in the text as well.
 - Handling questions about items, products, tools, counts, or elements at a position (e.g. "how many products/tools at the start", "what tools are shown", "what is at the beginning"):
   * Synthesize what is shown or listed in the relevant event(s) and video summary. If an exact numerical count is not explicitly written as a single digit in the visual frame or text, describe what is visually or audibly presented and enumerate the specific items, tools, or concepts covered in the video.
   * Mark found=true and cite the relevant event with a verbatim quote from that event's title or description. Do NOT reject or set found=false simply because the user phrased their question with a counting inquiry (e.g. "how many").
@@ -82,13 +84,25 @@ Retrieved evidence slices (JSON):
 {slices}
 """
 
+_RESEARCH_BOUNDARY = {
+    "en": (
+        "This information comes from external web research since it was not "
+        "explained in the video lesson."
+    ),
+    "hi": (
+        "यह जानकारी बाहरी वेब शोध से आई है, क्योंकि यह इस वीडियो पाठ में नहीं बताई गई थी।"
+    ),
+}
+
 _RESEARCH_PROMPT = """
 You are the ContextBridge web-research engine. The video lesson did not cover
 the user's question, and the user enabled "Web research".
 Search Google and provide an accurate, helpful, and concise answer to the user's
-question in the requested language and explanation level.
-State clearly at the beginning of your response:
-"This information comes from external web research since it was not explained in the video lesson."
+question. Write the ENTIRE answer in the requested language. If that language is
+Hindi, every sentence must be Hindi in Devanagari — do not add English sentences.
+A reader who does not know English must still be able to tell this is outside the video.
+Begin with this exact sentence and do not translate it into any other language:
+"{boundary}"
 Be direct, clear, and concise. Do not repeat sentences or duplicate paragraphs.
 
 Question: {question}
@@ -104,7 +118,7 @@ _NOT_FOUND_TEXT = {
     ),
     "hi": (
         "इस वीडियो में इसका उत्तर नहीं मिला और वेब शोध बंद है। "
-        "प्रश्न दोबारा लिखकर देखें या “Research missing context” चालू करें।"
+        "प्रश्न दोबारा लिखकर देखें या “वेब शोध” चालू करें।"
     ),
 }
 
@@ -145,8 +159,6 @@ def retrieve_video_context(
 
     all_events = envelope.get("events") or envelope.get("chapters") or []
     all_segments = envelope.get("transcript", [])
-    query = _tokens(question)
-    summary = str(envelope.get("summary") or "")
 
     scored_events: list[tuple[int, int, dict[str, Any]]] = []
     for index, event in enumerate(all_events):
@@ -216,7 +228,7 @@ def quote_matches_transcript(quote: str, envelope: dict[str, Any]) -> bool:
     When the video has no spoken transcript (silent/visual video), quotes from
     verified chapter event titles and descriptions are accepted.
     """
-    norm = lambda s: " ".join(s.lower().split())  # noqa: E731
+    norm = lambda s: " ".join(s.lower().split())
     needle = norm(quote)
     if not needle:
         return False
@@ -321,6 +333,130 @@ class AnswerValidationExhausted(pipeline.PipelineError):
     """
 
 
+def best_chapter_match(envelope: dict[str, Any], question: str) -> dict[str, Any] | None:
+    """Chapter whose title and description actually overlap the question.
+
+    Each query word counts once, at the highest-weight field that contains it.
+    A name repeated in the title and the description is not enough. The score
+    must reach 5 so a weak word does not block web research.
+    """
+    query = _tokens(question)
+    if not query:
+        return None
+    best: dict[str, Any] | None = None
+    best_score = 0
+    events = envelope.get("events") or envelope.get("chapters") or []
+    for event in events:
+        claimed: set[str] = set()
+        score = 0
+        for text, weight in (
+            (str(event.get("title") or ""), 3),
+            (str(event.get("description") or ""), 2),
+        ):
+            hits = (query & _tokens(text)) - claimed
+            score += weight * len(hits)
+            claimed |= hits
+        if score > best_score:
+            best, best_score = event, score
+    if best is None or best_score < 5:
+        return None
+    return best
+
+
+def answer_from_chapter(event: dict[str, Any], envelope: dict[str, Any]) -> dict[str, Any] | None:
+    """Video answer from a matched chapter when the spoken line is thin.
+
+    The explanation comes from the chapter description. The quote stays the
+    spoken line stored on that chapter, so the jump button cites real speech.
+    """
+    evidence_list = event.get("evidence") or []
+    quote = ""
+    start = event.get("startSeconds")
+    end = event.get("endSeconds")
+    if evidence_list and isinstance(evidence_list[0], dict):
+        first = evidence_list[0]
+        quote = str(first.get("quote") or "").strip()
+        start = first.get("startSeconds", start)
+        end = first.get("endSeconds", end)
+    if not quote:
+        return None
+    if not quote_matches_transcript(quote, envelope):
+        return None
+    try:
+        limit = pipeline.envelope_duration(envelope)
+        start_s = _check_seconds(start, limit)
+        end_s = _check_seconds(end, limit)
+    except ValueError:
+        return None
+    if end_s < start_s:
+        return None
+    description = str(event.get("description") or "").strip()
+    title = str(event.get("title") or "").strip()
+    text = description or title
+    if not text:
+        return None
+    return {
+        "text": text,
+        "found": True,
+        "confidence": 0.9,
+        "evidence": {
+            "startSeconds": start_s,
+            "endSeconds": end_s,
+            "quote": quote,
+        },
+    }
+
+
+def prefer_contrast_quote(
+    question: str, draft: dict[str, Any], envelope: dict[str, Any]
+) -> dict[str, Any]:
+    """When a stored pair matches, cite the statement that states the contrast.
+
+    Statement A is that side of the stored pass. The answer text still mentions
+    statement B. This runs only for an explicit contrast question ("or"), and
+    the claim must share two words, so a Hinglish feature question does not
+    lose its own quote.
+    """
+    if not draft.get("found"):
+        return draft
+    lowered = question.lower()
+    if " or " not in lowered and "या" not in question:
+        return draft
+    evidence = draft.get("evidence")
+    if not isinstance(evidence, dict):
+        return draft
+    query = _tokens(question)
+    for pair in envelope.get("contradictions") or []:
+        claim_tokens = _tokens(str(pair.get("claim") or ""))
+        if len(query & claim_tokens) < 2:
+            continue
+        statement_a = pair.get("statementA") or {}
+        quote = str(statement_a.get("quote") or "").strip()
+        if not quote or not quote_matches_transcript(quote, envelope):
+            continue
+        try:
+            limit = pipeline.envelope_duration(envelope)
+            start_s = _check_seconds(statement_a.get("startSeconds"), limit)
+            end_s = _check_seconds(statement_a.get("endSeconds"), limit)
+        except ValueError:
+            continue
+        updated = dict(draft)
+        updated["evidence"] = {
+            **evidence,
+            "quote": quote,
+            "startSeconds": start_s,
+            "endSeconds": end_s,
+        }
+        statement_b = pair.get("statementB") or {}
+        other = str(statement_b.get("quote") or "").strip()
+        text = str(updated.get("text") or "").strip()
+        if other and other not in text:
+            updated["text"] = f"{text}\n\"{other}\"".strip()
+        updated["contrastQuote"] = True
+        return updated
+    return draft
+
+
 def _contradiction_lines(envelope: dict[str, Any]) -> str:
     """The stored contradiction pass as prompt context (API.md §3.4: contradiction
     questions are answered from this pass with real video evidence — no second
@@ -351,6 +487,45 @@ def _language_directive(code: str) -> str:
         "en": "English",
         "hi": "Hindi (Devanagari)",
     }.get(code, "the same language as the question")
+
+
+def _prefers_hindi(question: str, qa_settings: dict[str, Any]) -> bool:
+    """True when the learner asked for Hindi, or the question itself is Hindi."""
+    code = str(qa_settings.get("answerLanguage") or "auto").lower()
+    if code == "hi":
+        return True
+    if code == "en":
+        return False
+    if re.search(r"[\u0900-\u097F]", question):
+        return True
+    lowered = question.lower()
+    return any(
+        word in lowered
+        for word in ("kya", "kaise", "kyun", "batao", "samjhao", "madad")
+    )
+
+
+def localize_research_answer(text: str, *, hindi: bool) -> str:
+    """Keep the web-research boundary in the learner's language.
+
+    The model is asked to open with that sentence, but it often copies the
+    English line even when Hindi was requested. A Hindi reader then cannot
+    tell whether the answer is from the video.
+    """
+    boundary = _RESEARCH_BOUNDARY["hi" if hindi else "en"]
+    other = _RESEARCH_BOUNDARY["en" if hindi else "hi"]
+    cleaned = text.replace(other, " ")
+    cleaned = re.sub(
+        r"this information comes from external web research[^.]*\.",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    if boundary not in cleaned:
+        cleaned = f"{boundary}\n\n{cleaned}".strip()
+    return cleaned
 
 
 def gemini_answer(
@@ -483,12 +658,15 @@ def gemini_web_research(
     Raises PipelineError on failure — the agent degrades to declare_not_found.
     """
     import urllib.parse
+
     from google.genai import types
 
+    hindi = _prefers_hindi(question, qa_settings)
     prompt = _RESEARCH_PROMPT.format(
         question=question.strip(),
         language=_language_directive(qa_settings.get("answerLanguage", "auto")),
         level=qa_settings.get("explanationLevel", "beginner"),
+        boundary=_RESEARCH_BOUNDARY["hi" if hindi else "en"],
     )
     last_error: Exception | None = None
     for client in pipeline._clients(settings):
@@ -515,6 +693,12 @@ def gemini_web_research(
                 raise ValueError("web research returned empty answer")
 
             grounded = _grounding_sources(response)
+            source_note = (
+                "बाहरी वेब खोज के नतीजे" if hindi else "External web search results"
+            )
+            grounded_note = (
+                "Google खोज से जाँचा हुआ" if hindi else "Grounded via Google Search"
+            )
             if not grounded:
                 encoded = urllib.parse.quote_plus(question.strip())
                 grounded = [
@@ -522,10 +706,17 @@ def gemini_web_research(
                         "title": f"Google Search: {question.strip()[:45]}",
                         "domain": "google.com",
                         "url": f"https://www.google.com/search?q={encoded}",
-                        "description": "External web search results",
+                        "description": source_note,
                     }
                 ]
-            return {"text": raw, "sources": grounded[:4]}
+            else:
+                for source in grounded:
+                    if source.get("description") == "Grounded via Google Search":
+                        source["description"] = grounded_note
+            return {
+                "text": localize_research_answer(raw, hindi=hindi),
+                "sources": grounded[:4],
+            }
         except Exception as exc:  # noqa: BLE001 — any failure → next provider
             last_error = exc
             logger.warning("gemini_web_research failed on a provider: %s", exc)

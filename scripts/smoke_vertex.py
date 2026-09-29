@@ -62,7 +62,7 @@ def main() -> int:
     for uri in SAMPLE_VIDEOS:
         try:
             clip = Part.from_uri(uri=uri, mime_type="video/mp4")
-            resp, dt = timed(lambda: model.generate_content(
+            resp, dt = timed(lambda clip=clip: model.generate_content(
                 ["In one short sentence, what happens in this video?", clip]))
             print(f"PASS video  ({dt:.1f}s) {uri}\n  -> {resp.text.strip()[:120]}")
             video_ok = True

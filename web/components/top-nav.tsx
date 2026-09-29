@@ -22,12 +22,9 @@ export function TopNav({ className }: { className?: string }) {
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-40 border-b border-white/[0.06] bg-[#070B14]/80 backdrop-blur-xl",
-        className,
-      )}
+      className={cn("sticky top-0 z-40 px-3 pt-3 sm:px-5", className)}
     >
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="arena-nav mx-auto flex h-14 max-w-7xl items-center justify-between rounded-2xl px-4 sm:px-5">
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
@@ -37,7 +34,7 @@ export function TopNav({ className }: { className?: string }) {
           <ContextBridgeWordmark className="hidden sm:inline" />
         </Link>
 
-        <nav aria-label="Main navigation" className="flex items-center gap-1">
+        <nav aria-label="Main navigation" className="flex items-center gap-0.5 sm:gap-1">
           {NAV_ITEMS.map((item) => {
             const active =
               item.href === "/"
@@ -49,7 +46,7 @@ export function TopNav({ className }: { className?: string }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative rounded-full px-3 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70 sm:px-3.5",
+                  "relative rounded-full px-2 py-1.5 text-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70 sm:px-3.5 sm:text-sm",
                   active
                     ? "text-white"
                     : "text-slate-400 hover:text-slate-200",

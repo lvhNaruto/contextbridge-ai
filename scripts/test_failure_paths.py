@@ -13,24 +13,21 @@ Drill 9: Partial execution -> status != 'completed' returns 409 (analysis_failed
 
 from __future__ import annotations
 
-import io
-import json
 import sys
 from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import pytest
+import uuid
+
 from fastapi.testclient import TestClient
 
+from api import agent, pipeline, tools
 from api.main import app
-from api import agent, pipeline, tools, seed
 from api.seed import DEMO_ANALYSIS_ID
 from contextbridge_store import create_analysis, update_analysis
 
-
-import uuid
 
 def run_all_drills():
     print("\n========================================================")
@@ -104,8 +101,9 @@ def run_all_drills():
             assert resp3.status_code == 502
             body3 = resp3.json()
             assert body3["error"]["code"] == "answer_failed"
-            assert "Fatal memory corruption" in body3["error"]["message"]
-            print("  [PASS] Drill 3: Agent loop crash caught by FastAPI handler and returned structured 502 envelope.")
+            assert "Fatal memory corruption" not in body3["error"]["message"]
+            assert "Please retry" in body3["error"]["message"]
+            print("  [PASS] Drill 3: Agent loop crash returned a 502 envelope without the raw exception.")
         finally:
             agent.answer_question = original_answer_q
 

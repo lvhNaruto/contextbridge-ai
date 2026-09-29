@@ -6,8 +6,15 @@ import { MessageCircleQuestion } from "lucide-react";
 import { AssistantMessage } from "@/components/chat/assistant-message";
 import type { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 
-function UserMessage({ message }: { message: ChatMessage }) {
+function UserMessage({
+  message,
+  voiceLabel,
+}: {
+  message: ChatMessage;
+  voiceLabel: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -19,7 +26,7 @@ function UserMessage({ message }: { message: ChatMessage }) {
         {message.text}
         {message.isVoice && (
           <span className="mt-1 block text-right text-[10px] text-violet-200/80">
-            asked by voice
+            {voiceLabel}
           </span>
         )}
       </div>
@@ -48,6 +55,7 @@ export function Conversation({
   autoSpeak?: boolean;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const copy = lessonCopy(lessonUiLanguage(answerLanguage));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -61,10 +69,10 @@ export function Conversation({
         </span>
         <div>
           <p className="text-sm font-medium text-slate-200">
-            Ask your first question about this lesson.
+            {copy.emptyTitle}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {emptyHint ?? "Type below, or tap the microphone to speak."}
+            {emptyHint ?? copy.emptyHint}
           </p>
         </div>
       </div>
@@ -75,13 +83,13 @@ export function Conversation({
     <div
       className="flex flex-col gap-5"
       role="log"
-      aria-label="Conversation with the video"
+      aria-label={copy.conversation}
       aria-live="polite"
     >
       <AnimatePresence initial={false}>
         {messages.map((message, idx) =>
           message.role === "user" ? (
-            <UserMessage key={message.id} message={message} />
+            <UserMessage key={message.id} message={message} voiceLabel={copy.askedByVoice} />
           ) : (
             <div key={message.id} className={cn(message.processing && "min-h-16")}>
               <AssistantMessage

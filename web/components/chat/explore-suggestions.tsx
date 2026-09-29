@@ -1,10 +1,12 @@
 "use client";
 
 import { Compass, ArrowRight } from "lucide-react";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 
 interface ExploreSuggestionsProps {
   suggestions?: string[];
   onSelect?: (question: string) => void;
+  language?: string;
 }
 
 /**
@@ -15,14 +17,16 @@ interface ExploreSuggestionsProps {
 export function ExploreSuggestions({
   suggestions,
   onSelect,
+  language,
 }: ExploreSuggestionsProps) {
   if (!suggestions || suggestions.length === 0) return null;
+  const copy = lessonCopy(lessonUiLanguage(language));
 
   return (
-    <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.04] pt-2.5" aria-label="Explore from here">
+    <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.04] pt-2.5" aria-label={copy.explore}>
       <div className="flex items-center gap-1.5 text-[11px] font-medium text-violet-300/80">
         <Compass className="size-3 text-violet-400" aria-hidden="true" />
-        <span>Explore from here</span>
+        <span>{copy.explore}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {suggestions.map((item, idx) => (

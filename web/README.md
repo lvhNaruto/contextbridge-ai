@@ -4,8 +4,7 @@ Premium, production-quality frontend for ContextBridge — turn any
 educational video into a conversation.
 
 Built with Next.js (App Router), React 19, TypeScript, Tailwind CSS v4,
-customized shadcn/ui-style primitives, Motion for product animation, and
-GSAP reserved for the cinematic hero entrance.
+customized shadcn/ui-style primitives, and Motion for product animation.
 
 ## Run
 
@@ -31,6 +30,7 @@ npm run build   # production build
 ```
 app/                    routes (landing, /lesson/[id], /library, /help, /accessibility)
 components/
+  hero.tsx             Design Arena-inspired landing hero and product preview
   ui/                   customized shadcn-style primitives
   video/                VideoPlayer — custom controls + intelligent chapter timeline
   chapters/             ChapterList with active-state tracking

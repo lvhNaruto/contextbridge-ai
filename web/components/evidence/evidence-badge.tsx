@@ -1,11 +1,13 @@
 import { Globe, CheckCircle2, Compass } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import { confidenceLabel } from "@/lib/utils";
 import type { EvidenceType } from "@/types";
 
 interface EvidenceBadgeProps {
   type: EvidenceType;
   confidence?: number;
+  language?: string;
 }
 
 /**
@@ -15,7 +17,9 @@ interface EvidenceBadgeProps {
  * 2. web: "Beyond this video (web, clearly labeled)" (sky)
  * 3. unknown: "Not covered (honest boundary)" (muted)
  */
-export function EvidenceBadge({ type, confidence }: EvidenceBadgeProps) {
+export function EvidenceBadge({ type, confidence, language }: EvidenceBadgeProps) {
+  const copy = lessonCopy(lessonUiLanguage(language));
+
   if (type === "video") {
     const pct =
       confidence != null && confidence > 0
@@ -25,10 +29,10 @@ export function EvidenceBadge({ type, confidence }: EvidenceBadgeProps) {
     return (
       <Badge
         variant="confidence"
-        className="border-emerald-400/30 bg-emerald-500/15 text-emerald-300 font-medium tracking-wide shadow-xs shadow-emerald-500/10"
+        className="border-emerald-200/70 bg-emerald-400/25 text-emerald-50 font-medium tracking-wide"
       >
-        <CheckCircle2 className="size-3 text-emerald-400 shrink-0" aria-hidden="true" />
-        {pct != null ? `Verified from this video · ${pct}%` : "Verified from this video"}
+        <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
+        {pct != null ? `${copy.verified} · ${pct}%` : copy.verified}
       </Badge>
     );
   }
@@ -37,10 +41,10 @@ export function EvidenceBadge({ type, confidence }: EvidenceBadgeProps) {
     return (
       <Badge
         variant="web"
-        className="border-sky-400/30 bg-sky-500/15 text-sky-300 font-medium tracking-wide shadow-xs shadow-sky-500/10"
+        className="border-sky-200/70 bg-sky-400/25 text-sky-50 font-medium tracking-wide"
       >
-        <Globe className="size-3 text-sky-400 shrink-0" aria-hidden="true" />
-        Beyond this video (web, clearly labeled)
+        <Globe className="size-3 shrink-0" aria-hidden="true" />
+        {copy.beyondWeb}
       </Badge>
     );
   }
@@ -48,24 +52,38 @@ export function EvidenceBadge({ type, confidence }: EvidenceBadgeProps) {
   return (
     <Badge
       variant="neutral"
-      className="border-white/10 bg-white/[0.05] text-slate-400 font-medium tracking-wide"
+      className="border-slate-200/50 bg-slate-400/25 text-slate-50 font-medium tracking-wide"
     >
-      <Compass className="size-3 text-slate-400 shrink-0" aria-hidden="true" />
-      Not covered (honest boundary)
+      <Compass className="size-3 shrink-0" aria-hidden="true" />
+      {copy.notCovered}
     </Badge>
   );
 }
 
-export function ConfidenceBadge({ confidence }: { confidence: number }) {
+export function ConfidenceBadge({
+  confidence,
+  language,
+}: {
+  confidence: number;
+  language?: string;
+}) {
   if (confidence <= 0) return null;
+  const copy = lessonCopy(lessonUiLanguage(language));
   const label = confidenceLabel(confidence);
+  const level =
+    label === "high"
+      ? copy.confidenceHigh
+      : label === "medium"
+        ? copy.confidenceMedium
+        : copy.confidenceLow;
+  const pct = Math.round(confidence <= 1 ? confidence * 100 : confidence);
   return (
     <Badge
       variant={label === "high" ? "confidence" : "processing"}
-      title={`${Math.round(confidence <= 1 ? confidence * 100 : confidence)}% confidence`}
+      title={`${pct}% ${copy.confidenceWord}`}
+      className="whitespace-normal"
     >
-      {label === "high" ? "High" : label === "medium" ? "Medium" : "Low"}{" "}
-      confidence
+      {level} {copy.confidenceWord}
     </Badge>
   );
 }

@@ -7,8 +7,8 @@ Theme: Dark mode (Navy/Slate/Emerald/Indigo)
 from __future__ import annotations
 
 import os
+
 from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import landscape
 from reportlab.pdfgen import canvas
 
 # 16:9 Landscape Dimensions (960 x 540)

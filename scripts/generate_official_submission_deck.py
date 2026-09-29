@@ -5,14 +5,14 @@ https://docs.google.com/presentation/d/13rg7vW43mEH6DkpuusAE6fdoEylSFz8waNpE4RLz
 
 Format: 16:9 Landscape (960 x 540 pt)
 Theme: Dark mode (Navy/Slate/Emerald/Indigo)
-Preserves all empirical metrics: 94.4% accuracy, 92.0% groundedness, 0.0% hallucination.
+Preserves the latest local 25-case metrics: 100% timestamp accuracy, 100% groundedness, 0.0% hallucination.
 """
 
 from __future__ import annotations
 
 import os
+
 from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import landscape
 from reportlab.pdfgen import canvas
 
 # 16:9 Landscape Dimensions (960 x 540)
@@ -120,8 +120,8 @@ def generate_deck(output_path: str):
     c.drawString(510, PAGE_HEIGHT - 208, "Media, Content & Digital Experiences")
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica", 12)
-    c.drawString(510, PAGE_HEIGHT - 238, "Problem: Self-learners lose hours scrubbing long technical")
-    c.drawString(510, PAGE_HEIGHT - 256, "videos, while generic AI chatbots hallucinate ungrounded facts.")
+    c.drawString(510, PAGE_HEIGHT - 238, "A learner scrubs a lecture for one sentence the video")
+    c.drawString(510, PAGE_HEIGHT - 256, "already said. The latest local benchmark averages 6.18s.")
     c.setFillColor(EMERALD_LIGHT)
     c.setFont("Helvetica-Bold", 11)
     c.drawString(510, PAGE_HEIGHT - 285, "Solution: Bounded Multimodal Video Compass with Verifiable Proof.")
@@ -131,7 +131,7 @@ def generate_deck(output_path: str):
     draw_card(c, 48, 65, card_w, 120, BG_CARD_BORDER, HexColor("#111827"))
     c.setFillColor(EMERALD_LIGHT)
     c.setFont("Helvetica-Bold", 26)
-    c.drawString(68, 140, "94.4%")
+    c.drawString(68, 140, "100%")
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica-Bold", 11)
     c.drawString(68, 115, "TIMESTAMP ACCURACY")
@@ -142,7 +142,7 @@ def generate_deck(output_path: str):
     draw_card(c, 48 + card_w + 16, 65, card_w, 120, BG_CARD_BORDER, HexColor("#111827"))
     c.setFillColor(SKY_BLUE)
     c.setFont("Helvetica-Bold", 26)
-    c.drawString(48 + card_w + 36, 140, "92.0%")
+    c.drawString(48 + card_w + 36, 140, "100%")
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica-Bold", 11)
     c.drawString(48 + card_w + 36, 115, "GROUNDEDNESS SCORE")
@@ -185,9 +185,9 @@ def generate_deck(output_path: str):
     c.drawString(68, PAGE_HEIGHT - 182, "Transforming Passive Long-Form Video Into Verifiable, Interactive Knowledge")
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica", 12)
-    c.drawString(68, PAGE_HEIGHT - 212, "Self-directed learners spend up to 40% of their study time manually scrubbing 2-hour lectures, coding")
-    c.drawString(68, PAGE_HEIGHT - 232, "bootcamps, and technical walkthroughs seeking a specific formula, code snippet, or architectural concept.")
-    c.drawString(68, PAGE_HEIGHT - 252, "Existing chatbots fail because they synthesize answers from general training data without verifying video context.")
+    c.drawString(68, PAGE_HEIGHT - 212, "The latest local 25-case run averages 6.18 seconds, with a jump to the cited second.")
+    c.drawString(68, PAGE_HEIGHT - 232, "A self-learner in India can ask in Hinglish and see whether the answer came from the video.")
+    c.drawString(68, PAGE_HEIGHT - 252, "Same pattern for company onboarding libraries. Any audience number is an estimate, not a rollout.")
     c.setFillColor(EMERALD_LIGHT)
     c.setFont("Helvetica-Bold", 11)
     c.drawString(68, PAGE_HEIGHT - 277, "ContextBridge AI eliminates scrubbing fatigue by delivering sub-second, grounded seeking with visible proof.")
@@ -252,7 +252,7 @@ def generate_deck(output_path: str):
     c.setFont("Helvetica", 11)
     c.drawString(68, PAGE_HEIGHT - 175, "• Existing YouTube summary tools generate generic 3-bullet overviews without interactive playback sync.")
     c.drawString(68, PAGE_HEIGHT - 195, "• Generic chatbots (ChatGPT, Claude) hallucinate answers from training data when video content is missing.")
-    c.drawString(68, PAGE_HEIGHT - 215, "• ContextBridge AI enforces mathematical grounding: 100% transcript-anchored + millisecond-accurate video seeking.")
+    c.drawString(68, PAGE_HEIGHT - 215, "• ContextBridge cites a verbatim line and a second. Web answers stay in a separate labeled card.")
 
     # Q2: How will it solve the problem?
     draw_card(c, 48, PAGE_HEIGHT - 365, PAGE_WIDTH - 96, q_h, EMERALD_GREEN)
@@ -263,7 +263,7 @@ def generate_deck(output_path: str):
     c.setFont("Helvetica", 11)
     c.drawString(68, PAGE_HEIGHT - 300, "• Dual-Evidence Engine: Combines lexical & semantic transcript search with Gemini 2.5 Flash visual inspection.")
     c.drawString(68, PAGE_HEIGHT - 320, "• Millisecond-accurate indexer parses timestamps into interactive seek triggers for the embedded player.")
-    c.drawString(68, PAGE_HEIGHT - 340, "• Full bilingual language parity: Hindi voice/text queries return Hindi responses with synchronized transcript tracking.")
+    c.drawString(68, PAGE_HEIGHT - 340, "• Hindi and Hinglish questions are answered in that language, including the trust labels on the card.")
 
     # Q3: USP of the proposed solution
     draw_card(c, 48, PAGE_HEIGHT - 490, PAGE_WIDTH - 96, q_h, SKY_BLUE)
@@ -273,7 +273,7 @@ def generate_deck(output_path: str):
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica", 11)
     c.drawString(68, PAGE_HEIGHT - 425, "• 0.0% Unsupported Answers: Verified empirically across 25 ground-truth benchmark cases.")
-    c.drawString(68, PAGE_HEIGHT - 445, "• 94.4% Timestamp Accuracy: Jumps learners directly to the exact relevant moment within ±15 seconds.")
+    c.drawString(68, PAGE_HEIGHT - 445, "• 100% timestamp accuracy and 100% groundedness on the latest 25-case run. Hindi trust labels included.")
     c.drawString(68, PAGE_HEIGHT - 465, "• EvidenceBadge System: Full transparency with confidence scoring, verbatim citations, and boundary guidance.")
 
     c.showPage()
@@ -860,7 +860,7 @@ def generate_deck(output_path: str):
     c.drawString(48, PAGE_HEIGHT - 90, "Prototype Performance report / Benchmarking")
     c.setFillColor(TEXT_MUTED)
     c.setFont("Helvetica", 14)
-    c.drawString(48, PAGE_HEIGHT - 116, "Empirical evaluation across 25 ground-truth video cases and 83 automated test suites.")
+    c.drawString(48, PAGE_HEIGHT - 116, "Empirical evaluation across 25 ground-truth video cases and 98 automated tests.")
 
     # Metric 1
     m_w = (PAGE_WIDTH - 96 - 40) / 3
@@ -871,14 +871,14 @@ def generate_deck(output_path: str):
     c.drawString(68, PAGE_HEIGHT - 155, "TIMESTAMP SEEK ACCURACY")
     c.setFillColor(TEXT_WHITE)
     c.setFont("Helvetica-Bold", 36)
-    c.drawString(68, PAGE_HEIGHT - 200, "94.4%")
+    c.drawString(68, PAGE_HEIGHT - 200, "100%")
     c.setFillColor(EMERALD_LIGHT)
     c.setFont("Helvetica-Bold", 11)
-    c.drawString(68, PAGE_HEIGHT - 225, "Target: > 85.0% (Exceeded by +9.4%)")
+    c.drawString(68, PAGE_HEIGHT - 225, "Target: > 90% (all in-video cases)")
     c.setFillColor(TEXT_MUTED)
     c.setFont("Helvetica", 10)
-    c.drawString(68, PAGE_HEIGHT - 250, "• 17 of 18 verifiable timestamp queries")
-    c.drawString(68, PAGE_HEIGHT - 270, "  within ±15s of exact creator moment.")
+    c.drawString(68, PAGE_HEIGHT - 250, "• Every verifiable timestamp query in")
+    c.drawString(68, PAGE_HEIGHT - 270, "  the 25-case local run.")
 
     # Metric 2
     draw_card(c, 48 + m_w + 20, PAGE_HEIGHT - 295, m_w, m_h, SKY_BLUE, HexColor("#0A1726"))
@@ -887,14 +887,14 @@ def generate_deck(output_path: str):
     c.drawString(48 + m_w + 40, PAGE_HEIGHT - 155, "TRANSCRIPT GROUNDEDNESS")
     c.setFillColor(TEXT_WHITE)
     c.setFont("Helvetica-Bold", 36)
-    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 200, "92.0%")
+    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 200, "100%")
     c.setFillColor(SKY_BLUE)
     c.setFont("Helvetica-Bold", 11)
-    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 225, "Target: > 80.0% (Exceeded by +12.0%)")
+    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 225, "Target: > 95% (all 25 cases)")
     c.setFillColor(TEXT_MUTED)
     c.setFont("Helvetica", 10)
-    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 250, "• 23 of 25 cases backed directly by")
-    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 270, "  explicit transcript speech lines.")
+    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 250, "• 25 of 25 cases backed by a")
+    c.drawString(48 + m_w + 40, PAGE_HEIGHT - 270, "  verbatim line from the video.")
 
     # Metric 3
     draw_card(c, 48 + (m_w + 20) * 2, PAGE_HEIGHT - 295, m_w, m_h, INDIGO_ACCENT, HexColor("#0F1426"))
@@ -920,9 +920,9 @@ def generate_deck(output_path: str):
 
     c.setFillColor(EMERALD_LIGHT)
     c.setFont("Helvetica-Bold", 11)
-    c.drawString(68, 130, "✓ 83 / 83 Unit & Integration Tests Passing (Pytest)")
+    c.drawString(68, 130, "✓ 98 / 98 Unit & Integration Tests Passing (Pytest)")
     c.drawString(68, 110, "✓ 9 / 9 Failure Drills Passing (tests/test_failure_drills.py)")
-    c.drawString(68, 90, "✓ Latency: ~1.1s median end-to-end response time on Google Cloud Run")
+    c.drawString(68, 90, "• Latest local average: 6.18s. Pre-deploy eval fails if groundedness is under 95%.")
 
     c.setFillColor(TEXT_MUTED)
     c.setFont("Helvetica", 10)

@@ -5,11 +5,11 @@
 [![Cloud Run Backend](https://img.shields.io/badge/Google_Cloud_Run-Backend_Live-4285F4?logo=googlecloud&logoColor=white)](https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/health)
 [![Cloud Run Web](https://img.shields.io/badge/Google_Cloud_Run-Frontend_Live-34A853?logo=googlecloud&logoColor=white)](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)
 [![Gemini 2.5 Flash](https://img.shields.io/badge/AI_Engine-Gemini_2.5_Flash-orange?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
-[![Eval Benchmark](https://img.shields.io/badge/Eval_Harness_V2-94.4%25_Accuracy-blueviolet)](context/eval_results.json)
+[![Eval Benchmark](https://img.shields.io/badge/Eval_Harness_V2-100%25_Accuracy-blueviolet)](context/eval_results.json)
 [![Zero Hallucination](https://img.shields.io/badge/Unsupported_Answers-0.0%25_Strict-brightgreen)](context/eval_results.json)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16_(Turbopack)-black?logo=next.js&logoColor=white)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Tests Passing](https://img.shields.io/badge/pytest-83%2F83_Passing-success)](tests/)
+[![Tests Passing](https://img.shields.io/badge/pytest-98%2F98_Passing-success)](tests/)
 
 ---
 
@@ -110,15 +110,15 @@ When curiosity steps beyond the uploaded video, ContextBridge activates Google S
 
 ## 📊 Empirical Evaluation (25-Case Live Benchmark)
 
-ContextBridge measures quality continuously using an automated 25-case benchmark harness (`scripts/eval_harness.py`) executed against the deployed Cloud Run instance:
+ContextBridge measures quality with an automated 25-case harness (`scripts/eval_harness.py`). The numbers below are the latest local run (`http://127.0.0.1:8011`), saved in `context/eval_results.json`. Run the same script against Cloud Run before the deploy freeze.
 
-| Metric | Target | Result on Live Cloud Run | Status |
+| Metric | Target | Latest local run | Status |
 | :--- | :---: | :---: | :---: |
 | **Unsupported-Answer Rate** | `0.0%` | **`0.0%`** | 🟢 **Zero Hallucination** |
-| **Timestamp Retrieval Accuracy** | $\ge 90.0\%$ | **`94.4%`** | 🟢 **Pass (17/18 in-video cases)** |
-| **Groundedness Rate** | $\ge 90.0\%$ | **`92.0%`** | 🟢 **Pass (Verbatim quotes)** |
+| **Timestamp Retrieval Accuracy** | $\ge 90.0\%$ | **`100%`** | 🟢 **Pass (latest local run)** |
+| **Groundedness Rate** | $\ge 90.0\%$ | **`100%`** | 🟢 **Pass (25/25 verbatim quotes)** |
 | **Explore Suggestions Coverage** | $\ge 90.0\%$ | **`100.0%`** | 🟢 **Pass (25/25 returned chips)** |
-| **Average Q&A Latency** | $< 5.0\text{ s}$ | **`3.59s`** | 🟢 **Fast & Bounded** |
+| **Average Q&A Latency** | $< 5.0\text{ s}$ | **`6.18s`** | 🟡 **Latest local run, above the 5s target** |
 
 *Full evaluation artifact persisted at [`context/eval_results.json`](context/eval_results.json).*
 

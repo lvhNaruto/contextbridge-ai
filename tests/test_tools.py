@@ -286,6 +286,27 @@ def test_grounding_sources_tolerates_missing_metadata():
     assert tools._grounding_sources(object()) == []
 
 
+def test_localize_research_answer_uses_hindi_boundary_when_hindi_selected():
+    raw = (
+        "This information comes from external web research since it was not "
+        "explained in the video lesson. टोक्यो जापान की राजधानी है।"
+    )
+    text = tools.localize_research_answer(raw, hindi=True)
+    assert "This information comes from external web research" not in text
+    assert text.startswith("यह जानकारी बाहरी वेब शोध से आई है")
+    assert "टोक्यो" in text
+    assert tools._prefers_hindi("What is Tokyo?", {"answerLanguage": "hi"})
+    assert not tools._prefers_hindi("What is Tokyo?", {"answerLanguage": "en"})
+    prompt = tools._RESEARCH_PROMPT.format(
+        question="टोक्यो क्या है?",
+        language="Hindi (Devanagari)",
+        level="beginner",
+        boundary=tools._RESEARCH_BOUNDARY["hi"],
+    )
+    assert "This information comes from external web research" not in prompt
+    assert "बाहरी वेब शोध" in prompt
+
+
 # --- declare_not_found -------------------------------------------------------
 
 
