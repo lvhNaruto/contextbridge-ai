@@ -76,9 +76,10 @@ def test_demo_lesson_matches_contract(client: TestClient):
     ):
         assert key in lesson, key
     assert lesson["id"] == DEMO_ANALYSIS_ID
-    assert "Tokyo" in lesson["title"] or "Videography" in lesson["title"]
+    assert "Gemini" in lesson["title"]
+    assert "Tokyo" not in lesson["title"]
     assert lesson["videoUrl"].endswith(f"/analyses/{DEMO_ANALYSIS_ID}/video")
-    assert 50 <= lesson["durationSeconds"] <= 60
+    assert lesson["durationSeconds"] == 43
     assert lesson["createdAt"].endswith("Z")
 
 
@@ -90,18 +91,9 @@ def test_demo_lesson_chapters_carry_confidence(client: TestClient):
         assert 0 <= chapter["startSeconds"] <= chapter["endSeconds"] <= lesson["durationSeconds"]
 
 
-def test_demo_lesson_has_genuine_contradiction_pair(client: TestClient):
+def test_demo_lesson_omits_contradictions_when_the_clip_has_none(client: TestClient):
     lesson = client.get(f"/analyses/{DEMO_ANALYSIS_ID}").json()
-    pairs = lesson.get("contradictions")
-    assert pairs, "demo-binary must ship one genuine pair (D-02)"
-    pair = pairs[0]
-    transcript_text = " ".join(seg["text"] for seg in lesson["transcript"])
-    for key in ("statementA", "statementB"):
-        stmt = pair[key]
-        # API §2 invariant 5: real timestamps in range, quotes in transcript
-        assert 0 <= stmt["startSeconds"] <= stmt["endSeconds"] <= lesson["durationSeconds"]
-        assert stmt["quote"] in transcript_text
-    assert pair["statementA"]["startSeconds"] < pair["statementB"]["startSeconds"]
+    assert not lesson.get("contradictions")
 
 
 def test_chapters_reserved_projection(client: TestClient):

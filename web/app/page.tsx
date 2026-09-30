@@ -136,7 +136,7 @@ export default function LearnPage() {
                       Try the demo lesson
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-slate-400">
-                      Tokyo Night Videography — ready to explore and ask questions
+                      Gemini in Docs lesson plan — Lesson video: Google for Education
                     </span>
                   </span>
                 </button>

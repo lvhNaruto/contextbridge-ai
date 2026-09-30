@@ -173,9 +173,9 @@ export async function askQuestion(
   await delay(1400 + Math.random() * 600);
   const answer = resolveDemoAnswer(question, settings);
   const suggestions = [
-    "What is covered in 'Low Light Test'?",
-    "Why is there a contradiction about natural darkness?",
-    "How does the video explain Video Boost?",
+    "What does the Gemini draft include?",
+    "How does the coach share the template with educators?",
+    "What is the coach creating in Google Docs?",
   ].slice(0, 2);
   return {
     id: `msg-${Date.now().toString(36)}`,

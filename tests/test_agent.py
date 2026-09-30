@@ -486,12 +486,35 @@ def _demo_envelope() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _puddle_envelope() -> dict:
+    """Keeps the visual-chapter regression without tying demo-binary to Tokyo."""
+    return {
+        "summary": "A photographer films a street puddle.",
+        "events": [
+            {
+                "id": "ch-puddle",
+                "startSeconds": 28,
+                "endSeconds": 36,
+                "title": "Filming Puddle Reflections",
+                "description": "Capturing creative low-angle reflection compositions off street puddles.",
+                "confidence": 0.97,
+                "evidence": [
+                    {"startSeconds": 28, "endSeconds": 30, "quote": "Oh, I like this."}
+                ],
+            }
+        ],
+        "transcript": [
+            {"startSeconds": 28, "endSeconds": 30, "text": "Oh, I like this."}
+        ],
+    }
+
+
 def test_puddle_question_uses_chapter_instead_of_web(monkeypatch):
-    """q05: the spoken line is only 'Oh, I like this.' A chapter match still answers."""
+    """A thin spoken line still answers from the chapter instead of the web."""
     calls = _stub(monkeypatch, answer=NOT_FOUND_DRAFT, web=WEB_DRAFT)
     msg = agent.answer_question(
         "What does Saeka notice and film on the street puddle?",
-        _demo_envelope(),
+        _puddle_envelope(),
         QA_ON,
         object(),
     )
@@ -518,7 +541,7 @@ def test_unrelated_question_still_uses_web_research(monkeypatch):
 
 
 def test_contradiction_cites_the_contrast_statement(monkeypatch):
-    """q11: the model quoted Night Sight; the contrast line is the one with 'different'."""
+    """An explicit or-question cites the contrast statement, not the other line."""
     night_sight = {
         "text": "Night Sight enhances low light.",
         "found": True,
@@ -529,10 +552,44 @@ def test_contradiction_cites_the_contrast_statement(monkeypatch):
             "quote": "In low light, it activates 'Night Sight' to make the quality even better.",
         },
     }
+    envelope = {
+        "summary": "A night photography contrast.",
+        "events": [],
+        "transcript": [
+            {
+                "startSeconds": 5,
+                "endSeconds": 9,
+                "text": "The city at night is totally different from what you see during the day.",
+            },
+            {
+                "startSeconds": 15,
+                "endSeconds": 21,
+                "text": "In low light, it activates 'Night Sight' to make the quality even better.",
+            },
+        ],
+        "contradictions": [
+            {
+                "id": "cx-1",
+                "claim": "natural dark streets or computational Night Sight",
+                "statementA": {
+                    "text": "The city at night is totally different from what you see during the day.",
+                    "startSeconds": 5,
+                    "endSeconds": 9,
+                    "quote": "The city at night is totally different from what you see during the day.",
+                },
+                "statementB": {
+                    "text": "In low light, it activates 'Night Sight' to make the quality even better.",
+                    "startSeconds": 15,
+                    "endSeconds": 21,
+                    "quote": "In low light, it activates 'Night Sight' to make the quality even better.",
+                },
+            }
+        ],
+    }
     _stub(monkeypatch, answer=night_sight)
     msg = agent.answer_question(
         "Does night videography capture natural dark city streets or does computational Night Sight enhance it?",
-        _demo_envelope(),
+        envelope,
         QA_ON,
         object(),
     )

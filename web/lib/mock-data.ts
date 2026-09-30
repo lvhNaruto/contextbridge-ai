@@ -1,131 +1,106 @@
 /**
- * Realistic mock data for the demo lesson.
- * In production this comes from GET /analyses/:id —
- * the shape matches contextbridge_schema.py (MediaAnalysis) exactly.
+ * Mock lesson used by the homepage preview and when the API is unreachable.
+ * Shape matches the seeded demo-binary fixture.
+ * Lesson video: Google for Education.
  */
 
 import type { Lesson } from "@/types";
 
 export const DEMO_LESSON_ID = "demo-binary";
 
+const LESSON_VIDEO =
+  "https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/analyses/demo-binary/video";
+
 export const DEMO_LESSON: Lesson = {
   id: DEMO_LESSON_ID,
-  title: "Tokyo Night Videography: Low-Light Camera & Video Boost",
-  videoUrl:
-    "https://storage.googleapis.com/cloud-samples-data/generative-ai/video/pixel8.mp4",
-  durationSeconds: 57.2,
-  createdAt: "2026-09-20T10:00:00.000Z",
-  language: "English",
+  title: "Create a lesson plan template using Gemini in Docs",
+  videoUrl: LESSON_VIDEO,
+  durationSeconds: 43,
+  createdAt: "2026-09-30T17:06:05.000Z",
+  language: "en",
   summary:
-    "Photographer Saeka Shimada explores Tokyo at night, demonstrating low-light mobile videography using Video Boost and Night Sight features across Sancha and Shibuya.",
+    "An instructional coach uses Gemini in Google Docs to draft a lesson plan, then shares it with educators through a class template in Google Classroom. Lesson video: Google for Education.",
   topics: [
-    "Videography",
-    "Night photography",
-    "Tokyo",
-    "Low-light camera",
-    "Mobile technology",
+    "Gemini for Google Workspace",
+    "Lesson planning",
+    "Google Docs",
+    "Google Classroom",
   ],
   chapters: [
     {
-      id: "ch-intro",
-      startSeconds: 1,
-      endSeconds: 4,
-      title: "Introduction: Saeka Shimada",
-      description: "Tokyo photographer Saeka Shimada introduces herself and her creative background.",
-      confidence: 0.98,
+      id: "event1",
+      startSeconds: 0,
+      endSeconds: 2,
+      title: "Introduction of Gemini for Google Workspace",
+      description: "The video begins by introducing Gemini for Google Workspace.",
+      confidence: 1,
     },
     {
-      id: "ch-tokyo-night",
-      startSeconds: 5,
-      endSeconds: 12,
-      title: "Tokyo City at Night",
-      description: "Contrasting daytime vs nighttime atmospheres in Tokyo streets.",
-      confidence: 0.97,
+      id: "event2",
+      startSeconds: 2,
+      endSeconds: 7,
+      title: "Instructional Coach's Challenge",
+      description:
+        "An instructional coach describes struggling to finish regular tasks in limited time.",
+      confidence: 1,
     },
     {
-      id: "ch-videoboost",
-      startSeconds: 13,
-      endSeconds: 22,
-      title: "Video Boost & Night Sight",
-      description: "Demonstrating how computational low-light Night Sight activates during evening recording.",
-      confidence: 0.99,
+      id: "event4",
+      startSeconds: 11,
+      endSeconds: 19,
+      title: "Drafting a Lesson Plan with Gemini in Google Docs",
+      description:
+        "The coach uses Gemini in Google Docs to draft a lesson plan template.",
+      confidence: 1,
     },
     {
-      id: "ch-sancha",
-      startSeconds: 23,
-      endSeconds: 27,
-      title: "Sancha Alleyway Memories",
-      description: "Exploring personal memories while walking through the Sangenjaya neighbourhood.",
-      confidence: 0.96,
+      id: "event6",
+      startSeconds: 21,
+      endSeconds: 31,
+      title: "Gemini Generates Detailed Lesson Plan",
+      description:
+        "Gemini drafts objectives, steps, and adaptations for new and advanced learners.",
+      confidence: 1,
     },
     {
-      id: "ch-puddle",
-      startSeconds: 28,
-      endSeconds: 36,
-      title: "Filming Puddle Reflections",
-      description: "Capturing creative low-angle reflection compositions off street puddles.",
-      confidence: 0.97,
-    },
-    {
-      id: "ch-review",
-      startSeconds: 37,
-      endSeconds: 39,
-      title: "Reviewing Low-Light Clarity",
-      description: "Inspecting captured video playback quality in dark alley conditions.",
-      confidence: 0.98,
-    },
-    {
-      id: "ch-montage",
-      startSeconds: 40,
-      endSeconds: 52,
-      title: "Night Shots Montage",
-      description: "Atmospheric evening scenes and neon lighting across Tokyo alleyways.",
-      confidence: 0.95,
-    },
-    {
-      id: "ch-shibuya",
-      startSeconds: 53,
-      endSeconds: 57,
-      title: "Shibuya Evening Exploration",
-      description: "Arriving at the iconic Shibuya pedestrian crossing and bridge lights.",
-      confidence: 0.96,
+      id: "event8",
+      startSeconds: 32,
+      endSeconds: 40,
+      title: "Distributing Content via Google Classroom",
+      description:
+        "The coach uploads the template to a shareable class template in Google Classroom.",
+      confidence: 1,
     },
   ],
   transcript: [
-    { startSeconds: 1, endSeconds: 3, text: "My name is Saeka Shimada. I'm a photographer in Tokyo." },
-    { startSeconds: 5, endSeconds: 9, text: "Tokyo has many faces. The city at night is totally different from what you see during the day." },
-    { startSeconds: 13, endSeconds: 15, text: "The new Pixel has a feature called 'Video Boost.'" },
-    { startSeconds: 15, endSeconds: 21, text: "In low light, it activates 'Night Sight' to make the quality even better." },
-    { startSeconds: 23, endSeconds: 26, text: "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here." },
-    { startSeconds: 28, endSeconds: 30, text: "Oh, I like this." },
-    { startSeconds: 37, endSeconds: 39, text: "Beautiful!" },
-    { startSeconds: 53, endSeconds: 57, text: "Next, I came to Shibuya." },
-  ],
-  contradictions: [
+    { startSeconds: 0, endSeconds: 2, text: "Gemini for Google Workspace" },
     {
-      id: "cx-1",
-      claim: "Whether night videography preserves natural darkness or computationally enhances clarity",
-      statementA: {
-        text: "Tokyo has many faces. The city at night is totally different from what you see during the day.",
-        startSeconds: 5,
-        endSeconds: 9,
-        quote: "The city at night is totally different from what you see during the day.",
-      },
-      statementB: {
-        text: "In low light, it activates 'Night Sight' to make the quality even better.",
-        startSeconds: 15,
-        endSeconds: 21,
-        quote: "In low light, it activates 'Night Sight' to make the quality even better.",
-      },
-      note: "Statement A highlights the distinct, natural darkness of the city at night; Statement B explains how Night Sight computationally clarifies and boosts low-light scenes.",
+      startSeconds: 2,
+      endSeconds: 6,
+      text: "In my work as an instructional coach, I struggle to get some of my regular to-dos done in the limited amount of time I have.",
+    },
+    { startSeconds: 7, endSeconds: 11, text: "So I was excited to learn about Gemini." },
+    {
+      startSeconds: 11,
+      endSeconds: 16,
+      text: "Today, I'm using it to create a lesson plan template in Google Docs.",
+    },
+    {
+      startSeconds: 21,
+      endSeconds: 30,
+      text: "Gemini quickly generates a draft that includes objectives, steps to follow, and even ways to adapt the material for students who are new to the topic and advanced learners.",
+    },
+    {
+      startSeconds: 32,
+      endSeconds: 40,
+      text: "I can also easily distribute content I create with Gemini to educators in my district by uploading it to a shareable class template in Google Classroom.",
     },
   ],
 };
 
 export const DEMO_SUGGESTED_QUESTIONS = [
-  "What features are introduced in the video?",
-  "Where did Saeka live when she moved to Tokyo?",
-  "What happens to the video in low light?",
-  "Can you explain this like I'm a beginner?",
-  "Where does the photographer describe Tokyo at night?",
+  "What does the Gemini draft include?",
+  "What is the coach creating in Google Docs?",
+  "How does the coach share the template with educators?",
+  "Woh template educators ke saath kaise share karti hain?",
 ];

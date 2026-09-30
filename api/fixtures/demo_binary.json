@@ -1,197 +1,206 @@
 {
-  "title": "Tokyo Night Videography: Low-Light Camera & Video Boost",
-  "createdAt": "2026-09-20T10:00:00.000Z",
-  "durationSeconds": 57.2,
-  "summary": "Photographer Saeka Shimada explores Tokyo at night, demonstrating low-light mobile videography using Video Boost and Night Sight features across Sancha and Shibuya.",
-  "language": "English",
+  "summary": "This video showcases how an instructional coach uses Gemini for Google Workspace to efficiently create and distribute lesson plans. It demonstrates Gemini's ability to draft detailed lesson plans, including objectives, procedures, and differentiation strategies, within Google Docs, and then highlights the ease of sharing these resources via Google Classroom.",
+  "language": "en",
   "topics": [
-    "Videography",
-    "Night photography",
-    "Tokyo",
-    "Low-light camera",
-    "Mobile technology"
+    "Gemini for Google Workspace",
+    "Instructional coaching",
+    "Lesson planning",
+    "Google Docs",
+    "Google Classroom",
+    "AI assistance",
+    "Education technology",
+    "Productivity tools"
   ],
   "events": [
     {
-      "id": "ch-intro",
-      "startSeconds": 1,
-      "endSeconds": 4,
-      "title": "Introduction: Saeka Shimada",
-      "description": "Tokyo photographer Saeka Shimada introduces herself and her creative background.",
-      "confidence": 0.98,
+      "id": "event1",
+      "startSeconds": 0.0,
+      "endSeconds": 2.0,
+      "title": "Introduction of Gemini for Google Workspace",
+      "description": "The video begins by introducing 'Gemini for Google Workspace' with its logo.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 1,
-          "endSeconds": 3,
-          "quote": "My name is Saeka Shimada. I'm a photographer in Tokyo."
+          "startSeconds": 0.0,
+          "endSeconds": 2.0,
+          "quote": "Gemini for Google Workspace"
         }
       ]
     },
     {
-      "id": "ch-tokyo-night",
-      "startSeconds": 5,
-      "endSeconds": 12,
-      "title": "Tokyo City at Night",
-      "description": "Contrasting daytime vs nighttime atmospheres in Tokyo streets.",
-      "confidence": 0.97,
+      "id": "event2",
+      "startSeconds": 2.0,
+      "endSeconds": 7.0,
+      "title": "Instructional Coach's Challenge",
+      "description": "An instructional coach expresses his struggle to complete regular tasks due to limited time, while visual cues around him depict typical work items like a whiteboard, calendar, and notebook.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 5,
-          "endSeconds": 9,
-          "quote": "Tokyo has many faces. The city at night is totally different from what you see during the day."
+          "startSeconds": 2.0,
+          "endSeconds": 6.0,
+          "quote": "In my work as an instructional coach, I struggle to get some of my regular to-dos done in the limited amount of time I have."
         }
       ]
     },
     {
-      "id": "ch-videoboost",
-      "startSeconds": 13,
-      "endSeconds": 22,
-      "title": "Video Boost & Night Sight",
-      "description": "Demonstrating how computational low-light Night Sight activates during evening recording.",
-      "confidence": 0.99,
+      "id": "event3",
+      "startSeconds": 7.0,
+      "endSeconds": 11.0,
+      "title": "Discovering Gemini",
+      "description": "The instructional coach expresses excitement about learning about Gemini, as the scene transitions to a laptop displaying 'Hello. Gemini for Cymbal Academy'.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 13,
-          "endSeconds": 21,
-          "quote": "The new Pixel has a feature called 'Video Boost.' In low light, it activates 'Night Sight' to make the quality even better."
+          "startSeconds": 7.0,
+          "endSeconds": 11.0,
+          "quote": "So I was excited to learn about Gemini."
         }
       ]
     },
     {
-      "id": "ch-sancha",
-      "startSeconds": 23,
-      "endSeconds": 27,
-      "title": "Sancha Alleyway Memories",
-      "description": "Exploring personal memories while walking through the Sangenjaya neighbourhood.",
-      "confidence": 0.96,
+      "id": "event4",
+      "startSeconds": 11.0,
+      "endSeconds": 19.0,
+      "title": "Drafting a Lesson Plan with Gemini in Google Docs",
+      "description": "The coach uses Gemini within Google Docs to draft a lesson plan template for a 6th-grade biology class on cellular structures. He types a detailed prompt requesting ideas for new and advanced learners.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 23,
-          "endSeconds": 26,
-          "quote": "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here."
+          "startSeconds": 11.0,
+          "endSeconds": 16.0,
+          "quote": "Today, I'm using it to create a lesson plan template in Google Docs."
+        },
+        {
+          "startSeconds": 14.0,
+          "endSeconds": 19.0,
+          "quote": "Acting as an instructional coach, draft a lesson plan for a 6th grade biology class about cellular structures. Include ideas for how to accommodate students who are new to the topic and provide extension activities for more advanced learners."
         }
       ]
     },
     {
-      "id": "ch-puddle",
-      "startSeconds": 28,
-      "endSeconds": 36,
-      "title": "Filming Puddle Reflections",
-      "description": "Capturing creative low-angle reflection compositions off street puddles.",
-      "confidence": 0.97,
+      "id": "event5",
+      "startSeconds": 19.0,
+      "endSeconds": 20.0,
+      "title": "Initiating Lesson Plan Generation",
+      "description": "The user clicks the 'Create' button to generate the lesson plan based on the typed prompt.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 28,
-          "endSeconds": 30,
-          "quote": "Oh, I like this."
+          "startSeconds": 19.0,
+          "endSeconds": 20.0,
+          "quote": "Create"
         }
       ]
     },
     {
-      "id": "ch-review",
-      "startSeconds": 37,
-      "endSeconds": 39,
-      "title": "Reviewing Low-Light Clarity",
-      "description": "Inspecting captured video playback quality in dark alley conditions.",
-      "confidence": 0.98,
+      "id": "event6",
+      "startSeconds": 21.0,
+      "endSeconds": 31.0,
+      "title": "Gemini Generates Detailed Lesson Plan",
+      "description": "Gemini rapidly generates a comprehensive lesson plan draft, including objectives, materials, procedures, assessment methods, and differentiated activities for both new and advanced learners.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 37,
-          "endSeconds": 39,
-          "quote": "Beautiful!"
+          "startSeconds": 21.0,
+          "endSeconds": 30.0,
+          "quote": "Gemini quickly generates a draft that includes objectives, steps to follow, and even ways to adapt the material for students who are new to the topic and advanced learners."
         }
       ]
     },
     {
-      "id": "ch-montage",
-      "startSeconds": 40,
-      "endSeconds": 52,
-      "title": "Night Shots Montage",
-      "description": "Atmospheric evening scenes and neon lighting across Tokyo alleyways.",
-      "confidence": 0.95,
+      "id": "event7",
+      "startSeconds": 31.0,
+      "endSeconds": 32.0,
+      "title": "Inserting Generated Content",
+      "description": "The user clicks the 'Insert' button to add the generated lesson plan directly into the Google Doc.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 40,
-          "endSeconds": 52,
-          "quote": "Visual montage of night scenes."
+          "startSeconds": 31.0,
+          "endSeconds": 32.0,
+          "quote": "Insert"
         }
       ]
     },
     {
-      "id": "ch-shibuya",
-      "startSeconds": 53,
-      "endSeconds": 57,
-      "title": "Shibuya Evening Exploration",
-      "description": "Arriving at the iconic Shibuya pedestrian crossing and bridge lights.",
-      "confidence": 0.96,
+      "id": "event8",
+      "startSeconds": 32.0,
+      "endSeconds": 40.0,
+      "title": "Distributing Content via Google Classroom",
+      "description": "The coach explains how easily content created with Gemini can be distributed to educators in the district by uploading it to a shareable template in Google Classroom, visually depicting a Google Doc being shared to a Google Classroom icon surrounded by diverse educators.",
+      "confidence": 1.0,
       "evidence": [
         {
-          "startSeconds": 53,
-          "endSeconds": 54,
-          "quote": "Next, I came to Shibuya."
+          "startSeconds": 32.0,
+          "endSeconds": 40.0,
+          "quote": "I can also easily distribute content I create with Gemini to educators in my district by uploading it to a shareable class template in Google Classroom."
+        }
+      ]
+    },
+    {
+      "id": "event9",
+      "startSeconds": 40.0,
+      "endSeconds": 43.0,
+      "title": "Final Branding",
+      "description": "The video concludes with the 'Gemini for Google Workspace' logo.",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "startSeconds": 40.0,
+          "endSeconds": 43.0,
+          "quote": "Gemini for Google Workspace"
         }
       ]
     }
   ],
   "transcript": [
     {
-      "startSeconds": 1,
-      "endSeconds": 3,
-      "text": "My name is Saeka Shimada. I'm a photographer in Tokyo."
+      "startSeconds": 0.0,
+      "endSeconds": 2.0,
+      "text": "Gemini for Google Workspace"
     },
     {
-      "startSeconds": 5,
-      "endSeconds": 9,
-      "text": "Tokyo has many faces. The city at night is totally different from what you see during the day."
+      "startSeconds": 2.0,
+      "endSeconds": 6.0,
+      "text": "In my work as an instructional coach, I struggle to get some of my regular to-dos done in the limited amount of time I have."
     },
     {
-      "startSeconds": 13,
-      "endSeconds": 15,
-      "text": "The new Pixel has a feature called 'Video Boost.'"
+      "startSeconds": 7.0,
+      "endSeconds": 11.0,
+      "text": "So I was excited to learn about Gemini."
     },
     {
-      "startSeconds": 15,
-      "endSeconds": 21,
-      "text": "In low light, it activates 'Night Sight' to make the quality even better."
+      "startSeconds": 11.0,
+      "endSeconds": 16.0,
+      "text": "Today, I'm using it to create a lesson plan template in Google Docs."
     },
     {
-      "startSeconds": 23,
-      "endSeconds": 26,
-      "text": "Sancha is where I used to live when I first moved to Tokyo. I have a lot of great memories here."
+      "startSeconds": 19.0,
+      "endSeconds": 20.0,
+      "text": "Create"
     },
     {
-      "startSeconds": 28,
-      "endSeconds": 30,
-      "text": "Oh, I like this."
+      "startSeconds": 21.0,
+      "endSeconds": 30.0,
+      "text": "Gemini quickly generates a draft that includes objectives, steps to follow, and even ways to adapt the material for students who are new to the topic and advanced learners."
     },
     {
-      "startSeconds": 37,
-      "endSeconds": 39,
-      "text": "Beautiful!"
+      "startSeconds": 31.0,
+      "endSeconds": 32.0,
+      "text": "Insert"
     },
     {
-      "startSeconds": 53,
-      "endSeconds": 57,
-      "text": "Next, I came to Shibuya."
+      "startSeconds": 32.0,
+      "endSeconds": 40.0,
+      "text": "I can also easily distribute content I create with Gemini to educators in my district by uploading it to a shareable class template in Google Classroom."
+    },
+    {
+      "startSeconds": 40.0,
+      "endSeconds": 43.0,
+      "text": "Gemini for Google Workspace"
     }
   ],
-  "contradictions": [
-    {
-      "id": "cx-1",
-      "claim": "Whether night videography preserves natural darkness or computationally enhances clarity",
-      "statementA": {
-        "text": "Tokyo has many faces. The city at night is totally different from what you see during the day.",
-        "startSeconds": 5,
-        "endSeconds": 9,
-        "quote": "The city at night is totally different from what you see during the day."
-      },
-      "statementB": {
-        "text": "In low light, it activates 'Night Sight' to make the quality even better.",
-        "startSeconds": 15,
-        "endSeconds": 21,
-        "quote": "In low light, it activates 'Night Sight' to make the quality even better."
-      },
-      "note": "Statement A highlights the distinct, natural darkness of the city at night; Statement B explains how Night Sight computationally clarifies and boosts low-light scenes."
-    }
-  ]
+  "durationSeconds": 43.0,
+  "title": "Create a lesson plan template using Gemini in Docs",
+  "createdAt": "2026-09-30T17:06:05.000Z"
 }

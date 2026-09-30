@@ -209,4 +209,4 @@ npm run build   # Turbopack clean production build
 
 ## 📄 License & Attribution
 
-Built for the **AI Builder Cup 2026**. Video sample courtesy of Google Cloud Samples (`pixel8.mp4`). Licensed under the [MIT License](LICENSE).
+Built for the **AI Builder Cup 2026**. Lesson video: Google for Education. Licensed under the [MIT License](LICENSE).

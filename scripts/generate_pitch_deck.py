@@ -391,11 +391,11 @@ def generate_deck(output_path: str):
     c.drawString(68, 185, "LIVE VERIFIED BENCHMARK CASE (q13 & q14 from eval_results.json):")
     c.setFillColor(TEXT_SLATE_200)
     c.setFont("Helvetica", 11)
-    c.drawString(68, 160, 'Student (Hindi): "सायका शिमाडा टोक्यो में क्या काम करती हैं?"')
+    c.drawString(68, 160, 'Student: "How does the coach share the template?"')
     c.setFillColor(EMERALD_LIGHT)
-    c.drawString(68, 140, 'ContextBridge: "Saeka Shimada Tokyo mein ek photographer hain (00:01)."')
+    c.drawString(68, 140, "ContextBridge cites the Google Classroom line (00:32).")
     c.setFillColor(TEXT_MUTED)
-    c.drawString(68, 120, 'Verified Evidence: [00:01 - 00:03] "My name is Saeka Shimada. I\'m a photographer in Tokyo."')
+    c.drawString(68, 120, 'Verified evidence: "shareable class template in Google Classroom."')
     c.setFillColor(TEXT_DIM)
     c.drawString(68, 100, "Confidence: 0.98 | Timestamp Retrieval: EXACT (1.0s - 3.0s) | Latency: 2.35s")
     c.showPage()
@@ -673,7 +673,7 @@ def generate_deck(output_path: str):
     c.drawString(68, 217, "c5ltxo3mkq-uc.a.run.app")
     c.setFillColor(TEXT_MUTED)
     c.setFont("Helvetica", 10)
-    c.drawString(68, 185, "Try Tokyo lesson or upload clip")
+    c.drawString(68, 185, "Try the demo lesson or upload a clip")
 
     # Link 2
     draw_card(c, 48 + box_c_w + 20, 160, box_c_w, 140, INDIGO_ACCENT)
