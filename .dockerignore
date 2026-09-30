@@ -6,5 +6,6 @@ __pycache__
 contextbridge.db
 uploaded_videos
 web/
+docs/sources/*.mp4
 logs
 
