@@ -63,7 +63,14 @@ export function Hero() {
       >
         <div className="arena-preview-bar">
           <span className="flex gap-1.5" aria-hidden="true"><i className="arena-dot" /><i className="arena-dot" /><i className="arena-dot" /></span>
-          <span className="arena-live-label text-[11px] tracking-wide text-slate-400">YOUR VIDEO · YOUR QUESTIONS · YOUR PACE</span>
+          <div className="min-w-0 flex-1 px-3 text-center">
+            <p className="truncate text-[11px] font-medium tracking-wide text-slate-100 sm:text-xs">
+              Context Bridge · Gemini lesson plan template · Google for Education
+            </p>
+            <p className="arena-live-label mt-0.5 truncate text-[10px] tracking-wide text-slate-500">
+              Your video · your questions · your pace
+            </p>
+          </div>
           <BookOpenCheck className="size-4 text-emerald-300" aria-hidden="true" />
         </div>
         <div className="grid divide-y divide-white/[0.07] md:grid-cols-[1.1fr_0.9fr] md:divide-x md:divide-y-0">

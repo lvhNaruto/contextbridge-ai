@@ -322,10 +322,10 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
     <div ref={workspaceRef} className="lesson-workspace mx-auto max-w-[1600px] px-3 py-5 sm:px-5 lg:px-6">
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3 px-1">
         <div className="min-w-0">
-          <p className="arena-section-label">Video workspace</p>
-          <h1 className="mt-2 truncate text-lg font-semibold tracking-tight text-white sm:text-xl" title={lesson.title}>
-            {lesson.title}
+          <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl" title={lesson.title}>
+            Context Bridge · Gemini lesson plan template · Google for Education
           </h1>
+          <p className="mt-1 truncate text-xs text-slate-500">Your video · your questions · your pace</p>
         </div>
         <p className="pb-1 text-xs text-slate-500">
           {chapters.length} chapters <span aria-hidden="true">·</span> Ask the lesson and follow its evidence
