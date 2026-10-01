@@ -18,6 +18,7 @@
 - 🖥️ **Live Web Application:** [https://contextbridge-web-c5ltxo3mkq-uc.a.run.app](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)
 - ⚡ **Backend API Interactive Docs:** [https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs](https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs)
 - 🩺 **Live Health & Metrics:** [https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/health](https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/health)
+- 🎬 **Demo video:** [https://youtu.be/Tf0LZE93oxw](https://youtu.be/Tf0LZE93oxw)
 
 ---
 
@@ -63,9 +64,9 @@ When curiosity steps beyond the uploaded video, ContextBridge activates Google S
 <a name="demo-video"></a>
 ## 🎬 Demo Video
 
-> 📺 **[Watch 90-Second Demo Walkthrough](https://youtu.be/z5w-Mze7RCw?si=shyjqVDg2q5zvHbw)** · **[Live Deployed App](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)**
-> 
-> *Demonstrating sub-second timestamp seeking, verified EvidenceBadges, bilingual Hindi voice interaction, and 0% hallucination boundary honesty.*
+> 📺 **[Watch the demo](https://youtu.be/Tf0LZE93oxw)** · **[Live app](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)**
+>
+> Upload a lesson, ask in your own words, jump to the proof, ask the same lesson in Hindi, switch depth, and see the boundary when the answer is not in the video.
 
 ---
 
