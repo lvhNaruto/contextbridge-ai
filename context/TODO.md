@@ -98,7 +98,7 @@
 - [x] **5.1** **Decision line:** First line of every answer comes from `evidenceType`, with no extra model call. Video: “I found this in the lesson.” Web or unknown: “The lesson never said this, so I did not guess.” Hindi when that answer’s language is Hindi. Rendered above the answer in `assistant-message.tsx`. Video answers keep the quote and timestamp. Web answers keep `BoundaryCard`.
 - [x] **5.2** **Three buttons under every video answer,** above the Explore chips: **Simpler** (same question, `explanationLevel` beginner, last ≤ 6 history turns), **In Hindi** (same question, `answerLanguage` hi), **Jump** (existing evidence timestamp; hidden when there is no timestamp; the existing seek, not a second one).
 - [x] **5.3** **Skipped.** Stay on the current Gemini lesson. Do not replace it with a longer contradictory video.
-- [x] **5.4** **Verify and publish the web change.** Title bar unchanged. `pytest` 98 passed. Web revision `contextbridge-web-00014-2sq` is serving. API stays on the current Gemini lesson. Public demo file: `docs/sources/contextbridge-demo.mp4` (2:42).
+- [x] **5.4** **Verify and publish the web change.** Title bar unchanged. `pytest` 101 passed. Web revision `contextbridge-web-00014-2sq` is serving. API stays on the current Gemini lesson. Public demo file: `docs/sources/contextbridge-demo.mp4` (2:42).
 
 ---
 

@@ -9,7 +9,7 @@
 [![Zero Hallucination](https://img.shields.io/badge/Unsupported_Answers-0.0%25_Strict-brightgreen)](context/eval_results.json)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16_(Turbopack)-black?logo=next.js&logoColor=white)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Tests Passing](https://img.shields.io/badge/pytest-98%2F98_Passing-success)](tests/)
+[![Tests Passing](https://img.shields.io/badge/pytest-101%2F101_Passing-success)](tests/)
 
 ---
 
@@ -173,7 +173,7 @@ Frontend will be available at `http://localhost:3000`.
 
 ### 3. Verification & Quality Gates
 ```bash
-# Run backend test suite (83 tests)
+# Run backend test suite (101 tests)
 python -m pytest
 
 # Run 9 failure-path drills
@@ -193,7 +193,7 @@ npm run build   # Turbopack clean production build
 - **Theme:** Media, Content & Digital Experiences
 - **Core Technology:** Google Gemini 2.5 Flash, Google Search Grounding, Google Cloud Run
 - **Evaluation Criteria Alignment:**
-  - **Technical Merit (40%):** Zero-hallucination anti-fabrication gate, verbatim transcript verification, sub-second video seeking, 83 passing tests, 9 failure drills.
+  - **Technical Merit (40%):** Zero-hallucination anti-fabrication gate, verbatim transcript verification, sub-second video seeking, 101 passing tests, 9 failure drills.
   - **Impact (25%):** Empowers self-directed learners to master technical video content with proof, bilingual voice equity (Hindi/English), and accessibility.
   - **Innovation (25%):** Moves beyond passive summarizers into an active compass: dynamic exploration chips, contradiction surfacing, and boundary cards.
   - **UX & Polish (10%):** Micro-animations, responsive right-rail transcript sync, playback rate selector, and audio wave avatar states.
