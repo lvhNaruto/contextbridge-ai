@@ -152,6 +152,7 @@ export async function askQuestion(
   settings: LessonSettings,
   isVoice = false,
   history?: HistoryTurn[],
+  simplify = false,
 ): Promise<ChatMessage> {
   if (!USE_MOCK) {
     const payload: {
@@ -159,7 +160,9 @@ export async function askQuestion(
       settings: LessonSettings;
       isVoice: boolean;
       history?: HistoryTurn[];
+      simplify?: boolean;
     } = { question, settings, isVoice };
+    if (simplify) payload.simplify = true;
     if (history && history.length > 0) {
       payload.history = history.slice(-6);
     }

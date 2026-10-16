@@ -34,4 +34,8 @@ next-env.d.ts
 # Agent tooling (not part of the submission)
 automation/
 
+# Workshop notes kept locally, not in the public repo
+context/IDEAS.md
+context/IDEA_REVIEW.md
+
 

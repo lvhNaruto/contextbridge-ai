@@ -7,6 +7,9 @@
 
 export type AnswerLanguage = "auto" | "en" | "hi";
 
+/** A second ask of the same question. Simpler shortens the prompt; Hindi sets the language. */
+export type RestateKind = "simpler" | "hindi";
+
 export type ExplanationLevel = "beginner" | "intermediate" | "expert";
 
 /** Where an answer's evidence comes from — never mixed in the UI. */
@@ -97,6 +100,8 @@ export interface ChatMessage {
   suggestions?: string[];
   /** Real agent steps for this answer: retrieve, verify, cite, and so on. */
   trace?: { step: string }[];
+  /** Set only for an explicit English or Hindi reply. Auto follows the answer text. */
+  replyLanguage?: Exclude<AnswerLanguage, "auto">;
 }
 
 export interface Lesson {

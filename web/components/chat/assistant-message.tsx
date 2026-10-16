@@ -19,58 +19,16 @@ import {
 import { TimestampButton } from "@/components/evidence/timestamp-button";
 import { BoundaryCard } from "@/components/evidence/boundary-card";
 import { ExploreSuggestions } from "@/components/chat/explore-suggestions";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, RestateKind } from "@/types";
 import { cn, formatTime } from "@/lib/utils";
 import {
+  decisionLine,
   lessonCopy,
   lessonUiLanguage,
   localizeResearchLead,
   traceStepLabel,
   type LessonCopy,
 } from "@/lib/lesson-copy";
-
-function stageLabel(stage: string, copy: LessonCopy): string {
-  switch (stage) {
-    case "checking-video":
-      return copy.stageChecking;
-    case "finding-moment":
-      return copy.stageFinding;
-    case "researching":
-      return copy.stageResearching;
-    case "preparing-answer":
-      return copy.stagePreparing;
-    case "speaking":
-      return copy.stageSpeaking;
-    default:
-      return copy.stageThinking;
-  }
-}
-
-function formatEvidenceCard(
-  text: string,
-  copy: LessonCopy,
-  answer?: ChatMessage["answer"],
-  lessonTitle?: string,
-): string {
-  const parts: string[] = [text];
-
-  if (answer?.evidence?.quote) {
-    parts.push(`${copy.evidence}: "${answer.evidence.quote}"`);
-  }
-
-  if (
-    answer?.evidence?.startSeconds !== undefined &&
-    answer.evidence.startSeconds !== null
-  ) {
-    parts.push(`${copy.timestamp}: ${formatTime(answer.evidence.startSeconds)}`);
-  }
-
-  if (lessonTitle) {
-    parts.push(`${copy.source}: ${lessonTitle}`);
-  }
-
-  return parts.join("\n\n");
-}
 
 function useSpeak() {
   const [speaking, setSpeaking] = useState(false);
@@ -98,7 +56,6 @@ function useSpeak() {
 
     window.speechSynthesis.cancel();
 
-    // Clean symbols and video seek timecodes for speech clarity
     const cleanText = text
       .replace(/\[\d{1,2}:\d{2}\]/g, "")
       .replace(/\(\d{1,2}:\d{2}\)/g, "")
@@ -109,14 +66,12 @@ function useSpeak() {
 
     if (!cleanText) return;
 
-    // Auto-detect Devanagari Hindi script (even if setting is "auto" or "en")
     const hasDevanagari = /[\u0900-\u097F]/.test(cleanText);
     const resolvedLang = hasDevanagari ? "hi-IN" : (lang || "en-US");
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = resolvedLang;
 
-    // Language-matched voice selection prioritizing Natural/Google voices
     const voices = window.speechSynthesis.getVoices();
     if (voices && voices.length > 0) {
       const prefix = resolvedLang.toLowerCase().split("-")[0];
@@ -124,7 +79,6 @@ function useSpeak() {
         v.lang.toLowerCase().startsWith(prefix),
       );
 
-      // Prioritize Google, Natural, or Online high-quality TTS voices
       const premiumVoice = matchingVoices.find((v) => {
         const name = v.name.toLowerCase();
         return (
@@ -150,32 +104,90 @@ function useSpeak() {
   return { speaking, speak };
 }
 
+function stageLabel(stage: string, copy: LessonCopy): string {
+  switch (stage) {
+    case "checking-video":
+      return copy.stageChecking;
+    case "finding-moment":
+      return copy.stageFinding;
+    case "researching":
+      return copy.stageResearching;
+    case "preparing-answer":
+      return copy.stagePreparing;
+    case "speaking":
+      return copy.stageSpeaking;
+    default:
+      return copy.stageThinking;
+  }
+}
+
+function formatEvidenceCard(
+  text: string,
+  copy: LessonCopy,
+  answer?: ChatMessage["answer"],
+  lessonTitle?: string,
+  lead?: string | null,
+): string {
+  const parts: string[] = [];
+  if (lead) parts.push(lead);
+  parts.push(text);
+
+  if (answer?.evidence?.quote) {
+    parts.push(`${copy.evidence}: "${answer.evidence.quote}"`);
+  }
+
+  if (
+    answer?.evidence?.startSeconds !== undefined &&
+    answer.evidence.startSeconds !== null
+  ) {
+    parts.push(`${copy.timestamp}: ${formatTime(answer.evidence.startSeconds)}`);
+  }
+
+  if (lessonTitle) {
+    parts.push(`${copy.source}: ${lessonTitle}`);
+  }
+
+  return parts.join("\n\n");
+}
+
 export function AssistantMessage({
   message,
   isHighlighted,
   onJump,
-  answerLanguage,
   lessonTitle,
   onSelectSuggestion,
+  onRestate,
+  sourceQuestion,
   autoSpeak,
   isLatest,
+  busy,
 }: {
   message: ChatMessage;
   /** True when this answer's moment is the current timeline highlight. */
   isHighlighted?: boolean;
   onJump: (seconds: number) => void;
-  answerLanguage: string;
   lessonTitle?: string;
   onSelectSuggestion?: (question: string) => void;
+  /** Ask the same question again, shorter or in Hindi. */
+  onRestate?: (question: string, kind: RestateKind) => void;
+  sourceQuestion?: string;
   autoSpeak?: boolean;
   isLatest?: boolean;
+  busy?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const { speaking, speak } = useSpeak();
   const spokenRef = useRef(false);
-  const ui = lessonUiLanguage(answerLanguage, message.text);
+  const pinnedReplyLanguage =
+    message.replyLanguage === "en" || message.replyLanguage === "hi"
+      ? message.replyLanguage
+      : undefined;
+  const ui = lessonUiLanguage(pinnedReplyLanguage, message.text);
   const copyText = lessonCopy(ui);
-  const spokenText = localizeResearchLead(message.text, ui);
+  const lead = decisionLine(message.answer?.evidenceType, ui);
+  const spokenText = [lead, localizeResearchLead(message.text, ui)]
+    .filter(Boolean)
+    .join(" ");
 
   useEffect(() => {
     if (autoSpeak && isLatest && !message.processing && spokenText && !spokenRef.current) {
@@ -192,6 +204,7 @@ export function AssistantMessage({
         copyText,
         message.answer,
         lessonTitle,
+        lead,
       );
       await navigator.clipboard.writeText(payload);
       setCopied(true);
@@ -244,6 +257,11 @@ export function AssistantMessage({
   }
 
   const answer = message.answer;
+  const jumpSeconds = answer?.evidence?.startSeconds;
+  const canJump =
+    answer?.evidenceType === "video" &&
+    typeof jumpSeconds === "number" &&
+    Number.isFinite(jumpSeconds);
   const shownText =
     answer?.evidenceType === "web"
       ? localizeResearchLead(message.text, ui)
@@ -289,6 +307,60 @@ export function AssistantMessage({
             : "border-white/[0.07] bg-white/[0.03]",
         )}
       >
+        {lead && (
+          <p
+            className={cn(
+              "mb-2 text-sm font-medium leading-snug",
+              answer?.evidenceType === "video" ? "text-emerald-200" : "text-amber-200",
+            )}
+          >
+            {lead}
+          </p>
+        )}
+
+        {answer?.evidenceType === "video" && answer.evidence?.quote && (
+          <blockquote className="mb-3 flex gap-2.5 rounded-xl border-l-2 border-violet-400/50 bg-violet-500/[0.06] px-3.5 py-2.5">
+            <Quote className="mt-0.5 size-3.5 shrink-0 text-violet-300/70" aria-hidden="true" />
+            <p className="text-sm italic leading-relaxed text-slate-100">
+              “{answer.evidence.quote}”
+            </p>
+          </blockquote>
+        )}
+
+        {answer?.evidenceType === "video" && (sourceQuestion || canJump) && (
+          <div className="mb-3 flex flex-wrap gap-1.5" role="group" aria-label={copyText.foundInLesson}>
+            {canJump && typeof jumpSeconds === "number" && (
+              <button
+                type="button"
+                onClick={() => onJump(jumpSeconds)}
+                className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-100 transition-colors hover:border-emerald-300/50 hover:bg-emerald-500/20"
+              >
+                {copyText.jump}
+              </button>
+            )}
+            {sourceQuestion && onRestate && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onRestate(sourceQuestion, "simpler")}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-100 transition-colors hover:border-violet-400/40 hover:bg-violet-500/15 disabled:opacity-50"
+              >
+                {copyText.simpler}
+              </button>
+            )}
+            {sourceQuestion && onRestate && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onRestate(sourceQuestion, "hindi")}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-100 transition-colors hover:border-violet-400/40 hover:bg-violet-500/15 disabled:opacity-50"
+              >
+                {copyText.inHindi}
+              </button>
+            )}
+          </div>
+        )}
+
         {answer?.evidenceType === "web" ? (
           <BoundaryCard sources={answer.sources} language={ui}>
             <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-100">
@@ -296,20 +368,9 @@ export function AssistantMessage({
             </p>
           </BoundaryCard>
         ) : (
-          <>
-            <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-100">
-              {shownText}
-            </p>
-
-            {answer?.evidence?.quote && (
-              <blockquote className="mt-3 flex gap-2.5 rounded-xl border-l-2 border-violet-400/50 bg-violet-500/[0.06] px-3.5 py-2.5">
-                <Quote className="mt-0.5 size-3.5 shrink-0 text-violet-300/70" aria-hidden="true" />
-                <p className="text-xs italic leading-relaxed text-slate-300">
-                  “{answer.evidence.quote}”
-                </p>
-              </blockquote>
-            )}
-          </>
+          <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-100">
+            {shownText}
+          </p>
         )}
 
         {/* Evidence footer — video and web are never mixed */}

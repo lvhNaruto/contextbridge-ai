@@ -251,6 +251,7 @@ def answer_question(
     *,
     is_voice: bool = False,
     history: list[dict[str, str]] | None = None,
+    simplify: bool = False,
 ) -> dict[str, Any]:
     """Run one agent round and return the resolved assistant ChatMessage.
 
@@ -310,7 +311,13 @@ def answer_question(
     # Act on the video branch; the draft gate inside gemini_answer is Evaluate.
     try:
         draft = tools.gemini_answer(
-            question, slices, envelope, active_qa_settings, settings, history
+            question,
+            slices,
+            envelope,
+            active_qa_settings,
+            settings,
+            history,
+            simplify=simplify,
         )
     except tools.AnswerValidationExhausted:
         # §6.3 Fallback: the model could not produce a *verified* video answer

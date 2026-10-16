@@ -50,7 +50,7 @@ export function localizeSourceDescription(
 }
 
 const EN = {
-  askTeacher: "Ask your teacher",
+  askTeacher: "Ask this lesson",
   answerLanguage: "Answer language",
   sameAsQuestion: "Same as question",
   english: "English",
@@ -116,10 +116,15 @@ const EN = {
   now: "Now",
   copyLink: "Copy timestamp link",
   replay: "Replay chapter",
+  foundInLesson: "I found this in the lesson.",
+  notInLesson: "The lesson never said this, so I did not guess.",
+  simpler: "Simpler",
+  inHindi: "In Hindi",
+  jump: "Jump",
 };
 
 const HI: typeof EN = {
-  askTeacher: "अपने शिक्षक से पूछें",
+  askTeacher: "इस पाठ से पूछें",
   answerLanguage: "उत्तर की भाषा",
   sameAsQuestion: "प्रश्न जैसी भाषा",
   english: "English",
@@ -184,6 +189,11 @@ const HI: typeof EN = {
   now: "अभी",
   copyLink: "इस समय का लिंक कॉपी करें",
   replay: "अध्याय दोबारा चलाएँ",
+  foundInLesson: "मैंने यह पाठ में पाया।",
+  notInLesson: "पाठ में यह नहीं कहा गया, इसलिए मैंने अंदाज़ा नहीं लगाया।",
+  simpler: "आसान",
+  inHindi: "हिन्दी में",
+  jump: "जाएँ",
 };
 
 export type LessonCopy = typeof EN;
@@ -217,4 +227,15 @@ const TRACE_HI: Record<string, string> = {
 export function traceStepLabel(step: string, lang: LessonUiLanguage): string {
   const table = lang === "hi" ? TRACE_HI : TRACE_EN;
   return table[step] ?? step;
+}
+
+/** First line of an answer, chosen from evidence type. No model call. */
+export function decisionLine(
+  evidenceType: string | undefined,
+  lang: LessonUiLanguage,
+): string | null {
+  const copy = lessonCopy(lang);
+  if (evidenceType === "video") return copy.foundInLesson;
+  if (evidenceType === "web" || evidenceType === "unknown") return copy.notInLesson;
+  return null;
 }

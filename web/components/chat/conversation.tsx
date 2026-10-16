@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { MessageCircleQuestion } from "lucide-react";
 import { AssistantMessage } from "@/components/chat/assistant-message";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, RestateKind } from "@/types";
 import { cn } from "@/lib/utils";
 import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 
@@ -42,7 +42,9 @@ export function Conversation({
   emptyHint,
   lessonTitle,
   onSelectSuggestion,
+  onRestate,
   autoSpeak,
+  busy,
 }: {
   messages: ChatMessage[];
   /** The message whose moment is currently highlighted on the timeline. */
@@ -52,7 +54,9 @@ export function Conversation({
   emptyHint?: string;
   lessonTitle?: string;
   onSelectSuggestion?: (question: string) => void;
+  onRestate?: (question: string, kind: RestateKind) => void;
   autoSpeak?: boolean;
+  busy?: boolean;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const copy = lessonCopy(lessonUiLanguage(answerLanguage));
@@ -96,11 +100,15 @@ export function Conversation({
                 message={message}
                 isHighlighted={highlightMessageId === message.id}
                 onJump={onJump}
-                answerLanguage={answerLanguage}
                 lessonTitle={lessonTitle}
                 onSelectSuggestion={onSelectSuggestion}
+                onRestate={onRestate}
+                sourceQuestion={
+                  [...messages.slice(0, idx)].reverse().find((item) => item.role === "user")?.text
+                }
                 autoSpeak={autoSpeak}
                 isLatest={idx === messages.length - 1}
+                busy={busy}
               />
             </div>
           ),

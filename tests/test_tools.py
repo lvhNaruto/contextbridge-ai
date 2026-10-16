@@ -410,6 +410,27 @@ def test_answer_prompt_carries_accessible_settings(monkeypatch, envelope: dict):
     )
     assert "Explanation level: beginner" in seen["prompt"]
     assert "Answer language: Hindi (Devanagari)" in seen["prompt"]
+    assert "at most two short sentences" not in seen["prompt"]
+
+
+def test_answer_prompt_simpler_demands_two_sentences(monkeypatch, envelope: dict):
+    seen: dict = {}
+
+    def fake_generate(client, model_id, parts):
+        seen["prompt"] = parts[0].text
+        return {"text": "ok", "found": False, "confidence": 0}
+
+    monkeypatch.setattr(pipeline, "_clients", lambda settings: [object()])
+    monkeypatch.setattr(pipeline, "_generate_json", fake_generate)
+    tools.gemini_answer(
+        "What is binary?",
+        {"events": [], "transcript": []},
+        envelope,
+        {"explanationLevel": "beginner", "answerLanguage": "en"},
+        _settings(),
+        simplify=True,
+    )
+    assert "at most two short sentences" in seen["prompt"]
 
 
 def test_answer_prompt_carries_expert_and_en_settings(monkeypatch, envelope: dict):

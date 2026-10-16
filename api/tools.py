@@ -70,6 +70,7 @@ Rules:
 
 Question: {question}
 Explanation level: {level}
+{simpler}
 Answer language: {language}
 Video durationSeconds: {duration}
 Video summary: {summary}
@@ -535,6 +536,8 @@ def gemini_answer(
     qa_settings: dict[str, Any],
     settings: Settings,
     history: list[dict[str, str]] | None = None,
+    *,
+    simplify: bool = False,
 ) -> dict[str, Any]:
     """Draft an answer constrained to retrieved slices; validate + retry once.
 
@@ -549,9 +552,18 @@ def gemini_answer(
             f"{turn.get('role', 'user')}: {turn.get('text', '')}"
             for turn in history[-6:]  # P0-7 — never more than 6 turns
         )
+    simpler = ""
+    if simplify:
+        simpler = (
+            "Simpler: the learner already heard a longer answer and asked for an easier one. "
+            "Write at most two short sentences, in everyday words. "
+            "Keep the same facts and the same evidence. "
+            "Do not retell the longer answer and do not add extra background."
+        )
     prompt = _ANSWER_PROMPT.format(
         question=question.strip(),
         level=qa_settings.get("explanationLevel", "beginner"),
+        simpler=simpler,
         language=_language_directive(qa_settings.get("answerLanguage", "auto")),
         duration=pipeline.envelope_duration(envelope),
         summary=str(envelope.get("summary") or "")[:500],

@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: LessonSettings = {
   answerLanguage: "auto",
   explanationLevel: "beginner",
   researchMissingContext: true,
+  autoSpeak: false,
 };
 
 export const DEFAULT_A11Y: AccessibilitySettings = {
@@ -89,7 +90,13 @@ export function saveConversation(
 }
 
 export function loadSettings(): LessonSettings {
-  return read<LessonSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
+  const stored = read<LessonSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
+  return {
+    ...stored,
+    explanationLevel: "beginner",
+    researchMissingContext: true,
+    autoSpeak: false,
+  };
 }
 
 export function saveSettings(settings: LessonSettings): void {

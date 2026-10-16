@@ -407,6 +407,7 @@ class QuestionRequest(BaseModel):
     settings: LessonSettingsIn = Field(default_factory=LessonSettingsIn)
     isVoice: bool = False
     history: list[HistoryTurn] | None = None
+    simplify: bool = False
 
 
 @app.post("/analyses/{analysis_id}/questions")
@@ -428,14 +429,16 @@ def ask_question(analysis_id: str, payload: QuestionRequest) -> dict[str, Any]:
         if payload.history
         else None
     )
+    qa_settings = payload.settings.model_dump()
     try:
         msg = agent.answer_question(
             question,
             envelope,
-            payload.settings.model_dump(),
+            qa_settings,
             settings,
             is_voice=payload.isVoice,
             history=history_dicts,
+            simplify=payload.simplify,
         )
         _record_question_metric(msg.get("answer"))
         return msg

@@ -208,9 +208,9 @@
 |---|---|---|---|
 | **4.1** | Bugfix buffer | Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes. | Zero open P0/P1 defects. |
 | **4.2** | Quota-death & fallback drill | Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store. | Fixture demo operates independently of live API quota. |
-| **4.3** | Recorded backup demo | Record a clean 90-second screen recording of the live deployed app following the demo script. | Offline MP4 artifact ready and verified. |
+| **4.3** | Recorded backup demo | Public video https://youtu.be/Tf0LZE93oxw (2:42). Local file stays in Downloads, not in the repo. | Done. Under 3 minutes. |
 | **4.4** | Rehearse demo script 5× | Practice the 90-second live presentation until completely second-nature. | Demo runs smoothly within $\le 90$ seconds. |
-| **4.5** | README & Deck (PDF) | Finalize GitHub README with architecture diagram, live links, and eval scorecard; produce 8-10 slide PDF deck citing metrics. | Submission-ready deck and public repo. |
+| **4.5** | README & Deck | README with live links and the demo video. 6-slide deck: `docs/contextbridge_pitch.pptx` and `docs/contextbridge_pitch.pdf`. | Deck files exist. |
 | **4.6** | Final deploy freeze | Deploy final frozen revision $\ge 48$h before deadline. Run full test suite, sweep, and lock revision. | Final Cloud Run revision frozen and tagged. |
 
 ---

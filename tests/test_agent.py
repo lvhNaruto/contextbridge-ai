@@ -68,10 +68,13 @@ def envelope() -> dict:
 
 def _stub(monkeypatch, *, answer=None, answer_error=None, web=None, web_error=None):
     """Replace the two LLM tools; return a call counter."""
-    calls = {"answer": 0, "web": 0, "last_history": None}
+    calls = {"answer": 0, "web": 0, "last_history": None, "simplify": False, "level": None}
 
     def fake_answer(*args, **kwargs):
         calls["answer"] += 1
+        calls["simplify"] = bool(kwargs.get("simplify"))
+        qa_settings = args[3] if len(args) > 3 else kwargs.get("qa_settings", {})
+        calls["level"] = qa_settings.get("explanationLevel")
         if "history" in kwargs:
             calls["last_history"] = kwargs["history"]
         elif len(args) >= 6:
@@ -268,7 +271,32 @@ def test_agent_passes_history_to_gemini_answer(monkeypatch, envelope):
     )
     assert calls["answer"] == 1
     assert calls["last_history"] == history
+    assert calls["simplify"] is False
     assert msg["answer"]["evidenceType"] == "video"
+
+
+def test_agent_passes_simplify_flag_without_changing_settings(monkeypatch, envelope):
+    calls = _stub(monkeypatch, answer=VIDEO_DRAFT)
+    agent.answer_question(
+        "What is binary?", envelope, {"explanationLevel": "expert"}, None, simplify=True
+    )
+    assert calls["simplify"] is True
+    assert calls["level"] == "expert"
+
+
+def test_post_question_forwards_simplify_without_rewriting_level(client, monkeypatch):
+    calls = _stub(monkeypatch, answer=VIDEO_DRAFT)
+    resp = client.post(
+        f"/analyses/{DEMO_ANALYSIS_ID}/questions",
+        json={
+            "question": "What is binary?",
+            "settings": {"explanationLevel": "expert", "answerLanguage": "en"},
+            "simplify": True,
+        },
+    )
+    assert resp.status_code == 200
+    assert calls["simplify"] is True
+    assert calls["level"] == "expert"
 
 
 def test_post_question_with_valid_history(client, monkeypatch):

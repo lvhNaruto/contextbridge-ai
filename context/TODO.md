@@ -89,10 +89,16 @@
 ### Week 4 — "Demo Proof" (Rehearse, Harden, Freeze)
 - [x] **4.1** **Bugfix buffer:** Address any edge cases or UI inconsistencies. Strict rule: no new features, only fixes.
 - [x] **4.2** **Quota-death & fallback drill:** Simulate offline/quota outage in testing; verify that `demo-binary` fixture serves seamlessly via in-memory store.
-- [ ] **4.3** **Recorded backup demo:** Clean 90-second screen recording of live deployed app following demo script (<3 min public MP4).
+- [x] **4.3** **Recorded backup demo:** Public video [Context Bridge — EdTech agent](https://youtu.be/Tf0LZE93oxw), 2:42 (under 3 min). Local file: `C:\Users\user\Downloads\Final Context bridge demo.mp4` (29.5 MB). Not copied into the repo.
 - [ ] **4.4** **Demo script rehearsal:** Rehearse the 90-second live presentation 5× until seamless.
-- [x] **4.5** **README + Pitch Deck:** Finalize README with architecture diagram and live links; produce 8-10 slide PDF deck citing metrics.
+- [x] **4.5** **README + Pitch Deck:** README has live links and the demo video. Deck is 6 slides: `docs/contextbridge_pitch.pptx` (speaker notes) and `docs/contextbridge_pitch.pdf`. Team Naruto: Mohit Singh (leader), Shanu Gupta (frontend designer).
 - [ ] **4.6** **Final deploy freeze:** Deploy final frozen revision $\ge 48$h before deadline. Run full test suite, sweep, and lock revision.
+
+### Judge demo — the choice a judge can see
+- [x] **5.1** **Decision line:** First line of every answer comes from `evidenceType`, with no extra model call. Video: “I found this in the lesson.” Web or unknown: “The lesson never said this, so I did not guess.” Hindi when that answer’s language is Hindi. Rendered above the answer in `assistant-message.tsx`. Video answers keep the quote and timestamp. Web answers keep `BoundaryCard`.
+- [x] **5.2** **Three buttons under every video answer,** above the Explore chips: **Simpler** (same question, `explanationLevel` beginner, last ≤ 6 history turns), **In Hindi** (same question, `answerLanguage` hi), **Jump** (existing evidence timestamp; hidden when there is no timestamp; the existing seek, not a second one).
+- [x] **5.3** **Skipped.** Stay on the current Gemini lesson. Do not replace it with a longer contradictory video.
+- [x] **5.4** **Verify and publish the web change.** Title bar unchanged. `pytest` 98 passed. Web revision `contextbridge-web-00014-2sq` is serving. API stays on the current Gemini lesson. Public demo file: `docs/sources/contextbridge-demo.mp4` (2:42).
 
 ---
 

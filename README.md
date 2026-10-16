@@ -18,7 +18,8 @@
 - 🖥️ **Live Web Application:** [https://contextbridge-web-c5ltxo3mkq-uc.a.run.app](https://contextbridge-web-c5ltxo3mkq-uc.a.run.app)
 - ⚡ **Backend API Interactive Docs:** [https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs](https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/docs)
 - 🩺 **Live Health & Metrics:** [https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/health](https://contextbridge-api-c5ltxo3mkq-uc.a.run.app/health)
-- 🎬 **Demo video:** [https://youtu.be/Tf0LZE93oxw](https://youtu.be/Tf0LZE93oxw)
+- 🎬 **Demo video:** [https://youtu.be/Tf0LZE93oxw](https://youtu.be/Tf0LZE93oxw) (2:42) · file: [docs/sources/contextbridge-demo.mp4](docs/sources/contextbridge-demo.mp4)
+- 👥 **Team Naruto:** Mohit Singh (team leader), Shanu Gupta (frontend designer)
 
 ---
 
@@ -199,12 +200,11 @@ npm run build   # Turbopack clean production build
 
 ---
 
-## 📊 Pitch Decks & Submissions
+## 📊 Pitch Deck
 
-- **Official Template Pitch Deck (PDF):** [docs/contextbridge_official_submission_deck.pdf](docs/contextbridge_official_submission_deck.pdf) — Formatted strictly per the AI Builder Cup Google Slides submission template (14 slides).
-- **Interactive Official Deck (Web):** [docs/official_submission_deck.html](docs/official_submission_deck.html) — Key-navigable presentation deck with dark-mode glassmorphic styling.
-- **Comprehensive Pitch Deck (PDF):** [docs/contextbridge_pitch_deck.pdf](docs/contextbridge_pitch_deck.pdf) — 10-slide architectural deep dive.
-- **Interactive Comprehensive Deck (Web):** [docs/pitch_deck.html](docs/pitch_deck.html)
+- **Pitch Deck (PowerPoint, with speaker notes):** [docs/contextbridge_pitch.pptx](docs/contextbridge_pitch.pptx)
+- **Pitch Deck (PDF):** [docs/contextbridge_pitch.pdf](docs/contextbridge_pitch.pdf)
+- Regenerate with `python scripts/build_pitch_pptx.py`.
 
 ---
 

@@ -14,6 +14,7 @@ import { LessonSettingsBar } from "@/components/settings/lesson-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAnalysis, askQuestion, askVoiceQuestion } from "@/lib/api";
 import {
+  DEFAULT_SETTINGS,
   loadConversation,
   saveConversation,
   loadSettings,
@@ -23,11 +24,13 @@ import { lessonCopy, lessonUiLanguage } from "@/lib/lesson-copy";
 import { cn, uid } from "@/lib/utils";
 import { DEMO_SUGGESTED_QUESTIONS } from "@/lib/mock-data";
 import type {
+  AnswerLanguage,
   Chapter,
   ChatMessage,
   Lesson,
   LessonSettings,
   ProcessingStage,
+  RestateKind,
 } from "@/types";
 
 /** Processing beats the assistant cycles through — visible but honest. */
@@ -37,15 +40,48 @@ const PROCESSING_BEATS: ProcessingStage[] = [
   "preparing-answer",
 ];
 
+function requestForRestate(
+  settings: LessonSettings,
+  restate: RestateKind | undefined,
+): { settings: LessonSettings; simplify: boolean } {
+  switch (restate) {
+    case undefined:
+      return { settings, simplify: false };
+    case "simpler":
+      return { settings, simplify: true };
+    case "hindi":
+      return {
+        settings: { ...settings, answerLanguage: "hi" },
+        simplify: false,
+      };
+    default: {
+      const unexpected: never = restate;
+      return unexpected;
+    }
+  }
+}
+
+function storedReplyLanguage(
+  language: AnswerLanguage,
+): ChatMessage["replyLanguage"] {
+  switch (language) {
+    case "en":
+    case "hi":
+      return language;
+    case "auto":
+      return undefined;
+    default: {
+      const unexpected: never = language;
+      return unexpected;
+    }
+  }
+}
+
 export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [settings, setSettings] = useState<LessonSettings>({
-    answerLanguage: "auto",
-    explanationLevel: "beginner",
-    researchMissingContext: true,
-  });
+  const [settings, setSettings] = useState<LessonSettings>(DEFAULT_SETTINGS);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [highlightSeconds, setHighlightSeconds] = useState<number | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
@@ -147,8 +183,16 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
   );
 
   const ask = useCallback(
-    async (question: string, isVoice: boolean, audioBlob?: Blob) => {
+    async (
+      question: string,
+      isVoice: boolean,
+      audioBlob?: Blob,
+      restate?: RestateKind,
+    ) => {
       if (!lesson || asking) return;
+      const request = requestForRestate(settings, restate);
+      const requestSettings = request.settings;
+      const simplify = request.simplify;
       setAsking(true);
 
       const userMessage: ChatMessage = {
@@ -192,18 +236,21 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
             lessonId,
             audioBlob,
             question,
-            settings,
+            requestSettings,
             historyTurns,
           );
         } else {
           resolved = await askQuestion(
             lessonId,
             question,
-            settings,
+            requestSettings,
             isVoice,
             historyTurns,
+            simplify,
           );
         }
+        const replyLanguage = storedReplyLanguage(requestSettings.answerLanguage);
+        if (replyLanguage) resolved = { ...resolved, replyLanguage };
 
         // If backend transcribed a refined question, ensure user message reflects it
         if (resolved.transcribedQuestion && resolved.transcribedQuestion !== question) {
@@ -233,7 +280,7 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                   ...m,
                   processing: undefined,
                   text: "Something went wrong while answering. Please try again.",
-                  answer: { text: "", evidenceType: "unknown", confidence: 0 },
+                  answer: undefined,
                 }
               : m,
           ),
@@ -445,7 +492,9 @@ export function WorkspaceClient({ lessonId }: { lessonId: string }) {
                 answerLanguage={settings.answerLanguage}
                 lessonTitle={lesson.title}
                 onSelectSuggestion={(q) => ask(q, false)}
+                onRestate={(question, kind) => ask(question, false, undefined, kind)}
                 autoSpeak={settings.autoSpeak}
+                busy={asking}
               />
             </div>
 
